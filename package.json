@@ -1,0 +1,89 @@
+{
+  "name": "electron",
+  "version": "1.0.0",
+  "description": "Chat application with AI integration",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "nodemon --watch . --exec \"electron .\"",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.chatbot.app",
+    "productName": "Dragon Chatbot",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist",
+      "!node_modules",
+      "!.git"
+    ],
+    "win": {
+      "icon": "assets/dragon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "mac": {
+      "icon": "assets/dragon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "icon": "assets/dragon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Dragon Chatbot"
+    }
+  },
+  "devDependencies": {
+    "electron": "^39.2.6",
+    "electron-builder": "^25.1.8",
+    "electron-reloader": "^1.2.3",
+    "nodemon": "^3.1.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
+    "@deepgram/sdk": "^3.13.0",
+    "@electron/remote": "^2.1.2",
+    "@google-cloud/vision": "^5.3.4",
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mic": "^2.1.2",
+    "mongoose": "^9.0.2",
+    "node-global-key-listener": "^0.3.0",
+    "node-record-lpcm16": "^1.0.1",
+    "openai": "^4.104.0",
+    "socket.io": "^4.8.1",
+    "tesseract.js": "^7.0.0",
+    "wav": "^1.0.2"
+  }
+}
