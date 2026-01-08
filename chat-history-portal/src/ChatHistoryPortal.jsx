@@ -68,7 +68,7 @@ const ChatHistoryPortal = () => {
   
 
 
-  const API_URL = 'http://localhost:3000';
+  const API_URL = 'https://chatbot-al0x.onrender.com';
 
   useEffect(() => {
   const handler = (e) => {
