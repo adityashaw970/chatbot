@@ -11,7 +11,14 @@ const ChatSession = require("./src/models/ChatSession");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://chatbot-delta-ten-87.vercel.app",
+    "http://localhost:5173"
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 
 connectDB();
@@ -108,11 +115,11 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
+    origin: "https://chatbot-delta-ten-87.vercel.app",
     methods: ["GET", "POST"]
-  },
-  maxHttpBufferSize: 1e8
+  }
 });
+
 
 const generateResponse = require("./src/service/ai.service");
 const transcribeAudio = require("./src/service/transcription.service");

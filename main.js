@@ -1,3 +1,4 @@
+//main.js
 const { app, BrowserWindow, screen, ipcMain, desktopCapturer, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const { GlobalKeyboardListener } = require("node-global-key-listener");
