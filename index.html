@@ -6,10 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chatbot</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
@@ -18,92 +15,6 @@
         padding: 0;
         box-sizing: border-box;
       }
-      * {
-        -webkit-app-region: no-drag; /* Allow clicks everywhere by default */
-      }
-
-      /* Only the header should be draggable */
-      .header {
-        -webkit-app-region: drag;
-      }
-
-      /* But buttons and interactive elements in header should NOT be draggable */
-      .header button,
-      .header .ai-btn,
-      .header .action-btn,
-      .header .control-btn,
-      .header input,
-      .header select,
-      .auto-timer-btn,
-      .auto-ss-btn {
-        -webkit-app-region: no-drag !important;
-      }
-
-      /* Ensure all clickable elements are NOT draggable */
-      button,
-      input,
-      textarea,
-      select,
-      a,
-      .message,
-      .image-preview,
-      .send-btn,
-      .ai-btn,
-      .action-btn,
-      .control-btn {
-        -webkit-app-region: no-drag !important;
-      }
-
-      /* Chat container should be scrollable, not draggable */
-      .chat-container,
-      .messages,
-      .message,
-      .input-area,
-      .footer {
-        -webkit-app-region: no-drag !important;
-      }
-
-      /* Browser view elements */
-      .browser-view,
-      .webview-container,
-      .browser-webview {
-        -webkit-app-region: no-drag !important;
-      }
-
-      /* Ensure cursor shows interactivity */
-      button:not(:disabled) {
-        cursor: pointer !important;
-      }
-
-      button:disabled {
-        cursor: not-allowed !important;
-        opacity: 0.5;
-      }
-
-      /* Add visual feedback for buttons */
-      button:not(:disabled):active {
-        transform: scale(0.95);
-        transition: transform 0.1s;
-      }
-
-      /* Fix for transparent areas that might block clicks */
-      body {
-        pointer-events: auto !important;
-      }
-
-      .container {
-        pointer-events: auto !important;
-      }
-
-      /* Ensure folder view is clickable when visible */
-      .folder-view {
-        -webkit-app-region: no-drag !important;
-        pointer-events: auto !important;
-      }
-
-      .folder-view.active {
-        cursor: pointer !important;
-      }
 
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -111,6 +22,92 @@
         overflow: hidden;
         background: black;
       }
+      * {
+    -webkit-app-region: no-drag; /* Allow clicks everywhere by default */
+  }
+
+  /* Only the header should be draggable */
+  .header {
+    -webkit-app-region: drag;
+  }
+
+  /* But buttons and interactive elements in header should NOT be draggable */
+  .header button,
+  .header .ai-btn,
+  .header .action-btn,
+  .header .control-btn,
+  .header input,
+  .header select,
+  .auto-timer-btn,
+  .auto-ss-btn {
+    -webkit-app-region: no-drag !important;
+  }
+
+  /* Ensure all clickable elements are NOT draggable */
+  button,
+  input,
+  textarea,
+  select,
+  a,
+  .message,
+  .image-preview,
+  .send-btn,
+  .ai-btn,
+  .action-btn,
+  .control-btn {
+    -webkit-app-region: no-drag !important;
+  }
+
+  /* Chat container should be scrollable, not draggable */
+  .chat-container,
+  .messages,
+  .message,
+  .input-area,
+  .footer {
+    -webkit-app-region: no-drag !important;
+  }
+
+  /* Browser view elements */
+  .browser-view,
+  .webview-container,
+  .browser-webview {
+    -webkit-app-region: no-drag !important;
+  }
+
+  /* Ensure cursor shows interactivity */
+  button:not(:disabled) {
+    cursor: pointer !important;
+  }
+
+  button:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.5;
+  }
+
+  /* Add visual feedback for buttons */
+  button:not(:disabled):active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+  }
+
+  /* Fix for transparent areas that might block clicks */
+  body {
+    pointer-events: auto !important;
+  }
+
+  .container {
+    pointer-events: auto !important;
+  }
+
+  /* Ensure folder view is clickable when visible */
+  .folder-view {
+    -webkit-app-region: no-drag !important;
+    pointer-events: auto !important;
+  }
+
+  .folder-view.active {
+    cursor: pointer !important;
+  }
 
       .container {
         background-color: black;
@@ -730,81 +727,81 @@
         min-height: min-content;
       }
       /* Code block styling */
-      .message pre {
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 8px;
-        padding: 12px;
-        overflow-x: auto;
-        margin: 8px 0;
-        position: relative;
-      }
+.message pre {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+  position: relative;
+}
 
-      .message code {
-        font-family: "Consolas", "Monaco", "Courier New", monospace;
-        font-size: 13px;
-        line-height: 1.5;
-      }
+.message code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
 
-      .message pre code {
-        display: block;
-        padding: 0;
-        background: none;
-        color: #e6edf3;
-      }
+.message pre code {
+  display: block;
+  padding: 0;
+  background: none;
+  color: #e6edf3;
+}
 
-      .message :not(pre) > code {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 12px;
-      }
+.message :not(pre) > code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
 
-      /* Copy button for code blocks */
-      .code-block-wrapper {
-        position: relative;
-        margin: 8px 0;
-      }
+/* Copy button for code blocks */
+.code-block-wrapper {
+  position: relative;
+  margin: 8px 0;
+}
 
-      .copy-code-btn {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: rgba(59, 130, 246, 0.8);
-        border: none;
-        border-radius: 6px;
-        padding: 6px 12px;
-        color: white;
-        font-size: 11px;
-        cursor: pointer;
-        opacity: 0;
-        transition: all 0.2s;
-        z-index: 10;
-      }
+.copy-code-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(59, 130, 246, 0.8);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: white;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  z-index: 10;
+}
 
-      .code-block-wrapper:hover .copy-code-btn {
-        opacity: 1;
-      }
+.code-block-wrapper:hover .copy-code-btn {
+  opacity: 1;
+}
 
-      .copy-code-btn:hover {
-        background: rgba(59, 130, 246, 1);
-        transform: scale(1.05);
-      }
+.copy-code-btn:hover {
+  background: rgba(59, 130, 246, 1);
+  transform: scale(1.05);
+}
 
-      .copy-code-btn.copied {
-        background: rgba(34, 197, 94, 0.9);
-      }
+.copy-code-btn.copied {
+  background: rgba(34, 197, 94, 0.9);
+}
 
-      /* Language label */
-      .code-language {
-        position: absolute;
-        top: 8px;
-        left: 12px;
-        font-size: 10px;
-        color: rgba(255, 255, 255, 0.6);
-        font-weight: 600;
-        text-transform: uppercase;
-        pointer-events: none;
-      }
+/* Language label */
+.code-language {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  pointer-events: none;
+}
       ::-webkit-scrollbar {
         width: 4px;
       }
@@ -1147,6 +1144,7 @@
     </style>
   </head>
   <body>
+    
     <div class="connection-indicator disconnected" id="connectionIndicator">
       <div class="connection-dot"></div>
       <span id="connectionText">Disconnected</span>
@@ -1176,7 +1174,7 @@
                 <div class="provider-buttons">
                   <button
                     class="ai-btn"
-                    data-provider="gemini-2-flash-preview"
+                    data-provider="gemini-3-flash-preview"
                     data-mode="chatbot"
                   >
                     3.0
@@ -1345,7 +1343,7 @@
                 <div class="provider-buttons">
                   <button
                     class="ai-btn"
-                    data-provider="gemini-2-flash-preview"
+                    data-provider="gemini-3-flash-preview"
                     data-mode="chatbot"
                   >
                     3.0
@@ -1521,13 +1519,14 @@
         </div>
       </div>
     </div>
+   
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
     <script>
       // ==================== SOCKET AND ELEMENT INITIALIZATION ====================
-      //const socket = io("https://chatbot-al0x.onrender.com/");
-      const socket = io("https://chatbot-al0x.onrender.com/");
+      const socket = io("http://localhost:3000");
+       //const socket = io("https://chatbot-al0x.onrender.com/");
 
       // All element references (declare ONCE at the top)
       const messagesDiv = document.getElementById("messages");
@@ -2841,24 +2840,17 @@
         updateImagePreviews();
       };
 
-      // ==================== MESSAGING ====================
-      function addMessage(
-        text,
-        isUser,
-        images = [],
-        sender = null,
-        provider = null
-      ) {
-        const messageDiv = document.createElement("div");
-        const messageClass =
-          sender === "portal" ? "portal" : isUser ? "user" : "bot";
-        messageDiv.className = `message ${messageClass}`;
+     // ==================== MESSAGING ====================
+     function addMessage(text, isUser, images = [], sender = null, provider = null) {
+  const messageDiv = document.createElement("div");
+  const messageClass = sender === "portal" ? "portal" : isUser ? "user" : "bot";
+  messageDiv.className = `message ${messageClass}`;
 
-        let content = "";
+  let content = "";
 
         if (!isUser && provider) {
           const modelNames = {
-            "gemini-2-flash-preview": "🤖 Gemini 3.0 Flash-Preview",
+            "gemini-3-flash-preview": "🤖 Gemini 3.0 Flash-Preview",
             "gemini-25-flash": "🤖 Gemini 2.5 Flash",
             "gemini-25-flash-lite": "🤖 Gemini 2.5 Lite",
             Claude: "🧠 Claude Sonnet 4 (API)",
@@ -2871,108 +2863,104 @@
           }</div>`;
         }
 
-        if (images.length > 0) {
-          images.forEach((img) => {
-            content += `<img src="${img.data}" alt="${img.name}">`;
-          });
-        }
+  if (images.length > 0) {
+    images.forEach((img) => {
+      content += `<img src="${img.data}" alt="${img.name}">`;
+    });
+  }
 
-        // NEW: Render markdown for bot messages
-        if (!isUser && text) {
-          content += `<div class="message-content">${renderMarkdown(
-            text
-          )}</div>`;
-        } else {
-          content += `<div>${text}</div>`;
-        }
+  // NEW: Render markdown for bot messages
+  if (!isUser && text) {
+    content += `<div class="message-content">${renderMarkdown(text)}</div>`;
+  } else {
+    content += `<div>${text}</div>`;
+  }
 
-        messageDiv.innerHTML = content;
+  messageDiv.innerHTML = content;
+  
+  // Add copy buttons to code blocks
+  if (!isUser) {
+    addCopyButtonsToCodeBlocks(messageDiv);
+  }
+  
+  messagesDiv.appendChild(messageDiv);
 
-        // Add copy buttons to code blocks
-        if (!isUser) {
-          addCopyButtonsToCodeBlocks(messageDiv);
-        }
+  const chatContainer = document.querySelector(".chat-container");
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
-        messagesDiv.appendChild(messageDiv);
-
-        const chatContainer = document.querySelector(".chat-container");
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
-
-      // NEW: Markdown rendering function
+     // NEW: Markdown rendering function
       function renderMarkdown(text) {
-        // Configure marked options
-        marked.setOptions({
-          highlight: function (code, lang) {
-            if (lang && hljs.getLanguage(lang)) {
-              try {
-                return hljs.highlight(code, { language: lang }).value;
-              } catch (err) {
-                console.error("Highlight error:", err);
-              }
-            }
-            return hljs.highlightAuto(code).value;
-          },
-          breaks: true,
-          gfm: true,
-        });
-
-        return marked.parse(text);
+  // Configure marked options
+  marked.setOptions({
+    highlight: function(code, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return hljs.highlight(code, { language: lang }).value;
+        } catch (err) {
+          console.error('Highlight error:', err);
+        }
       }
+      return hljs.highlightAuto(code).value;
+    },
+    breaks: true,
+    gfm: true
+  });
+
+  return marked.parse(text);
+}
 
       // NEW: Add copy buttons to code blocks
       function addCopyButtonsToCodeBlocks(messageDiv) {
-        const codeBlocks = messageDiv.querySelectorAll("pre code");
-
-        codeBlocks.forEach((codeBlock) => {
-          const pre = codeBlock.parentElement;
-          const wrapper = document.createElement("div");
-          wrapper.className = "code-block-wrapper";
-
-          // Detect language
-          const classes = codeBlock.className.split(" ");
-          const langClass = classes.find((c) => c.startsWith("language-"));
-          const language = langClass
-            ? langClass.replace("language-", "")
-            : "code";
-
-          // Add language label
-          const langLabel = document.createElement("span");
-          langLabel.className = "code-language";
-          langLabel.textContent = language;
-
-          // Create copy button
-          const copyBtn = document.createElement("button");
-          copyBtn.className = "copy-code-btn";
-          copyBtn.textContent = "📋 Copy";
-
-          copyBtn.addEventListener("click", async () => {
-            const code = codeBlock.textContent;
-            try {
-              await navigator.clipboard.writeText(code);
-              copyBtn.textContent = "✅ Copied!";
-              copyBtn.classList.add("copied");
-
-              setTimeout(() => {
-                copyBtn.textContent = "📋 Copy";
-                copyBtn.classList.remove("copied");
-              }, 2000);
-            } catch (err) {
-              console.error("Copy failed:", err);
-              copyBtn.textContent = "❌ Failed";
-              setTimeout(() => {
-                copyBtn.textContent = "📋 Copy";
-              }, 2000);
-            }
-          });
-
-          // Wrap the pre element
-          pre.parentNode.insertBefore(wrapper, pre);
-          wrapper.appendChild(pre);
-          wrapper.appendChild(langLabel);
-          wrapper.appendChild(copyBtn);
-        });
+  const codeBlocks = messageDiv.querySelectorAll('pre code');
+  
+  codeBlocks.forEach((codeBlock) => {
+    const pre = codeBlock.parentElement;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper';
+    
+    // Detect language
+    const classes = codeBlock.className.split(' ');
+    const langClass = classes.find(c => c.startsWith('language-'));
+    const language = langClass ? langClass.replace('language-', '') : 'code';
+    
+    // Add language label
+    const langLabel = document.createElement('span');
+    langLabel.className = 'code-language';
+    langLabel.textContent = language;
+    
+    // Create copy button
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-code-btn';
+    copyBtn.textContent = '📋 Copy';
+    
+    copyBtn.addEventListener('click', async () => {
+      const code = codeBlock.textContent;
+      try {
+        await navigator.clipboard.writeText(code);
+        copyBtn.textContent = '✅ Copied!';
+        copyBtn.classList.add('copied');
+        
+        setTimeout(() => {
+          copyBtn.textContent = '📋 Copy';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+        copyBtn.textContent = '❌ Failed';
+        setTimeout(() => {
+          copyBtn.textContent = '📋 Copy';
+        }, 2000);
       }
+    });
+    
+    // Wrap the pre element
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+    wrapper.appendChild(langLabel);
+    wrapper.appendChild(copyBtn);
+  });
+}
 
       function showLoading() {
         const loadingDiv = document.createElement("div");
@@ -3170,23 +3158,19 @@
       } else {
         setupProviderButtons();
       }
-      // Click test functionality
-      document.addEventListener("DOMContentLoaded", function () {
-        console.log("🖱️  Click handler initialized");
 
-        // Track all clicks for debugging
-        let clickCount = 0;
-        document.addEventListener("click", function (e) {
-          clickCount++;
-          console.log(
-            `Click #${clickCount} detected on:`,
-            e.target.tagName,
-            e.target.className
-          );
-
-          // Visual feedback
-          const ripple = document.createElement("div");
-          ripple.style.cssText = `
+      document.addEventListener('DOMContentLoaded', function() {
+       //console.log('🖱️  Click handler initialized');
+    
+    // Track all clicks for debugging
+    let clickCount = 0;
+    document.addEventListener('click', function(e) {
+      clickCount++;
+      console.log(`Click #${clickCount} detected on:`, e.target.tagName, e.target.className);
+      
+      // Visual feedback
+      const ripple = document.createElement('div');
+      ripple.style.cssText = `
         position: fixed;
         left: ${e.clientX - 5}px;
         top: ${e.clientY - 5}px;
@@ -3198,15 +3182,15 @@
         animation: ripple 0.6s ease-out;
         z-index: 10000;
       `;
-          document.body.appendChild(ripple);
-          setTimeout(() => ripple.remove(), 600);
-        });
-
-        // Add ripple animation
-        if (!document.querySelector("#ripple-style")) {
-          const style = document.createElement("style");
-          style.id = "ripple-style";
-          style.textContent = `
+      document.body.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+    
+    // Add ripple animation
+    if (!document.querySelector('#ripple-style')) {
+      const style = document.createElement('style');
+      style.id = 'ripple-style';
+      style.textContent = `
         @keyframes ripple {
           0% {
             transform: scale(1);
@@ -3218,29 +3202,24 @@
           }
         }
       `;
-          document.head.appendChild(style);
-        }
-
-        // Log button click status
-        document.querySelectorAll("button").forEach((btn, index) => {
-          btn.addEventListener("click", function () {
-            console.log(
-              `✅ Button ${index} clicked successfully:`,
-              btn.textContent || btn.title
-            );
-          });
-        });
-
-        // Debug mode: Show clickable regions
-        if (window.location.search.includes("debug=true")) {
-          document
-            .querySelectorAll("button, input, textarea, .ai-btn, .action-btn")
-            .forEach((el) => {
-              el.style.outline = "2px solid rgba(0, 255, 0, 0.5)";
-            });
-          console.log("🐛 Debug mode: Clickable regions highlighted");
-        }
+      document.head.appendChild(style);
+    }
+    
+    // Log button click status
+    document.querySelectorAll('button').forEach((btn, index) => {
+      btn.addEventListener('click', function() {
+        console.log(`✅ Button ${index} clicked successfully:`, btn.textContent || btn.title);
       });
+    });
+    
+    // Debug mode: Show clickable regions
+    if (window.location.search.includes('debug=true')) {
+      document.querySelectorAll('button, input, textarea, .ai-btn, .action-btn').forEach(el => {
+        el.style.outline = '2px solid rgba(0, 255, 0, 0.5)';
+      });
+      console.log('🐛 Debug mode: Clickable regions highlighted');
+    }
+  });
     </script>
   </body>
 </html>

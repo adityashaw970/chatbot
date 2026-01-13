@@ -259,7 +259,7 @@ ipcMain.on("minimize-to-folder", () => {
       height: 5
     });
     
-    mainWindow.setResizable(false);
+    // mainWindow.setResizable(false);
   }
 });
 
@@ -351,10 +351,10 @@ function resetSpaceSequence() {
 function setupKeyboardHook() {
   keyboardListener = new GlobalKeyboardListener();
   
-  console.log('Keyboard hook initialized. Shortcuts active:');
-  console.log('  Space+Space+Space+A - Show/Hide Window');
-  console.log('  Space+Space+Space+S - Screenshot');
-  console.log('  Space+Space+Space+V - Voice Recording');
+  // console.log('Keyboard hook initialized. Shortcuts active:');
+  // console.log('  Space+Space+Space+A - Show/Hide Window');
+  // console.log('  Space+Space+Space+S - Screenshot');
+  // console.log('  Space+Space+Space+V - Voice Recording');
   
   keyboardListener.addListener(function (e, down) {
     if (e.state !== "DOWN") return;

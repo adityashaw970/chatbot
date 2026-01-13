@@ -1,164 +1,811 @@
-// // // main.js - Production overlay chatbot
+// // // // main.js - Production overlay chatbot
+// // // const { app, BrowserWindow, screen, ipcMain, desktopCapturer, Tray, Menu, nativeImage } = require('electron');
+// // // const path = require('path');
+// // // const { GlobalKeyboardListener } = require("node-global-key-listener");
+// // // const { spawn } = require('child_process');
+// // // const Tesseract = require('tesseract.js');
+
+// // // const AntiFocusEnhanced = require('./anti-focus-enhanced.js');
+
+// // // try { require('electron-reloader')(module); } catch (_) {}
+
+// // // let mainWindow;
+// // // let tray = null;
+// // // let isWindowVisible = false;
+// // // let watcherProcess = null;
+// // // let isExiting = false;
+// // // let currentDisplay = null;
+// // // let antiFocus = null;
+
+// // // const iconPath = path.join(__dirname, 'assets', 'dragon.ico');
+
+// // // // Watchdog process
+// // // function createWatchdog() {
+// // //   if (process.platform === 'win32') {
+// // //     const watchdogScript = `
+// // //       const { spawn } = require('child_process');
+// // //       const parentPid = parseInt(process.argv[1]);
+      
+// // //       function check() {
+// // //         try {
+// // //           process.kill(parentPid, 0);
+// // //           setTimeout(check, 3000);
+// // //         } catch (e) {
+// // //           const appPath = process.argv[0].replace('node.exe', 'electron.exe');
+// // //           spawn(appPath, [process.cwd()], { detached: true, stdio: 'ignore' }).unref();
+// // //           process.exit(0);
+// // //         }
+// // //       }
+// // //       check();
+// // //     `;
+    
+// // //     const fs = require('fs');
+// // //     const os = require('os');
+// // //     const watchdogPath = path.join(os.tmpdir(), `wd_${Date.now()}.js`);
+// // //     fs.writeFileSync(watchdogPath, watchdogScript);
+    
+// // //     watcherProcess = spawn('node', [watchdogPath, process.pid], {
+// // //       detached: true,
+// // //       stdio: 'ignore'
+// // //     });
+// // //     watcherProcess.unref();
+    
+// // //     console.log('✅ Watchdog started');
+// // //   }
+// // // }
+
+// // // // Create main window
+// // // async function createBackgroundWindow() {
+// // //   currentDisplay = screen.getPrimaryDisplay();
+// // //   const { width, height } = currentDisplay.workAreaSize;
+  
+// // //   mainWindow = new BrowserWindow({
+// // //     width: Math.floor(width / 3),
+// // //     height: Math.floor(height / 1.3),
+// // //     x: Math.floor(width - width / 3),
+// // //     y: Math.floor(height / 8),
+// // //     frame: false,
+// // //     transparent: true,
+// // //     alwaysOnTop: true,
+// // //     skipTaskbar: true,
+// // //     show: false,
+// // //     resizable: true,
+// // //     type: 'toolbar',
+// // //     icon: iconPath,
+    
+// // //     // CRITICAL: Enable clicks
+// // //     focusable: true,
+// // //     acceptFirstMouse: true,
+// // //     hasShadow: false,
+    
+// // //     webPreferences: {
+// // //       preload: path.join(__dirname, "preload.js"),
+// // //       nodeIntegration: false,
+// // //       contextIsolation: true,
+// // //       backgroundThrottling: false,
+// // //       sandbox: false,
+// // //       webviewTag: true,
+// // //       enableRemoteModule: false,
+// // //       devTools: false
+// // //     }
+// // //   });
+  
+// // //   // Initialize overlay system
+// // //   antiFocus = new AntiFocusEnhanced();
+  
+// // //   console.log('\n🔒 Starting Overlay System...\n');
+  
+// // //   // Apply protections BEFORE loading content
+// // //   await antiFocus.applyAllProtections(mainWindow);
+  
+// // //   // Small delay for protections to settle
+// // //   await new Promise(resolve => setTimeout(resolve, 300));
+  
+// // //   // Load UI
+// // //   await mainWindow.loadFile('index.html');
+// // //   mainWindow.setContentProtection(true);
+  
+// // //   // Show window
+// // //   mainWindow.show();
+// // //   isWindowVisible = true;
+  
+// // //   // Handle blur - DON'T steal focus, just maintain position
+// // //   mainWindow.on('blur', () => {
+// // //     setTimeout(() => {
+// // //       if (mainWindow && !mainWindow.isDestroyed() && isWindowVisible) {
+// // //         mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+// // //       }
+// // //     }, 100);
+// // //   });
+  
+// // //   // Update bounds when user moves window
+// // //   mainWindow.on('move', () => {
+// // //     if (antiFocus) {
+// // //       antiFocus.lastKnownBounds = mainWindow.getBounds();
+// // //     }
+// // //   });
+  
+// // //   mainWindow.on('resize', () => {
+// // //     if (antiFocus) {
+// // //       antiFocus.lastKnownBounds = mainWindow.getBounds();
+// // //     }
+// // //   });
+  
+// // //   // Block DevTools shortcuts
+// // //   mainWindow.webContents.on('before-input-event', (event, input) => {
+// // //     if (input.type === 'keyDown') {
+// // //       if ((input.key === 'F12') || 
+// // //           (input.key === 'I' && input.control && input.shift)) {
+// // //         event.preventDefault();
+// // //       }
+// // //     }
+// // //   });
+  
+// // //   // Handle display changes
+// // //   screen.on('display-added', handleDisplayChange);
+// // //   screen.on('display-removed', handleDisplayChange);
+// // //   screen.on('display-metrics-changed', handleDisplayChange);
+  
+// // //   // Health check every 30 seconds
+// // //   setInterval(async () => {
+// // //     if (mainWindow && !mainWindow.isDestroyed()) {
+// // //       const status = antiFocus.getStatus();
+      
+// // //       if (!status.monitorsActive.position || !status.monitorsActive.visibility) {
+// // //         console.warn('⚠️  Monitor degraded, repairing...');
+// // //         await antiFocus.quickRepair(mainWindow);
+// // //       }
+// // //     }
+// // //   }, 30000);
+  
+// // //   console.log('\n✅ Overlay active - buttons should work!\n');
+// // // }
+
+// // // function handleDisplayChange() {
+// // //   if (!mainWindow) return;
+  
+// // //   const windowBounds = mainWindow.getBounds();
+// // //   const displays = screen.getAllDisplays();
+  
+// // //   const displayWithWindow = displays.find(display => {
+// // //     const { x, y, width, height } = display.bounds;
+// // //     return windowBounds.x >= x && windowBounds.x < x + width &&
+// // //            windowBounds.y >= y && windowBounds.y < y + height;
+// // //   });
+  
+// // //   if (displayWithWindow) {
+// // //     currentDisplay = displayWithWindow;
+// // //   }
+// // // }
+
+// // // // Tray menu
+// // // function createTray() {
+// // //   const trayIcon = nativeImage.createFromPath(iconPath);
+// // //   const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
+  
+// // //   tray = new Tray(resizedIcon);
+  
+// // //   const status = antiFocus ? antiFocus.getStatus() : null;
+// // //   const features = status?.features || {};
+// // //   const monitors = status?.monitorsActive || {};
+  
+// // //   const allActive = features.overlayMode && (monitors.position && monitors.visibility);
+// // //   const statusText = allActive ? '✅ ACTIVE' : '⚠️  PARTIAL';
+  
+// // //   const contextMenu = Menu.buildFromTemplate([
+// // //     {
+// // //       label: 'Show/Hide Window',
+// // //       click: () => toggleWindow()
+// // //     },
+// // //     {
+// // //       label: 'Screenshot (Space+Space+Space+S)',
+// // //       click: () => {
+// // //         if (mainWindow) mainWindow.webContents.send('trigger-screenshot');
+// // //       }
+// // //     },
+// // //     { type: 'separator' },
+// // //     {
+// // //       label: `Status: ${statusText}`,
+// // //       enabled: false
+// // //     },
+// // //     {
+// // //       label: `  Overlay Mode: ${features.overlayMode ? '✅' : '❌'}`,
+// // //       enabled: false
+// // //     },
+// // //     {
+// // //       label: `  Capture Shield: ${features.captureProtection ? '✅' : 'ℹ️'}`,
+// // //       enabled: false
+// // //     },
+// // //     {
+// // //       label: 'Test Click',
+// // //       click: () => {
+// // //         if (mainWindow) {
+// // //           mainWindow.webContents.executeJavaScript(`
+// // //             alert('✅ Click test passed! Window is interactive.');
+// // //           `);
+// // //         }
+// // //       }
+// // //     },
+// // //     {
+// // //       label: 'Quick Repair',
+// // //       click: async () => {
+// // //         if (antiFocus && mainWindow) {
+// // //           await antiFocus.quickRepair(mainWindow);
+// // //           createTray();
+// // //         }
+// // //       }
+// // //     },
+// // //     { type: 'separator' },
+// // //     {
+// // //       label: 'Move to Display',
+// // //       submenu: screen.getAllDisplays().map((display, index) => ({
+// // //         label: `Display ${index + 1} (${display.bounds.width}x${display.bounds.height})`,
+// // //         click: () => moveToDisplay(display)
+// // //       }))
+// // //     },
+// // //     { type: 'separator' },
+// // //     {
+// // //       label: 'Quit',
+// // //       click: () => {
+// // //         isExiting = true;
+// // //         if (antiFocus) antiFocus.stopAllMonitors();
+// // //         if (watcherProcess) watcherProcess.kill();
+// // //         app.quit();
+// // //       }
+// // //     }
+// // //   ]);
+  
+// // //   tray.setToolTip('Dragon Chatbot - Overlay Mode');
+// // //   tray.setContextMenu(contextMenu);
+// // //   tray.on('click', () => toggleWindow());
+// // // }
+
+// // // function moveToDisplay(display) {
+// // //   if (!mainWindow) return;
+  
+// // //   const { x, y, width, height } = display.workArea;
+  
+// // //   mainWindow.setBounds({
+// // //     x: Math.floor(x + width - width / 3),
+// // //     y: Math.floor(y + height / 8),
+// // //     width: Math.floor(width / 3),
+// // //     height: Math.floor(height / 1.3)
+// // //   });
+  
+// // //   mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+// // //   currentDisplay = display;
+  
+// // //   if (antiFocus) {
+// // //     antiFocus.lastKnownBounds = mainWindow.getBounds();
+// // //   }
+// // // }
+
+// // // function toggleWindow() {
+// // //   if (!mainWindow) return;
+  
+// // //   if (isWindowVisible) {
+// // //     mainWindow.hide();
+// // //     isWindowVisible = false;
+// // //   } else {
+// // //     mainWindow.show();
+// // //     isWindowVisible = true;
+// // //     mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+// // //   }
+// // // }
+
+// // // // IPC Handlers
+// // // ipcMain.handle('extract-text-from-image', async (event, imageData) => {
+// // //   try {
+// // //     const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+// // //     const buffer = Buffer.from(base64Data, 'base64');
+// // //     const { data: { text } } = await Tesseract.recognize(buffer, 'eng');
+// // //     return { success: true, text: text.trim(), length: text.trim().length };
+// // //   } catch (error) {
+// // //     console.error('OCR error:', error);
+// // //     return { success: false, error: error.message };
+// // //   }
+// // // });
+
+// // // ipcMain.on("close-window", () => {
+// // //   if (mainWindow) {
+// // //     mainWindow.hide();
+// // //     isWindowVisible = false;
+// // //   }
+// // // });
+
+// // // ipcMain.on("minimize-to-folder", () => {
+// // //   if (mainWindow && antiFocus) {
+// // //     const currentBounds = mainWindow.getBounds();
+// // //     mainWindow.setBounds({
+// // //       x: currentBounds.x,
+// // //       y: currentBounds.y,
+// // //       width: 5,
+// // //       height: 5
+// // //     });
+// // //     mainWindow.setResizable(false);
+// // //     antiFocus.lastKnownBounds = mainWindow.getBounds();
+// // //   }
+// // // });
+
+// // // ipcMain.on("restore-from-folder", () => {
+// // //   if (mainWindow && antiFocus) {
+// // //     const { width, height } = currentDisplay.workAreaSize;
+// // //     const currentBounds = mainWindow.getBounds();
+// // //     mainWindow.setBounds({
+// // //       x: currentBounds.x,
+// // //       y: currentBounds.y,
+// // //       width: Math.floor(width / 3),
+// // //       height: Math.floor(height / 1.3)
+// // //     });
+// // //     mainWindow.setResizable(true);
+// // //     antiFocus.lastKnownBounds = mainWindow.getBounds();
+// // //   }
+// // // });
+
+// // // ipcMain.handle('capture-screenshot', async () => {
+// // //   try {
+// // //     const sources = await desktopCapturer.getSources({
+// // //       types: ['screen'],
+// // //       thumbnailSize: { width: 3840, height: 2160 }
+// // //     });
+    
+// // //     if (sources.length > 0) {
+// // //       const windowBounds = mainWindow.getBounds();
+// // //       const displays = screen.getAllDisplays();
+      
+// // //       let targetDisplay = displays[0];
+// // //       for (const display of displays) {
+// // //         const { x, y, width, height } = display.bounds;
+// // //         if (windowBounds.x >= x && windowBounds.x < x + width) {
+// // //           targetDisplay = display;
+// // //           break;
+// // //         }
+// // //       }
+      
+// // //       const displayIndex = displays.indexOf(targetDisplay);
+// // //       const source = sources[displayIndex] || sources[0];
+      
+// // //       return source.thumbnail.toDataURL();
+// // //     }
+// // //     return null;
+// // //   } catch (error) {
+// // //     console.error('Screenshot error:', error);
+// // //     return null;
+// // //   }
+// // // });
+
+// // // ipcMain.handle('capture-full-page', async () => {
+// // //   try {
+// // //     const image = await mainWindow.webContents.capturePage();
+// // //     return image.toDataURL();
+// // //   } catch (error) {
+// // //     console.error('Full page capture error:', error);
+// // //     return null;
+// // //   }
+// // // });
+
+// // // ipcMain.handle('get-audio-sources', async () => {
+// // //   try {
+// // //     const sources = await desktopCapturer.getSources({
+// // //       types: ['window', 'screen']
+// // //     });
+// // //     return sources.map(source => ({
+// // //       id: source.id,
+// // //       name: source.name,
+// // //       thumbnail: source.thumbnail.toDataURL()
+// // //     }));
+// // //   } catch (error) {
+// // //     console.error('Audio sources error:', error);
+// // //     return [];
+// // //   }
+// // // });
+
+// // // // Keyboard shortcuts
+// // // let spaceCount = 0;
+// // // let lastSpaceTime = 0;
+// // // let isWaitingForAction = false;
+// // // const SPACE_TIMEOUT = 800;
+// // // const ACTION_TIMEOUT = 1500;
+// // // let keyboardListener = null;
+
+// // // function resetSpaceSequence() {
+// // //   spaceCount = 0;
+// // //   isWaitingForAction = false;
+// // //   lastSpaceTime = 0;
+// // // }
+
+// // // function setupKeyboardHook() {
+// // //   keyboardListener = new GlobalKeyboardListener();
+  
+// // //   console.log('\n⌨️  Global Shortcuts:');
+// // //   console.log('  Space+Space+Space+A - Toggle Window');
+// // //   console.log('  Space+Space+Space+S - Screenshot');
+// // //   console.log('  Space+Space+Space+O - OCR');
+// // //   console.log('  Space+Space+Space+V - Voice Record');
+// // //   console.log('  Space+Space+Space+R - Quick Repair\n');
+  
+// // //   keyboardListener.addListener(function (e, down) {
+// // //     if (e.state !== "DOWN") return;
+    
+// // //     const now = Date.now();
+// // //     const keyName = e.name.toUpperCase();
+    
+// // //     if (keyName === "SPACE") {
+// // //       if (now - lastSpaceTime > SPACE_TIMEOUT || isWaitingForAction) {
+// // //         resetSpaceSequence();
+// // //       }
+      
+// // //       spaceCount++;
+// // //       lastSpaceTime = now;
+      
+// // //       if (spaceCount === 3) {
+// // //         isWaitingForAction = true;
+// // //         setTimeout(() => {
+// // //           if (isWaitingForAction) resetSpaceSequence();
+// // //         }, ACTION_TIMEOUT);
+// // //       }
+// // //     }
+// // //     else if (isWaitingForAction) {
+// // //       if (keyName === "A") {
+// // //         toggleWindow();
+// // //       } else if (keyName === "S") {
+// // //         if (mainWindow) {
+// // //           mainWindow.webContents.send('trigger-screenshot');
+// // //           if (!isWindowVisible) {
+// // //             mainWindow.show();
+// // //             isWindowVisible = true;
+// // //           }
+// // //         }
+// // //       } else if (keyName === "V") {
+// // //         if (mainWindow) {
+// // //           mainWindow.webContents.send('trigger-voice-record');
+// // //           if (!isWindowVisible) {
+// // //             mainWindow.show();
+// // //             isWindowVisible = true;
+// // //           }
+// // //         }
+// // //       } else if (keyName === "O") {
+// // //         if (mainWindow) {
+// // //           mainWindow.webContents.send('trigger-ocr');
+// // //           if (!isWindowVisible) {
+// // //             mainWindow.show();
+// // //             isWindowVisible = true;
+// // //           }
+// // //         }
+// // //       } else if (keyName === "R") {
+// // //         if (antiFocus && mainWindow) {
+// // //           console.log('🔧 Quick repair triggered');
+// // //           antiFocus.quickRepair(mainWindow).then(() => {
+// // //             console.log('✅ Repair done');
+// // //             createTray();
+// // //           });
+// // //         }
+// // //       }
+// // //       resetSpaceSequence();
+// // //     } else if (spaceCount > 0) {
+// // //       resetSpaceSequence();
+// // //     }
+// // //   });
+// // // }
+
+// // // // App initialization
+// // // app.whenReady().then(async () => {
+// // //   console.log('\n🚀 Starting Overlay Chatbot...\n');
+// // //   console.log('📋 Features:');
+// // //   console.log('  • Clickable Overlay Mode');
+// // //   console.log('  • Sandbox Compatible');
+// // //   console.log('  • Auto-Recovery System');
+// // //   console.log('  • Optional Capture Protection\n');
+  
+// // //   await createBackgroundWindow();
+// // //   createTray();
+// // //   setupKeyboardHook();
+// // //   createWatchdog();
+  
+// // //   console.log('✅ Application ready!\n');
+// // //   console.log('💡 All buttons should be clickable now\n');
+// // // });
+
+// // // app.on('will-quit', (event) => {
+// // //   if (keyboardListener) {
+// // //     keyboardListener.kill();
+// // //   }
+  
+// // //   if (antiFocus) {
+// // //     antiFocus.stopAllMonitors();
+// // //   }
+  
+// // //   if (!isExiting && watcherProcess) {
+// // //     console.log('Unexpected shutdown - watchdog will restart');
+// // //   }
+// // // });
+
+// // // app.on('window-all-closed', (e) => {
+// // //   e.preventDefault();
+// // // });
+
+// // // app.on('activate', () => {
+// // //   if (BrowserWindow.getAllWindows().length === 0) {
+// // //     createBackgroundWindow();
+// // //   }
+// // // });
+
+// // // // Single instance lock
+// // // const gotTheLock = app.requestSingleInstanceLock();
+
+// // // if (!gotTheLock) {
+// // //   app.quit();
+// // // } else {
+// // //   app.on('second-instance', () => {
+// // //     if (mainWindow) {
+// // //       if (!isWindowVisible) {
+// // //         mainWindow.show();
+// // //         isWindowVisible = true;
+// // //       }
+// // //       mainWindow.focus();
+// // //     }
+// // //   });
+// // // }
+
+// // // app.setPath("userData", path.join(app.getPath("userData"), "myAppData"));
+// //  // // preload.js - Enhanced with anti-detection features
+// // // const { contextBridge, ipcRenderer } = require('electron');
+
+// // // // Anti-debugging techniques
+// // // function antiDebug() {
+// // //   // Detect DevTools
+// // //   const threshold = 160;
+// // //   let devtoolsOpen = false;
+  
+// // //   const detectDevTools = () => {
+// // //     const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+// // //     const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+    
+// // //     if (widthThreshold || heightThreshold) {
+// // //       if (!devtoolsOpen) {
+// // //         devtoolsOpen = true;
+// // //         console.log('DevTools detected - some features disabled');
+// // //       }
+// // //     } else {
+// // //       devtoolsOpen = false;
+// // //     }
+// // //   };
+  
+// // //   setInterval(detectDevTools, 1000);
+  
+// // //   // Prevent right-click context menu
+// // //   window.addEventListener('contextmenu', (e) => {
+// // //     e.preventDefault();
+// // //     return false;
+// // //   });
+  
+// // //   // Detect debugger
+// // //   setInterval(() => {
+// // //     const start = performance.now();
+// // //     debugger;
+// // //     const end = performance.now();
+// // //     if (end - start > 100) {
+// // //       console.log('Debugger detected');
+// // //     }
+// // //   }, 3000);
+// // // }
+
+// // // // Initialize anti-debug on load
+// // // window.addEventListener('DOMContentLoaded', antiDebug);
+
+// // // // Secure API exposure
+// // // contextBridge.exposeInMainWorld('electronAPI', {
+// // //   // Window controls
+// // //   closeWindow: () => ipcRenderer.send('close-window'),
+// // //   minimizeToFolder: () => ipcRenderer.send('minimize-to-folder'),
+// // //   restoreFromFolder: () => ipcRenderer.send('restore-from-folder'),
+  
+// // //   // Screenshot functionality
+// // //   captureScreen: () => ipcRenderer.invoke('capture-screenshot'),
+// // //   captureFullPage: () => ipcRenderer.invoke('capture-full-page'),
+  
+// // //   // Audio/media sources
+// // //   getAudioSources: () => ipcRenderer.invoke('get-audio-sources'),
+  
+// // //   // OCR functionality
+// // //   extractTextFromImage: (imageData) => ipcRenderer.invoke('extract-text-from-image', imageData),
+  
+// // //   // Event listeners with one-time setup
+// // //   onOcrTrigger: (callback) => {
+// // //     ipcRenderer.on('trigger-ocr', callback);
+// // //   },
+  
+// // //   onScreenshotTrigger: (callback) => {
+// // //     ipcRenderer.on('trigger-screenshot', callback);
+// // //   },
+  
+// // //   onVoiceRecordTrigger: (callback) => {
+// // //     ipcRenderer.on('trigger-voice-record', callback);
+// // //   },
+  
+// // //   onRestore: (callback) => {
+// // //     ipcRenderer.on('restore-window', callback);
+// // //   },
+  
+// // //   onCaptureDetected: (callback) => {
+// // //     ipcRenderer.on('capture-detected', (event, data) => {
+// // //       console.warn('Screen capture detected!');
+// // //       callback(event, data);
+// // //     });
+// // //   },
+  
+// // //   // Anti-detection utilities
+// // //   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
+// // //   checkSandbox: () => ipcRenderer.invoke('check-sandbox'),
+  
+// // //   // Secure storage (encrypted)
+// // //   secureStore: {
+// // //     set: (key, value) => ipcRenderer.invoke('secure-store-set', key, value),
+// // //     get: (key) => ipcRenderer.invoke('secure-store-get', key),
+// // //     delete: (key) => ipcRenderer.invoke('secure-store-delete', key)
+// // //   }
+// // // });
+
+// // // // Additional security: Prevent navigation
+// // // window.addEventListener('beforeunload', (e) => {
+// // //   // Prevent accidental navigation
+// // //   const message = 'Are you sure you want to leave?';
+// // //   e.returnValue = message;
+// // //   return message;
+// // // });
+
+// // // // Monitor for suspicious activity
+// // // const activityMonitor = {
+// // //   mouseClicks: 0,
+// // //   keyPresses: 0,
+// // //   lastActivity: Date.now(),
+  
+// // //   recordActivity(type) {
+// // //     this.lastActivity = Date.now();
+// // //     if (type === 'click') this.mouseClicks++;
+// // //     if (type === 'keypress') this.keyPresses++;
+// // //   },
+  
+// // //   isHuman() {
+// // //     // Simple bot detection
+// // //     const timeSinceLastActivity = Date.now() - this.lastActivity;
+// // //     return this.mouseClicks > 5 && this.keyPresses > 10 && timeSinceLastActivity < 300000;
+// // //   }
+// // // };
+
+// // // // Track user activity
+// // // window.addEventListener('click', () => activityMonitor.recordActivity('click'));
+// // // window.addEventListener('keypress', () => activityMonitor.recordActivity('keypress'));
+
+// // // // Expose activity monitor
+// // // contextBridge.exposeInMainWorld('security', {
+// // //   isHumanActivity: () => activityMonitor.isHuman(),
+// // //   getActivityStats: () => ({
+// // //     clicks: activityMonitor.mouseClicks,
+// // //     keypresses: activityMonitor.keyPresses,
+// // //     lastActivity: activityMonitor.lastActivity
+// // //   })
+// // // });
+
+// // // // Prevent memory inspection
+// // // Object.freeze(Object.prototype);
+// // // Object.freeze(Array.prototype);
+// // // Object.freeze(Function.prototype);
+
+// // // console.log('🔒 Enhanced security preload initialized');
+
+
+// // //main.js
 // // const { app, BrowserWindow, screen, ipcMain, desktopCapturer, Tray, Menu, nativeImage } = require('electron');
 // // const path = require('path');
 // // const { GlobalKeyboardListener } = require("node-global-key-listener");
 // // const { spawn } = require('child_process');
 // // const Tesseract = require('tesseract.js');
-
-// // const AntiFocusEnhanced = require('./anti-focus-enhanced.js');
-
 // // try { require('electron-reloader')(module); } catch (_) {}
 
+// // app.commandLine.appendSwitch("disable-gpu-shader-disk-cache");
+// // app.commandLine.appendSwitch("disable-gpu-program-cache");
+// // app.commandLine.appendSwitch("disable-gpu");
+
 // // let mainWindow;
-// // let tray = null;
+// // let tray = null; 
 // // let isWindowVisible = false;
 // // let watcherProcess = null;
 // // let isExiting = false;
 // // let currentDisplay = null;
-// // let antiFocus = null;
 
 // // const iconPath = path.join(__dirname, 'assets', 'dragon.ico');
 
-// // // Watchdog process
 // // function createWatchdog() {
 // //   if (process.platform === 'win32') {
 // //     const watchdogScript = `
 // //       const { spawn } = require('child_process');
-// //       const parentPid = parseInt(process.argv[1]);
+// //       const path = require('path');
       
-// //       function check() {
+// //       const appPath = process.argv[2];
+// //       const parentPid = parseInt(process.argv[3]);
+      
+// //       function checkParent() {
 // //         try {
 // //           process.kill(parentPid, 0);
-// //           setTimeout(check, 3000);
+// //           setTimeout(checkParent, 2000);
 // //         } catch (e) {
-// //           const appPath = process.argv[0].replace('node.exe', 'electron.exe');
-// //           spawn(appPath, [process.cwd()], { detached: true, stdio: 'ignore' }).unref();
+// //           console.log('Parent process died, restarting...');
+// //           spawn(appPath, [], {
+// //             detached: true,
+// //             stdio: 'ignore'
+// //           }).unref();
 // //           process.exit(0);
 // //         }
 // //       }
-// //       check();
+      
+// //       checkParent();
 // //     `;
     
 // //     const fs = require('fs');
 // //     const os = require('os');
-// //     const watchdogPath = path.join(os.tmpdir(), `wd_${Date.now()}.js`);
+// //     const watchdogPath = path.join(os.tmpdir(), 'electron-watchdog.js');
 // //     fs.writeFileSync(watchdogPath, watchdogScript);
     
-// //     watcherProcess = spawn('node', [watchdogPath, process.pid], {
+// //     watcherProcess = spawn('node', [watchdogPath, process.execPath, process.pid], {
 // //       detached: true,
 // //       stdio: 'ignore'
 // //     });
 // //     watcherProcess.unref();
     
-// //     console.log('✅ Watchdog started');
+// //     console.log('Watchdog process started - app will auto-restart if killed');
 // //   }
 // // }
 
-// // // Create main window
-// // async function createBackgroundWindow() {
+// // function createBackgroundWindow() {
 // //   currentDisplay = screen.getPrimaryDisplay();
 // //   const { width, height } = currentDisplay.workAreaSize;
   
 // //   mainWindow = new BrowserWindow({
-// //     width: Math.floor(width / 3),
-// //     height: Math.floor(height / 1.3),
-// //     x: Math.floor(width - width / 3),
-// //     y: Math.floor(height / 8),
+// //     width: Math.floor((width)/3),
+// //     height: Math.floor((height/1.3)),
+// //     x: Math.floor(width - (width)/3),
+// //     y: Math.floor((height/8)),
 // //     frame: false,
 // //     transparent: true,
 // //     alwaysOnTop: true,
-// //     skipTaskbar: true,
-// //     show: false,
+// //     skipTaskbar: false,
+// //     show: true,
 // //     resizable: true,
 // //     type: 'toolbar',
 // //     icon: iconPath,
-    
-// //     // CRITICAL: Enable clicks
-// //     focusable: true,
-// //     acceptFirstMouse: true,
-// //     hasShadow: false,
-    
 // //     webPreferences: {
 // //       preload: path.join(__dirname, "preload.js"),
 // //       nodeIntegration: false,
 // //       contextIsolation: true,
 // //       backgroundThrottling: false,
-// //       sandbox: false,
-// //       webviewTag: true,
-// //       enableRemoteModule: false,
-// //       devTools: false
+// //       webviewTag: true // Enable webview for browser integration
 // //     }
 // //   });
   
-// //   // Initialize overlay system
-// //   antiFocus = new AntiFocusEnhanced();
-  
-// //   console.log('\n🔒 Starting Overlay System...\n');
-  
-// //   // Apply protections BEFORE loading content
-// //   await antiFocus.applyAllProtections(mainWindow);
-  
-// //   // Small delay for protections to settle
-// //   await new Promise(resolve => setTimeout(resolve, 300));
-  
-// //   // Load UI
-// //   await mainWindow.loadFile('index.html');
+// //   mainWindow.loadFile('index.html');
 // //   mainWindow.setContentProtection(true);
   
-// //   // Show window
-// //   mainWindow.show();
 // //   isWindowVisible = true;
+// //   mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
   
-// //   // Handle blur - DON'T steal focus, just maintain position
 // //   mainWindow.on('blur', () => {
 // //     setTimeout(() => {
-// //       if (mainWindow && !mainWindow.isDestroyed() && isWindowVisible) {
+// //       if (mainWindow && !mainWindow.isDestroyed()) {
 // //         mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
 // //       }
-// //     }, 100);
+// //     }, 10);
 // //   });
   
-// //   // Update bounds when user moves window
-// //   mainWindow.on('move', () => {
-// //     if (antiFocus) {
-// //       antiFocus.lastKnownBounds = mainWindow.getBounds();
-// //     }
+// //   mainWindow.on('focus', () => {
+// //     mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
 // //   });
   
-// //   mainWindow.on('resize', () => {
-// //     if (antiFocus) {
-// //       antiFocus.lastKnownBounds = mainWindow.getBounds();
-// //     }
-// //   });
-  
-// //   // Block DevTools shortcuts
-// //   mainWindow.webContents.on('before-input-event', (event, input) => {
-// //     if (input.type === 'keyDown') {
-// //       if ((input.key === 'F12') || 
-// //           (input.key === 'I' && input.control && input.shift)) {
-// //         event.preventDefault();
-// //       }
-// //     }
-// //   });
-  
-// //   // Handle display changes
 // //   screen.on('display-added', handleDisplayChange);
 // //   screen.on('display-removed', handleDisplayChange);
 // //   screen.on('display-metrics-changed', handleDisplayChange);
   
-// //   // Health check every 30 seconds
-// //   setInterval(async () => {
-// //     if (mainWindow && !mainWindow.isDestroyed()) {
-// //       const status = antiFocus.getStatus();
-      
-// //       if (!status.monitorsActive.position || !status.monitorsActive.visibility) {
-// //         console.warn('⚠️  Monitor degraded, repairing...');
-// //         await antiFocus.quickRepair(mainWindow);
-// //       }
-// //     }
-// //   }, 30000);
-  
-// //   console.log('\n✅ Overlay active - buttons should work!\n');
+// //   monitorScreenCapture();
 // // }
 
 // // function handleDisplayChange() {
@@ -169,69 +816,36 @@
   
 // //   const displayWithWindow = displays.find(display => {
 // //     const { x, y, width, height } = display.bounds;
-// //     return windowBounds.x >= x && windowBounds.x < x + width &&
-// //            windowBounds.y >= y && windowBounds.y < y + height;
+// //     return windowBounds.x >= x && 
+// //            windowBounds.x < x + width &&
+// //            windowBounds.y >= y && 
+// //            windowBounds.y < y + height;
 // //   });
   
 // //   if (displayWithWindow) {
 // //     currentDisplay = displayWithWindow;
+// //     console.log('Window is on display:', currentDisplay.id);
 // //   }
 // // }
 
-// // // Tray menu
 // // function createTray() {
 // //   const trayIcon = nativeImage.createFromPath(iconPath);
 // //   const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
   
 // //   tray = new Tray(resizedIcon);
   
-// //   const status = antiFocus ? antiFocus.getStatus() : null;
-// //   const features = status?.features || {};
-// //   const monitors = status?.monitorsActive || {};
-  
-// //   const allActive = features.overlayMode && (monitors.position && monitors.visibility);
-// //   const statusText = allActive ? '✅ ACTIVE' : '⚠️  PARTIAL';
-  
 // //   const contextMenu = Menu.buildFromTemplate([
 // //     {
 // //       label: 'Show/Hide Window',
-// //       click: () => toggleWindow()
+// //       click: () => {
+// //         toggleWindow();
+// //       }
 // //     },
 // //     {
 // //       label: 'Screenshot (Space+Space+Space+S)',
 // //       click: () => {
-// //         if (mainWindow) mainWindow.webContents.send('trigger-screenshot');
-// //       }
-// //     },
-// //     { type: 'separator' },
-// //     {
-// //       label: `Status: ${statusText}`,
-// //       enabled: false
-// //     },
-// //     {
-// //       label: `  Overlay Mode: ${features.overlayMode ? '✅' : '❌'}`,
-// //       enabled: false
-// //     },
-// //     {
-// //       label: `  Capture Shield: ${features.captureProtection ? '✅' : 'ℹ️'}`,
-// //       enabled: false
-// //     },
-// //     {
-// //       label: 'Test Click',
-// //       click: () => {
 // //         if (mainWindow) {
-// //           mainWindow.webContents.executeJavaScript(`
-// //             alert('✅ Click test passed! Window is interactive.');
-// //           `);
-// //         }
-// //       }
-// //     },
-// //     {
-// //       label: 'Quick Repair',
-// //       click: async () => {
-// //         if (antiFocus && mainWindow) {
-// //           await antiFocus.quickRepair(mainWindow);
-// //           createTray();
+// //           mainWindow.webContents.send('trigger-screenshot');
 // //         }
 // //       }
 // //     },
@@ -245,19 +859,27 @@
 // //     },
 // //     { type: 'separator' },
 // //     {
-// //       label: 'Quit',
+// //       label: 'Auto-Restart: Enabled',
+// //       enabled: false
+// //     },
+// //     {
+// //       label: 'Quit (Permanently)',
 // //       click: () => {
 // //         isExiting = true;
-// //         if (antiFocus) antiFocus.stopAllMonitors();
-// //         if (watcherProcess) watcherProcess.kill();
+// //         if (watcherProcess) {
+// //           watcherProcess.kill();
+// //         }
 // //         app.quit();
 // //       }
 // //     }
 // //   ]);
   
-// //   tray.setToolTip('Dragon Chatbot - Overlay Mode');
+// //   tray.setToolTip('Dragon Chatbot');
 // //   tray.setContextMenu(contextMenu);
-// //   tray.on('click', () => toggleWindow());
+  
+// //   tray.on('click', () => {
+// //     toggleWindow();
+// //   });
 // // }
 
 // // function moveToDisplay(display) {
@@ -266,18 +888,16 @@
 // //   const { x, y, width, height } = display.workArea;
   
 // //   mainWindow.setBounds({
-// //     x: Math.floor(x + width - width / 3),
-// //     y: Math.floor(y + height / 8),
-// //     width: Math.floor(width / 3),
-// //     height: Math.floor(height / 1.3)
+// //     x: Math.floor(x + width - (width/3)),
+// //     y: Math.floor(y + (height/8)),
+// //     width: Math.floor((width)/3),
+// //     height: Math.floor((height/1.3))
 // //   });
   
 // //   mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-// //   currentDisplay = display;
   
-// //   if (antiFocus) {
-// //     antiFocus.lastKnownBounds = mainWindow.getBounds();
-// //   }
+// //   currentDisplay = display;
+// //   console.log('Moved window to display:', display.id);
 // // }
 
 // // function toggleWindow() {
@@ -293,15 +913,27 @@
 // //   }
 // // }
 
-// // // IPC Handlers
+
 // // ipcMain.handle('extract-text-from-image', async (event, imageData) => {
 // //   try {
+// //     // console.log('Starting OCR text extraction...');
+    
+// //     // Convert base64 to buffer
 // //     const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
 // //     const buffer = Buffer.from(base64Data, 'base64');
-// //     const { data: { text } } = await Tesseract.recognize(buffer, 'eng');
-// //     return { success: true, text: text.trim(), length: text.trim().length };
+    
+// //     // Perform OCR
+// //     const { data: { text } } = await Tesseract.recognize(
+// //       buffer,
+// //       'eng',
+      
+// //     );
+    
+// //     // console.log('OCR completed. Extracted text length:', text.length);
+// //     return { success: true, text: text.trim() };
+    
 // //   } catch (error) {
-// //     console.error('OCR error:', error);
+// //     console.error('OCR extraction error:', error);
 // //     return { success: false, error: error.message };
 // //   }
 // // });
@@ -314,31 +946,31 @@
 // // });
 
 // // ipcMain.on("minimize-to-folder", () => {
-// //   if (mainWindow && antiFocus) {
+// //   if (mainWindow) {
 // //     const currentBounds = mainWindow.getBounds();
+    
 // //     mainWindow.setBounds({
 // //       x: currentBounds.x,
 // //       y: currentBounds.y,
 // //       width: 5,
 // //       height: 5
 // //     });
+    
 // //     mainWindow.setResizable(false);
-// //     antiFocus.lastKnownBounds = mainWindow.getBounds();
 // //   }
 // // });
 
 // // ipcMain.on("restore-from-folder", () => {
-// //   if (mainWindow && antiFocus) {
-// //     const { width, height } = currentDisplay.workAreaSize;
+// //   if (mainWindow) {
+// //     const { width, height } = currentDisplay.workAreaSize;   
 // //     const currentBounds = mainWindow.getBounds();
+    
 // //     mainWindow.setBounds({
 // //       x: currentBounds.x,
 // //       y: currentBounds.y,
-// //       width: Math.floor(width / 3),
-// //       height: Math.floor(height / 1.3)
+// //       width: Math.floor((width)/3),
+// //       height: Math.floor((height)/1.3)
 // //     });
-// //     mainWindow.setResizable(true);
-// //     antiFocus.lastKnownBounds = mainWindow.getBounds();
 // //   }
 // // });
 
@@ -369,7 +1001,7 @@
 // //     }
 // //     return null;
 // //   } catch (error) {
-// //     console.error('Screenshot error:', error);
+// //     console.error('Screenshot capture error:', error);
 // //     return null;
 // //   }
 // // });
@@ -395,12 +1027,11 @@
 // //       thumbnail: source.thumbnail.toDataURL()
 // //     }));
 // //   } catch (error) {
-// //     console.error('Audio sources error:', error);
+// //     console.error('Error getting audio sources:', error);
 // //     return [];
 // //   }
 // // });
 
-// // // Keyboard shortcuts
 // // let spaceCount = 0;
 // // let lastSpaceTime = 0;
 // // let isWaitingForAction = false;
@@ -417,12 +1048,10 @@
 // // function setupKeyboardHook() {
 // //   keyboardListener = new GlobalKeyboardListener();
   
-// //   console.log('\n⌨️  Global Shortcuts:');
-// //   console.log('  Space+Space+Space+A - Toggle Window');
+// //   console.log('Keyboard hook initialized. Shortcuts active:');
+// //   console.log('  Space+Space+Space+A - Show/Hide Window');
 // //   console.log('  Space+Space+Space+S - Screenshot');
-// //   console.log('  Space+Space+Space+O - OCR');
-// //   console.log('  Space+Space+Space+V - Voice Record');
-// //   console.log('  Space+Space+Space+R - Quick Repair\n');
+// //   console.log('  Space+Space+Space+V - Voice Recording');
   
 // //   keyboardListener.addListener(function (e, down) {
 // //     if (e.state !== "DOWN") return;
@@ -440,70 +1069,66 @@
       
 // //       if (spaceCount === 3) {
 // //         isWaitingForAction = true;
+// //         console.log('Triple space detected! Waiting for action key (A/S/V)...');
+        
 // //         setTimeout(() => {
-// //           if (isWaitingForAction) resetSpaceSequence();
+// //           if (isWaitingForAction) {
+// //             console.log('Action timeout - sequence reset');
+// //             resetSpaceSequence();
+// //           }
 // //         }, ACTION_TIMEOUT);
 // //       }
 // //     }
-// //     else if (isWaitingForAction) {
-// //       if (keyName === "A") {
-// //         toggleWindow();
-// //       } else if (keyName === "S") {
-// //         if (mainWindow) {
-// //           mainWindow.webContents.send('trigger-screenshot');
-// //           if (!isWindowVisible) {
-// //             mainWindow.show();
-// //             isWindowVisible = true;
-// //           }
-// //         }
-// //       } else if (keyName === "V") {
-// //         if (mainWindow) {
-// //           mainWindow.webContents.send('trigger-voice-record');
-// //           if (!isWindowVisible) {
-// //             mainWindow.show();
-// //             isWindowVisible = true;
-// //           }
-// //         }
-// //       } else if (keyName === "O") {
-// //         if (mainWindow) {
-// //           mainWindow.webContents.send('trigger-ocr');
-// //           if (!isWindowVisible) {
-// //             mainWindow.show();
-// //             isWindowVisible = true;
-// //           }
-// //         }
-// //       } else if (keyName === "R") {
-// //         if (antiFocus && mainWindow) {
-// //           console.log('🔧 Quick repair triggered');
-// //           antiFocus.quickRepair(mainWindow).then(() => {
-// //             console.log('✅ Repair done');
-// //             createTray();
-// //           });
+// //     else if (keyName === "A" && isWaitingForAction) {
+// //       console.log('Space Space Space A - Toggle Window');
+// //       toggleWindow();
+// //       resetSpaceSequence();
+// //     }
+// //     else if (keyName === "S" && isWaitingForAction) {
+// //       console.log('Space Space Space S - Screenshot');
+// //       if (mainWindow) {
+// //         mainWindow.webContents.send('trigger-screenshot');
+// //         if (!isWindowVisible) {
+// //           mainWindow.show();
+// //           isWindowVisible = true;
 // //         }
 // //       }
 // //       resetSpaceSequence();
-// //     } else if (spaceCount > 0) {
+// //     }
+// //     else if (keyName === "V" && isWaitingForAction) {
+// //       console.log('Space Space Space V - Voice Recording');
+// //       if (mainWindow) {
+// //         mainWindow.webContents.send('trigger-voice-record');
+// //         if (!isWindowVisible) {
+// //           mainWindow.show();
+// //           isWindowVisible = true;
+// //         }
+// //       }
+// //       resetSpaceSequence();
+// //     }
+// //     // Add this in your keyboard listener, after the 'V' case:
+// //     else if (keyName === "O" && isWaitingForAction) {
+// //       console.log('Space Space Space O - OCR Screenshot');
+// //       if (mainWindow) {
+// //         mainWindow.webContents.send('trigger-ocr');
+// //         if (!isWindowVisible) {
+// //           mainWindow.show();
+// //           isWindowVisible = true;
+// //         }
+// //       }
+// //       resetSpaceSequence();
+// //     }
+// //     else if (spaceCount > 0 || isWaitingForAction) {
 // //       resetSpaceSequence();
 // //     }
 // //   });
 // // }
 
-// // // App initialization
-// // app.whenReady().then(async () => {
-// //   console.log('\n🚀 Starting Overlay Chatbot...\n');
-// //   console.log('📋 Features:');
-// //   console.log('  • Clickable Overlay Mode');
-// //   console.log('  • Sandbox Compatible');
-// //   console.log('  • Auto-Recovery System');
-// //   console.log('  • Optional Capture Protection\n');
-  
-// //   await createBackgroundWindow();
+// // app.whenReady().then(() => {
+// //   createBackgroundWindow();
 // //   createTray();
 // //   setupKeyboardHook();
 // //   createWatchdog();
-  
-// //   console.log('✅ Application ready!\n');
-// //   console.log('💡 All buttons should be clickable now\n');
 // // });
 
 // // app.on('will-quit', (event) => {
@@ -511,14 +1136,39 @@
 // //     keyboardListener.kill();
 // //   }
   
-// //   if (antiFocus) {
-// //     antiFocus.stopAllMonitors();
-// //   }
-  
 // //   if (!isExiting && watcherProcess) {
-// //     console.log('Unexpected shutdown - watchdog will restart');
+// //     console.log('App killed unexpectedly - watchdog will restart...');
 // //   }
 // // });
+
+// // function monitorScreenCapture() {
+// //   const { exec } = require('child_process');
+  
+// //   setInterval(() => {
+// //     if (process.platform === 'win32') {
+// //       exec('tasklist', (err, stdout) => {
+// //         if (err) return;
+        
+// //         const suspiciousProcesses = [
+// //           'obs64.exe', 'obs32.exe', 'obs.exe',
+// //           'sharex.exe',
+// //           'bandicam.exe',
+// //           'fraps.exe',
+// //           'camtasia.exe',
+// //           'snagit.exe',
+// //           'screenrec.exe'
+// //         ];
+        
+// //         const lower = stdout.toLowerCase();
+// //         const detected = suspiciousProcesses.some(proc => lower.includes(proc));
+        
+// //         if (detected && mainWindow) {
+// //           mainWindow.webContents.send('capture-detected');
+// //         }
+// //       });
+// //     }
+// //   }, 2000);
+// // }
 
 // // app.on('window-all-closed', (e) => {
 // //   e.preventDefault();
@@ -530,7 +1180,6 @@
 // //   }
 // // });
 
-// // // Single instance lock
 // // const gotTheLock = app.requestSingleInstanceLock();
 
 // // if (!gotTheLock) {
@@ -548,885 +1197,3484 @@
 // // }
 
 // // app.setPath("userData", path.join(app.getPath("userData"), "myAppData"));
-//  // // preload.js - Enhanced with anti-detection features
-// // const { contextBridge, ipcRenderer } = require('electron');
 
-// // // Anti-debugging techniques
-// // function antiDebug() {
-// //   // Detect DevTools
-// //   const threshold = 160;
-// //   let devtoolsOpen = false;
+
+// //standalone.html
+
+// // <!DOCTYPE html>
+// // <html lang="en">
+// // <head>
+// //   <meta charset="UTF-8">
+// //   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+// //   <title>Dragon Assistant - Universal</title>
   
-// //   const detectDevTools = () => {
-// //     const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-// //     const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+// //   <!-- External Dependencies -->
+// //   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+// //   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+// //   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+// //   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+// //   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  
+// //   <style>
+// //     /* Your existing CSS from index.html */
+// //     * { margin: 0; padding: 0; box-sizing: border-box; }
+// //     body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: white; overflow: hidden; background: black; }
     
-// //     if (widthThreshold || heightThreshold) {
-// //       if (!devtoolsOpen) {
-// //         devtoolsOpen = true;
-// //         console.log('DevTools detected - some features disabled');
+// //     /* Environment indicator */
+// //     .env-badge {
+// //       position: fixed;
+// //       top: 10px;
+// //       left: 10px;
+// //       background: rgba(59, 130, 246, 0.2);
+// //       border: 1px solid rgba(59, 130, 246, 0.4);
+// //       padding: 4px 8px;
+// //       border-radius: 6px;
+// //       font-size: 10px;
+// //       z-index: 10000;
+// //       pointer-events: none;
+// //     }
+    
+// //     /* Rest of your CSS... */
+// //   </style>
+// // </head>
+// // <body>
+// //   <!-- Environment Badge -->
+// //   <div class="env-badge" id="envBadge">Loading...</div>
+  
+// //   <!-- Your existing HTML structure -->
+// //   <div class="container" id="app">
+// //     <!-- Content from your index.html -->
+// //   </div>
+  
+// //   <script>
+// //     // ==================== UNIVERSAL ADAPTER (Built-in for web) ====================
+// //     (function() {
+// //       const isElectron = typeof window.electronAPI !== 'undefined';
+// //       const isBrowser = !isElectron;
+      
+// //       // Update environment badge
+// //       const envBadge = document.getElementById('envBadge');
+// //       envBadge.textContent = isElectron ? '⚡ Electron Mode' : '🌐 Web Mode';
+// //       setTimeout(() => envBadge.style.opacity = '0', 3000);
+      
+// //       console.log(`🌍 Environment: ${isElectron ? 'Electron' : 'Web Browser'}`);
+      
+// //       // Create unified API if not in Electron
+// //       if (!isElectron) {
+// //         window.electronAPI = {
+// //           getEnvironment: () => ({
+// //             isElectron: false,
+// //             isSandboxed: true,
+// //             platform: navigator.platform,
+// //             version: 'web'
+// //           }),
+          
+// //           closeWindow: () => {
+// //             console.log('Close requested (web mode - minimizing)');
+// //             document.getElementById('app').style.display = 'none';
+// //           },
+          
+// //           minimizeToFolder: () => {
+// //             const app = document.getElementById('app');
+// //             app.style.transform = 'scale(0.1)';
+// //             app.style.opacity = '0.5';
+// //           },
+          
+// //           restoreFromFolder: () => {
+// //             const app = document.getElementById('app');
+// //             app.style.transform = 'scale(1)';
+// //             app.style.opacity = '1';
+// //           },
+          
+// //           captureScreen: async () => {
+// //             try {
+// //               const stream = await navigator.mediaDevices.getDisplayMedia({
+// //                 video: { mediaSource: 'screen' }
+// //               });
+              
+// //               const video = document.createElement('video');
+// //               video.srcObject = stream;
+// //               video.play();
+              
+// //               await new Promise(resolve => video.onloadedmetadata = resolve);
+              
+// //               const canvas = document.createElement('canvas');
+// //               canvas.width = video.videoWidth;
+// //               canvas.height = video.videoHeight;
+// //               canvas.getContext('2d').drawImage(video, 0, 0);
+              
+// //               stream.getTracks().forEach(track => track.stop());
+              
+// //               return canvas.toDataURL('image/png');
+// //             } catch (error) {
+// //               console.error('Screenshot failed:', error);
+// //               return null;
+// //             }
+// //           },
+          
+// //           extractTextFromImage: async (imageData) => {
+// //             try {
+// //               console.log('Starting Tesseract.js OCR...');
+// //               const worker = await Tesseract.createWorker('eng');
+// //               const { data: { text } } = await worker.recognize(imageData);
+// //               await worker.terminate();
+              
+// //               return { 
+// //                 success: true, 
+// //                 text: text.trim(), 
+// //                 length: text.trim().length 
+// //               };
+// //             } catch (error) {
+// //               console.error('OCR failed:', error);
+// //               return { success: false, error: error.message };
+// //             }
+// //           },
+          
+// //           onScreenshotTrigger: (callback) => {
+// //             window.addEventListener('trigger-screenshot', callback);
+// //           },
+          
+// //           onOcrTrigger: (callback) => {
+// //             window.addEventListener('trigger-ocr', callback);
+// //           },
+          
+// //           onVoiceRecordTrigger: (callback) => {
+// //             window.addEventListener('trigger-voice-record', callback);
+// //           },
+          
+// //           clipboard: {
+// //             writeText: async (text) => {
+// //               try {
+// //                 await navigator.clipboard.writeText(text);
+// //                 return true;
+// //               } catch (error) {
+// //                 console.error('Clipboard write failed:', error);
+// //                 return false;
+// //               }
+// //             },
+            
+// //             writeImage: async (imageDataUrl) => {
+// //               try {
+// //                 const response = await fetch(imageDataUrl);
+// //                 const blob = await response.blob();
+// //                 await navigator.clipboard.write([
+// //                   new ClipboardItem({ [blob.type]: blob })
+// //                 ]);
+// //                 return true;
+// //               } catch (error) {
+// //                 console.error('Clipboard image write failed:', error);
+// //                 return false;
+// //               }
+// //             }
+// //           }
+// //         };
+        
+// //         // Implement web keyboard shortcuts
+// //         let spaceCount = 0;
+// //         let lastSpaceTime = 0;
+// //         let isWaitingForAction = false;
+// //         const SPACE_TIMEOUT = 800;
+// //         const ACTION_TIMEOUT = 1500;
+        
+// //         function resetSpaceSequence() {
+// //           spaceCount = 0;
+// //           isWaitingForAction = false;
+// //           lastSpaceTime = 0;
+// //         }
+        
+// //         document.addEventListener('keydown', (e) => {
+// //           const now = Date.now();
+// //           const keyName = e.key.toUpperCase();
+          
+// //           if (keyName === ' ' || e.code === 'SPACE') {
+// //             if (now - lastSpaceTime > SPACE_TIMEOUT || isWaitingForAction) {
+// //               resetSpaceSequence();
+// //             }
+            
+// //             spaceCount++;
+// //             lastSpaceTime = now;
+            
+// //             if (spaceCount === 3) {
+// //               isWaitingForAction = true;
+// //               console.log('⌨️  Triple space! Waiting for action...');
+              
+// //               setTimeout(() => {
+// //                 if (isWaitingForAction) {
+// //                   resetSpaceSequence();
+// //                 }
+// //               }, ACTION_TIMEOUT);
+// //             }
+// //           } else if (keyName === 'S' && isWaitingForAction) {
+// //             window.dispatchEvent(new Event('trigger-screenshot'));
+// //             resetSpaceSequence();
+// //           } else if (keyName === 'O' && isWaitingForAction) {
+// //             window.dispatchEvent(new Event('trigger-ocr'));
+// //             resetSpaceSequence();
+// //           } else if (spaceCount > 0 || isWaitingForAction) {
+// //             resetSpaceSequence();
+// //           }
+// //         });
+        
+// //         console.log('✅ Web mode keyboard shortcuts initialized');
+// //         console.log('   Space+Space+Space+S - Screenshot');
+// //         console.log('   Space+Space+Space+O - OCR');
 // //       }
-// //     } else {
-// //       devtoolsOpen = false;
-// //     }
-// //   };
-  
-// //   setInterval(detectDevTools, 1000);
-  
-// //   // Prevent right-click context menu
-// //   window.addEventListener('contextmenu', (e) => {
-// //     e.preventDefault();
-// //     return false;
-// //   });
-  
-// //   // Detect debugger
-// //   setInterval(() => {
-// //     const start = performance.now();
-// //     debugger;
-// //     const end = performance.now();
-// //     if (end - start > 100) {
-// //       console.log('Debugger detected');
-// //     }
-// //   }, 3000);
-// // }
-
-// // // Initialize anti-debug on load
-// // window.addEventListener('DOMContentLoaded', antiDebug);
-
-// // // Secure API exposure
-// // contextBridge.exposeInMainWorld('electronAPI', {
-// //   // Window controls
-// //   closeWindow: () => ipcRenderer.send('close-window'),
-// //   minimizeToFolder: () => ipcRenderer.send('minimize-to-folder'),
-// //   restoreFromFolder: () => ipcRenderer.send('restore-from-folder'),
-  
-// //   // Screenshot functionality
-// //   captureScreen: () => ipcRenderer.invoke('capture-screenshot'),
-// //   captureFullPage: () => ipcRenderer.invoke('capture-full-page'),
-  
-// //   // Audio/media sources
-// //   getAudioSources: () => ipcRenderer.invoke('get-audio-sources'),
-  
-// //   // OCR functionality
-// //   extractTextFromImage: (imageData) => ipcRenderer.invoke('extract-text-from-image', imageData),
-  
-// //   // Event listeners with one-time setup
-// //   onOcrTrigger: (callback) => {
-// //     ipcRenderer.on('trigger-ocr', callback);
-// //   },
-  
-// //   onScreenshotTrigger: (callback) => {
-// //     ipcRenderer.on('trigger-screenshot', callback);
-// //   },
-  
-// //   onVoiceRecordTrigger: (callback) => {
-// //     ipcRenderer.on('trigger-voice-record', callback);
-// //   },
-  
-// //   onRestore: (callback) => {
-// //     ipcRenderer.on('restore-window', callback);
-// //   },
-  
-// //   onCaptureDetected: (callback) => {
-// //     ipcRenderer.on('capture-detected', (event, data) => {
-// //       console.warn('Screen capture detected!');
-// //       callback(event, data);
-// //     });
-// //   },
-  
-// //   // Anti-detection utilities
-// //   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
-// //   checkSandbox: () => ipcRenderer.invoke('check-sandbox'),
-  
-// //   // Secure storage (encrypted)
-// //   secureStore: {
-// //     set: (key, value) => ipcRenderer.invoke('secure-store-set', key, value),
-// //     get: (key) => ipcRenderer.invoke('secure-store-get', key),
-// //     delete: (key) => ipcRenderer.invoke('secure-store-delete', key)
-// //   }
-// // });
-
-// // // Additional security: Prevent navigation
-// // window.addEventListener('beforeunload', (e) => {
-// //   // Prevent accidental navigation
-// //   const message = 'Are you sure you want to leave?';
-// //   e.returnValue = message;
-// //   return message;
-// // });
-
-// // // Monitor for suspicious activity
-// // const activityMonitor = {
-// //   mouseClicks: 0,
-// //   keyPresses: 0,
-// //   lastActivity: Date.now(),
-  
-// //   recordActivity(type) {
-// //     this.lastActivity = Date.now();
-// //     if (type === 'click') this.mouseClicks++;
-// //     if (type === 'keypress') this.keyPresses++;
-// //   },
-  
-// //   isHuman() {
-// //     // Simple bot detection
-// //     const timeSinceLastActivity = Date.now() - this.lastActivity;
-// //     return this.mouseClicks > 5 && this.keyPresses > 10 && timeSinceLastActivity < 300000;
-// //   }
-// // };
-
-// // // Track user activity
-// // window.addEventListener('click', () => activityMonitor.recordActivity('click'));
-// // window.addEventListener('keypress', () => activityMonitor.recordActivity('keypress'));
-
-// // // Expose activity monitor
-// // contextBridge.exposeInMainWorld('security', {
-// //   isHumanActivity: () => activityMonitor.isHuman(),
-// //   getActivityStats: () => ({
-// //     clicks: activityMonitor.mouseClicks,
-// //     keypresses: activityMonitor.keyPresses,
-// //     lastActivity: activityMonitor.lastActivity
-// //   })
-// // });
-
-// // // Prevent memory inspection
-// // Object.freeze(Object.prototype);
-// // Object.freeze(Array.prototype);
-// // Object.freeze(Function.prototype);
-
-// // console.log('🔒 Enhanced security preload initialized');
-
-
-// //main.js
-// const { app, BrowserWindow, screen, ipcMain, desktopCapturer, Tray, Menu, nativeImage } = require('electron');
-// const path = require('path');
-// const { GlobalKeyboardListener } = require("node-global-key-listener");
-// const { spawn } = require('child_process');
-// const Tesseract = require('tesseract.js');
-// try { require('electron-reloader')(module); } catch (_) {}
-
-// app.commandLine.appendSwitch("disable-gpu-shader-disk-cache");
-// app.commandLine.appendSwitch("disable-gpu-program-cache");
-// app.commandLine.appendSwitch("disable-gpu");
-
-// let mainWindow;
-// let tray = null; 
-// let isWindowVisible = false;
-// let watcherProcess = null;
-// let isExiting = false;
-// let currentDisplay = null;
-
-// const iconPath = path.join(__dirname, 'assets', 'dragon.ico');
-
-// function createWatchdog() {
-//   if (process.platform === 'win32') {
-//     const watchdogScript = `
-//       const { spawn } = require('child_process');
-//       const path = require('path');
-      
-//       const appPath = process.argv[2];
-//       const parentPid = parseInt(process.argv[3]);
-      
-//       function checkParent() {
-//         try {
-//           process.kill(parentPid, 0);
-//           setTimeout(checkParent, 2000);
-//         } catch (e) {
-//           console.log('Parent process died, restarting...');
-//           spawn(appPath, [], {
-//             detached: true,
-//             stdio: 'ignore'
-//           }).unref();
-//           process.exit(0);
-//         }
-//       }
-      
-//       checkParent();
-//     `;
+// //     })();
     
-//     const fs = require('fs');
-//     const os = require('os');
-//     const watchdogPath = path.join(os.tmpdir(), 'electron-watchdog.js');
-//     fs.writeFileSync(watchdogPath, watchdogScript);
+// //     // ==================== YOUR EXISTING APP CODE ====================
+// //     // (All your existing JavaScript from index.html)
+// //     // The app will automatically use window.electronAPI whether in Electron or web
     
-//     watcherProcess = spawn('node', [watchdogPath, process.execPath, process.pid], {
-//       detached: true,
-//       stdio: 'ignore'
-//     });
-//     watcherProcess.unref();
-    
-//     console.log('Watchdog process started - app will auto-restart if killed');
-//   }
-// }
+// //     console.log('🚀 Universal chatbot initialized');
+// //     console.log('   Works in: Electron, Browser, iFrame, WebView, Any Sandbox');
+// //   </script>
+// // </body>
+// // </html>
 
-// function createBackgroundWindow() {
-//   currentDisplay = screen.getPrimaryDisplay();
-//   const { width, height } = currentDisplay.workAreaSize;
-  
-//   mainWindow = new BrowserWindow({
-//     width: Math.floor((width)/3),
-//     height: Math.floor((height/1.3)),
-//     x: Math.floor(width - (width)/3),
-//     y: Math.floor((height/8)),
-//     frame: false,
-//     transparent: true,
-//     alwaysOnTop: true,
-//     skipTaskbar: false,
-//     show: true,
-//     resizable: true,
-//     type: 'toolbar',
-//     icon: iconPath,
-//     webPreferences: {
-//       preload: path.join(__dirname, "preload.js"),
-//       nodeIntegration: false,
-//       contextIsolation: true,
-//       backgroundThrottling: false,
-//       webviewTag: true // Enable webview for browser integration
-//     }
-//   });
-  
-//   mainWindow.loadFile('index.html');
-//   mainWindow.setContentProtection(true);
-  
-//   isWindowVisible = true;
-//   mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-  
-//   mainWindow.on('blur', () => {
-//     setTimeout(() => {
-//       if (mainWindow && !mainWindow.isDestroyed()) {
-//         mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-//       }
-//     }, 10);
-//   });
-  
-//   mainWindow.on('focus', () => {
-//     mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-//   });
-  
-//   screen.on('display-added', handleDisplayChange);
-//   screen.on('display-removed', handleDisplayChange);
-//   screen.on('display-metrics-changed', handleDisplayChange);
-  
-//   monitorScreenCapture();
-// }
-
-// function handleDisplayChange() {
-//   if (!mainWindow) return;
-  
-//   const windowBounds = mainWindow.getBounds();
-//   const displays = screen.getAllDisplays();
-  
-//   const displayWithWindow = displays.find(display => {
-//     const { x, y, width, height } = display.bounds;
-//     return windowBounds.x >= x && 
-//            windowBounds.x < x + width &&
-//            windowBounds.y >= y && 
-//            windowBounds.y < y + height;
-//   });
-  
-//   if (displayWithWindow) {
-//     currentDisplay = displayWithWindow;
-//     console.log('Window is on display:', currentDisplay.id);
-//   }
-// }
-
-// function createTray() {
-//   const trayIcon = nativeImage.createFromPath(iconPath);
-//   const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
-  
-//   tray = new Tray(resizedIcon);
-  
-//   const contextMenu = Menu.buildFromTemplate([
-//     {
-//       label: 'Show/Hide Window',
-//       click: () => {
-//         toggleWindow();
-//       }
-//     },
-//     {
-//       label: 'Screenshot (Space+Space+Space+S)',
-//       click: () => {
-//         if (mainWindow) {
-//           mainWindow.webContents.send('trigger-screenshot');
-//         }
-//       }
-//     },
-//     { type: 'separator' },
-//     {
-//       label: 'Move to Display',
-//       submenu: screen.getAllDisplays().map((display, index) => ({
-//         label: `Display ${index + 1} (${display.bounds.width}x${display.bounds.height})`,
-//         click: () => moveToDisplay(display)
-//       }))
-//     },
-//     { type: 'separator' },
-//     {
-//       label: 'Auto-Restart: Enabled',
-//       enabled: false
-//     },
-//     {
-//       label: 'Quit (Permanently)',
-//       click: () => {
-//         isExiting = true;
-//         if (watcherProcess) {
-//           watcherProcess.kill();
-//         }
-//         app.quit();
-//       }
-//     }
-//   ]);
-  
-//   tray.setToolTip('Dragon Chatbot');
-//   tray.setContextMenu(contextMenu);
-  
-//   tray.on('click', () => {
-//     toggleWindow();
-//   });
-// }
-
-// function moveToDisplay(display) {
-//   if (!mainWindow) return;
-  
-//   const { x, y, width, height } = display.workArea;
-  
-//   mainWindow.setBounds({
-//     x: Math.floor(x + width - (width/3)),
-//     y: Math.floor(y + (height/8)),
-//     width: Math.floor((width)/3),
-//     height: Math.floor((height/1.3))
-//   });
-  
-//   mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-  
-//   currentDisplay = display;
-//   console.log('Moved window to display:', display.id);
-// }
-
-// function toggleWindow() {
-//   if (!mainWindow) return;
-  
-//   if (isWindowVisible) {
-//     mainWindow.hide();
-//     isWindowVisible = false;
-//   } else {
-//     mainWindow.show();
-//     isWindowVisible = true;
-//     mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-//   }
-// }
-
-
-// ipcMain.handle('extract-text-from-image', async (event, imageData) => {
-//   try {
-//     // console.log('Starting OCR text extraction...');
-    
-//     // Convert base64 to buffer
-//     const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-//     const buffer = Buffer.from(base64Data, 'base64');
-    
-//     // Perform OCR
-//     const { data: { text } } = await Tesseract.recognize(
-//       buffer,
-//       'eng',
-      
-//     );
-    
-//     // console.log('OCR completed. Extracted text length:', text.length);
-//     return { success: true, text: text.trim() };
-    
-//   } catch (error) {
-//     console.error('OCR extraction error:', error);
-//     return { success: false, error: error.message };
-//   }
-// });
-
-// ipcMain.on("close-window", () => {
-//   if (mainWindow) {
-//     mainWindow.hide();
-//     isWindowVisible = false;
-//   }
-// });
-
-// ipcMain.on("minimize-to-folder", () => {
-//   if (mainWindow) {
-//     const currentBounds = mainWindow.getBounds();
-    
-//     mainWindow.setBounds({
-//       x: currentBounds.x,
-//       y: currentBounds.y,
-//       width: 5,
-//       height: 5
-//     });
-    
-//     mainWindow.setResizable(false);
-//   }
-// });
-
-// ipcMain.on("restore-from-folder", () => {
-//   if (mainWindow) {
-//     const { width, height } = currentDisplay.workAreaSize;   
-//     const currentBounds = mainWindow.getBounds();
-    
-//     mainWindow.setBounds({
-//       x: currentBounds.x,
-//       y: currentBounds.y,
-//       width: Math.floor((width)/3),
-//       height: Math.floor((height)/1.3)
-//     });
-//   }
-// });
-
-// ipcMain.handle('capture-screenshot', async () => {
-//   try {
-//     const sources = await desktopCapturer.getSources({
-//       types: ['screen'],
-//       thumbnailSize: { width: 3840, height: 2160 }
-//     });
-    
-//     if (sources.length > 0) {
-//       const windowBounds = mainWindow.getBounds();
-//       const displays = screen.getAllDisplays();
-      
-//       let targetDisplay = displays[0];
-//       for (const display of displays) {
-//         const { x, y, width, height } = display.bounds;
-//         if (windowBounds.x >= x && windowBounds.x < x + width) {
-//           targetDisplay = display;
-//           break;
-//         }
-//       }
-      
-//       const displayIndex = displays.indexOf(targetDisplay);
-//       const source = sources[displayIndex] || sources[0];
-      
-//       return source.thumbnail.toDataURL();
-//     }
-//     return null;
-//   } catch (error) {
-//     console.error('Screenshot capture error:', error);
-//     return null;
-//   }
-// });
-
-// ipcMain.handle('capture-full-page', async () => {
-//   try {
-//     const image = await mainWindow.webContents.capturePage();
-//     return image.toDataURL();
-//   } catch (error) {
-//     console.error('Full page capture error:', error);
-//     return null;
-//   }
-// });
-
-// ipcMain.handle('get-audio-sources', async () => {
-//   try {
-//     const sources = await desktopCapturer.getSources({
-//       types: ['window', 'screen']
-//     });
-//     return sources.map(source => ({
-//       id: source.id,
-//       name: source.name,
-//       thumbnail: source.thumbnail.toDataURL()
-//     }));
-//   } catch (error) {
-//     console.error('Error getting audio sources:', error);
-//     return [];
-//   }
-// });
-
-// let spaceCount = 0;
-// let lastSpaceTime = 0;
-// let isWaitingForAction = false;
-// const SPACE_TIMEOUT = 800;
-// const ACTION_TIMEOUT = 1500;
-// let keyboardListener = null;
-
-// function resetSpaceSequence() {
-//   spaceCount = 0;
-//   isWaitingForAction = false;
-//   lastSpaceTime = 0;
-// }
-
-// function setupKeyboardHook() {
-//   keyboardListener = new GlobalKeyboardListener();
-  
-//   console.log('Keyboard hook initialized. Shortcuts active:');
-//   console.log('  Space+Space+Space+A - Show/Hide Window');
-//   console.log('  Space+Space+Space+S - Screenshot');
-//   console.log('  Space+Space+Space+V - Voice Recording');
-  
-//   keyboardListener.addListener(function (e, down) {
-//     if (e.state !== "DOWN") return;
-    
-//     const now = Date.now();
-//     const keyName = e.name.toUpperCase();
-    
-//     if (keyName === "SPACE") {
-//       if (now - lastSpaceTime > SPACE_TIMEOUT || isWaitingForAction) {
-//         resetSpaceSequence();
-//       }
-      
-//       spaceCount++;
-//       lastSpaceTime = now;
-      
-//       if (spaceCount === 3) {
-//         isWaitingForAction = true;
-//         console.log('Triple space detected! Waiting for action key (A/S/V)...');
-        
-//         setTimeout(() => {
-//           if (isWaitingForAction) {
-//             console.log('Action timeout - sequence reset');
-//             resetSpaceSequence();
-//           }
-//         }, ACTION_TIMEOUT);
-//       }
-//     }
-//     else if (keyName === "A" && isWaitingForAction) {
-//       console.log('Space Space Space A - Toggle Window');
-//       toggleWindow();
-//       resetSpaceSequence();
-//     }
-//     else if (keyName === "S" && isWaitingForAction) {
-//       console.log('Space Space Space S - Screenshot');
-//       if (mainWindow) {
-//         mainWindow.webContents.send('trigger-screenshot');
-//         if (!isWindowVisible) {
-//           mainWindow.show();
-//           isWindowVisible = true;
-//         }
-//       }
-//       resetSpaceSequence();
-//     }
-//     else if (keyName === "V" && isWaitingForAction) {
-//       console.log('Space Space Space V - Voice Recording');
-//       if (mainWindow) {
-//         mainWindow.webContents.send('trigger-voice-record');
-//         if (!isWindowVisible) {
-//           mainWindow.show();
-//           isWindowVisible = true;
-//         }
-//       }
-//       resetSpaceSequence();
-//     }
-//     // Add this in your keyboard listener, after the 'V' case:
-//     else if (keyName === "O" && isWaitingForAction) {
-//       console.log('Space Space Space O - OCR Screenshot');
-//       if (mainWindow) {
-//         mainWindow.webContents.send('trigger-ocr');
-//         if (!isWindowVisible) {
-//           mainWindow.show();
-//           isWindowVisible = true;
-//         }
-//       }
-//       resetSpaceSequence();
-//     }
-//     else if (spaceCount > 0 || isWaitingForAction) {
-//       resetSpaceSequence();
-//     }
-//   });
-// }
-
-// app.whenReady().then(() => {
-//   createBackgroundWindow();
-//   createTray();
-//   setupKeyboardHook();
-//   createWatchdog();
-// });
-
-// app.on('will-quit', (event) => {
-//   if (keyboardListener) {
-//     keyboardListener.kill();
-//   }
-  
-//   if (!isExiting && watcherProcess) {
-//     console.log('App killed unexpectedly - watchdog will restart...');
-//   }
-// });
-
-// function monitorScreenCapture() {
-//   const { exec } = require('child_process');
-  
-//   setInterval(() => {
-//     if (process.platform === 'win32') {
-//       exec('tasklist', (err, stdout) => {
-//         if (err) return;
-        
-//         const suspiciousProcesses = [
-//           'obs64.exe', 'obs32.exe', 'obs.exe',
-//           'sharex.exe',
-//           'bandicam.exe',
-//           'fraps.exe',
-//           'camtasia.exe',
-//           'snagit.exe',
-//           'screenrec.exe'
-//         ];
-        
-//         const lower = stdout.toLowerCase();
-//         const detected = suspiciousProcesses.some(proc => lower.includes(proc));
-        
-//         if (detected && mainWindow) {
-//           mainWindow.webContents.send('capture-detected');
-//         }
-//       });
-//     }
-//   }, 2000);
-// }
-
-// app.on('window-all-closed', (e) => {
-//   e.preventDefault();
-// });
-
-// app.on('activate', () => {
-//   if (BrowserWindow.getAllWindows().length === 0) {
-//     createBackgroundWindow();
-//   }
-// });
-
-// const gotTheLock = app.requestSingleInstanceLock();
-
-// if (!gotTheLock) {
-//   app.quit();
-// } else {
-//   app.on('second-instance', () => {
-//     if (mainWindow) {
-//       if (!isWindowVisible) {
-//         mainWindow.show();
-//         isWindowVisible = true;
-//       }
-//       mainWindow.focus();
-//     }
-//   });
-// }
-
-// app.setPath("userData", path.join(app.getPath("userData"), "myAppData"));
-
-
-//standalone.html
-
+// // index.html
 // <!DOCTYPE html>
 // <html lang="en">
-// <head>
-//   <meta charset="UTF-8">
-//   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//   <title>Dragon Assistant - Universal</title>
-  
-//   <!-- External Dependencies -->
-//   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-//   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-//   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-//   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-//   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-  
-//   <style>
-//     /* Your existing CSS from index.html */
-//     * { margin: 0; padding: 0; box-sizing: border-box; }
-//     body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: white; overflow: hidden; background: black; }
-    
-//     /* Environment indicator */
-//     .env-badge {
-//       position: fixed;
-//       top: 10px;
-//       left: 10px;
-//       background: rgba(59, 130, 246, 0.2);
-//       border: 1px solid rgba(59, 130, 246, 0.4);
-//       padding: 4px 8px;
-//       border-radius: 6px;
-//       font-size: 10px;
-//       z-index: 10000;
-//       pointer-events: none;
-//     }
-    
-//     /* Rest of your CSS... */
-//   </style>
-// </head>
-// <body>
-//   <!-- Environment Badge -->
-//   <div class="env-badge" id="envBadge">Loading...</div>
-  
-//   <!-- Your existing HTML structure -->
-//   <div class="container" id="app">
-//     <!-- Content from your index.html -->
-//   </div>
-  
-//   <script>
-//     // ==================== UNIVERSAL ADAPTER (Built-in for web) ====================
-//     (function() {
-//       const isElectron = typeof window.electronAPI !== 'undefined';
-//       const isBrowser = !isElectron;
-      
-//       // Update environment badge
-//       const envBadge = document.getElementById('envBadge');
-//       envBadge.textContent = isElectron ? '⚡ Electron Mode' : '🌐 Web Mode';
-//       setTimeout(() => envBadge.style.opacity = '0', 3000);
-      
-//       console.log(`🌍 Environment: ${isElectron ? 'Electron' : 'Web Browser'}`);
-      
-//       // Create unified API if not in Electron
-//       if (!isElectron) {
-//         window.electronAPI = {
-//           getEnvironment: () => ({
-//             isElectron: false,
-//             isSandboxed: true,
-//             platform: navigator.platform,
-//             version: 'web'
-//           }),
-          
-//           closeWindow: () => {
-//             console.log('Close requested (web mode - minimizing)');
-//             document.getElementById('app').style.display = 'none';
-//           },
-          
-//           minimizeToFolder: () => {
-//             const app = document.getElementById('app');
-//             app.style.transform = 'scale(0.1)';
-//             app.style.opacity = '0.5';
-//           },
-          
-//           restoreFromFolder: () => {
-//             const app = document.getElementById('app');
-//             app.style.transform = 'scale(1)';
-//             app.style.opacity = '1';
-//           },
-          
-//           captureScreen: async () => {
-//             try {
-//               const stream = await navigator.mediaDevices.getDisplayMedia({
-//                 video: { mediaSource: 'screen' }
-//               });
-              
-//               const video = document.createElement('video');
-//               video.srcObject = stream;
-//               video.play();
-              
-//               await new Promise(resolve => video.onloadedmetadata = resolve);
-              
-//               const canvas = document.createElement('canvas');
-//               canvas.width = video.videoWidth;
-//               canvas.height = video.videoHeight;
-//               canvas.getContext('2d').drawImage(video, 0, 0);
-              
-//               stream.getTracks().forEach(track => track.stop());
-              
-//               return canvas.toDataURL('image/png');
-//             } catch (error) {
-//               console.error('Screenshot failed:', error);
-//               return null;
-//             }
-//           },
-          
-//           extractTextFromImage: async (imageData) => {
-//             try {
-//               console.log('Starting Tesseract.js OCR...');
-//               const worker = await Tesseract.createWorker('eng');
-//               const { data: { text } } = await worker.recognize(imageData);
-//               await worker.terminate();
-              
-//               return { 
-//                 success: true, 
-//                 text: text.trim(), 
-//                 length: text.trim().length 
-//               };
-//             } catch (error) {
-//               console.error('OCR failed:', error);
-//               return { success: false, error: error.message };
-//             }
-//           },
-          
-//           onScreenshotTrigger: (callback) => {
-//             window.addEventListener('trigger-screenshot', callback);
-//           },
-          
-//           onOcrTrigger: (callback) => {
-//             window.addEventListener('trigger-ocr', callback);
-//           },
-          
-//           onVoiceRecordTrigger: (callback) => {
-//             window.addEventListener('trigger-voice-record', callback);
-//           },
-          
-//           clipboard: {
-//             writeText: async (text) => {
-//               try {
-//                 await navigator.clipboard.writeText(text);
-//                 return true;
-//               } catch (error) {
-//                 console.error('Clipboard write failed:', error);
-//                 return false;
-//               }
-//             },
-            
-//             writeImage: async (imageDataUrl) => {
-//               try {
-//                 const response = await fetch(imageDataUrl);
-//                 const blob = await response.blob();
-//                 await navigator.clipboard.write([
-//                   new ClipboardItem({ [blob.type]: blob })
-//                 ]);
-//                 return true;
-//               } catch (error) {
-//                 console.error('Clipboard image write failed:', error);
-//                 return false;
-//               }
-//             }
-//           }
-//         };
-        
-//         // Implement web keyboard shortcuts
-//         let spaceCount = 0;
-//         let lastSpaceTime = 0;
-//         let isWaitingForAction = false;
-//         const SPACE_TIMEOUT = 800;
-//         const ACTION_TIMEOUT = 1500;
-        
-//         function resetSpaceSequence() {
-//           spaceCount = 0;
-//           isWaitingForAction = false;
-//           lastSpaceTime = 0;
+//   <head>
+//     <meta charset="UTF-8" />
+//     <link rel="icon" href="./assets/dragon.png" />
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+//     <title>Chatbot</title>
+//     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+//     <link
+//       rel="stylesheet"
+//       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
+//     />
+//     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+//     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+//     <style>
+//       * {
+//         margin: 0;
+//         padding: 0;
+//         box-sizing: border-box;
+//       }
+//       * {
+//         -webkit-app-region: no-drag; /* Allow clicks everywhere by default */
+//       }
+
+//       /* Only the header should be draggable */
+//       .header {
+//         -webkit-app-region: drag;
+//       }
+
+//       /* But buttons and interactive elements in header should NOT be draggable */
+//       .header button,
+//       .header .ai-btn,
+//       .header .action-btn,
+//       .header .control-btn,
+//       .header input,
+//       .header select,
+//       .auto-timer-btn,
+//       .auto-ss-btn {
+//         -webkit-app-region: no-drag !important;
+//       }
+
+//       /* Ensure all clickable elements are NOT draggable */
+//       button,
+//       input,
+//       textarea,
+//       select,
+//       a,
+//       .message,
+//       .image-preview,
+//       .send-btn,
+//       .ai-btn,
+//       .action-btn,
+//       .control-btn {
+//         -webkit-app-region: no-drag !important;
+//       }
+
+//       /* Chat container should be scrollable, not draggable */
+//       .chat-container,
+//       .messages,
+//       .message,
+//       .input-area,
+//       .footer {
+//         -webkit-app-region: no-drag !important;
+//       }
+
+//       /* Browser view elements */
+//       .browser-view,
+//       .webview-container,
+//       .browser-webview {
+//         -webkit-app-region: no-drag !important;
+//       }
+
+//       /* Ensure cursor shows interactivity */
+//       button:not(:disabled) {
+//         cursor: pointer !important;
+//       }
+
+//       button:disabled {
+//         cursor: not-allowed !important;
+//         opacity: 0.5;
+//       }
+
+//       /* Add visual feedback for buttons */
+//       button:not(:disabled):active {
+//         transform: scale(0.95);
+//         transition: transform 0.1s;
+//       }
+
+//       /* Fix for transparent areas that might block clicks */
+//       body {
+//         pointer-events: auto !important;
+//       }
+
+//       .container {
+//         pointer-events: auto !important;
+//       }
+
+//       /* Ensure folder view is clickable when visible */
+//       .folder-view {
+//         -webkit-app-region: no-drag !important;
+//         pointer-events: auto !important;
+//       }
+
+//       .folder-view.active {
+//         cursor: pointer !important;
+//       }
+
+//       body {
+//         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+//         color: white;
+//         overflow: hidden;
+//         background: black;
+//       }
+
+//       .container {
+//         background-color: black;
+//         height: 100vh;
+//         display: flex;
+//         flex-direction: column;
+//         user-select: none;
+//         border-radius: 20px;
+//         overflow: hidden;
+//       }
+
+//       .connection-indicator {
+//         position: fixed;
+//         top: 80px;
+//         right: 0px;
+//         padding: 4px 10px;
+//         border-radius: 12px;
+//         font-size: 10px;
+//         font-weight: 600;
+//         display: flex;
+//         align-items: center;
+//         gap: 5px;
+//         z-index: 1000;
+//         -webkit-app-region: drag;
+//         user-select: none;
+//       }
+
+//       .connection-indicator.connected {
+//         background: rgba(34, 197, 94, 0.15);
+//         border: 1px solid rgba(34, 197, 94, 0.4);
+//         color: #22c55e;
+//       }
+
+//       .connection-indicator.disconnected {
+//         background: rgba(239, 68, 68, 0.15);
+//         border: 1px solid rgba(239, 68, 68, 0.4);
+//         color: #ef4444;
+//       }
+
+//       .connection-dot {
+//         width: 6px;
+//         height: 6px;
+//         border-radius: 50%;
+//         animation: pulse 2s infinite;
+//       }
+
+//       .connection-indicator.connected .connection-dot {
+//         background: #22c55e;
+//       }
+
+//       .connection-indicator.disconnected .connection-dot {
+//         background: #ef4444;
+//       }
+
+//       @keyframes pulse {
+//         0%,
+//         100% {
+//           opacity: 1;
 //         }
-        
-//         document.addEventListener('keydown', (e) => {
-//           const now = Date.now();
-//           const keyName = e.key.toUpperCase();
-          
-//           if (keyName === ' ' || e.code === 'SPACE') {
-//             if (now - lastSpaceTime > SPACE_TIMEOUT || isWaitingForAction) {
-//               resetSpaceSequence();
-//             }
-            
-//             spaceCount++;
-//             lastSpaceTime = now;
-            
-//             if (spaceCount === 3) {
-//               isWaitingForAction = true;
-//               console.log('⌨️  Triple space! Waiting for action...');
-              
-//               setTimeout(() => {
-//                 if (isWaitingForAction) {
-//                   resetSpaceSequence();
-//                 }
-//               }, ACTION_TIMEOUT);
-//             }
-//           } else if (keyName === 'S' && isWaitingForAction) {
-//             window.dispatchEvent(new Event('trigger-screenshot'));
-//             resetSpaceSequence();
-//           } else if (keyName === 'O' && isWaitingForAction) {
-//             window.dispatchEvent(new Event('trigger-ocr'));
-//             resetSpaceSequence();
-//           } else if (spaceCount > 0 || isWaitingForAction) {
-//             resetSpaceSequence();
+//         50% {
+//           opacity: 0.5;
+//         }
+//       }
+
+//       .folder-view {
+//         display: none;
+//         width: 100%;
+//         height: 100%;
+//         flex-direction: column;
+//         align-items: center;
+//         justify-content: center;
+//         cursor: pointer;
+//         background: transparent;
+//         -webkit-app-region: drag;
+//       }
+
+//       .folder-view.active {
+//         display: flex;
+//       }
+
+//       .folder-label {
+//         width: 100%;
+//         height: 100%;
+//         font-size: 10px;
+//         color: white;
+//         text-align: center;
+//         padding: 2px 8px;
+//         border-radius: 3px;
+//         -webkit-app-region: no-drag;
+//         user-select: none;
+//       }
+
+//       .main-content {
+//         flex: 1;
+//         display: flex;
+//         flex-direction: column;
+//         overflow: hidden;
+//         -webkit-app-region: no-drag;
+//         position: relative;
+//       }
+
+//       .main-content.hidden {
+//         display: none;
+//       }
+
+//       .browser-view {
+//         position: absolute;
+//         top: 0;
+//         left: 0;
+//         width: 100%;
+//         height: 100%;
+//         background: #1a1a1a;
+//         display: none;
+//         flex-direction: column;
+//         z-index: 500;
+//       }
+
+//       .browser-view.active {
+//         display: flex;
+//       }
+
+//       .webview-container {
+//         flex: 1;
+//         position: relative;
+//         background: white;
+//         overflow: hidden;
+//       }
+
+//       .browser-webview {
+//         width: 100%;
+//         height: 100%;
+//         border: none;
+//       }
+
+//       .browser-loading {
+//         position: absolute;
+//         top: 50%;
+//         left: 50%;
+//         transform: translate(-50%, -50%);
+//         text-align: center;
+//         z-index: 10;
+//       }
+
+//       .browser-loading.hidden {
+//         display: none;
+//       }
+
+//       .browser-spinner {
+//         width: 50px;
+//         height: 50px;
+//         border: 4px solid rgba(59, 130, 246, 0.3);
+//         border-top-color: #3b82f6;
+//         border-radius: 50%;
+//         animation: spin 0.8s linear infinite;
+//         margin: 0 auto 16px;
+//       }
+
+//       .browser-info {
+//         position: absolute;
+//         top: 10px;
+//         right: 10px;
+//         background: rgba(59, 130, 246, 0.95);
+//         padding: 12px 16px;
+//         border-radius: 8px;
+//         max-width: 320px;
+//         z-index: 100;
+//         animation: slideInRight 0.3s ease;
+//       }
+
+//       .browser-info.hidden {
+//         display: none;
+//       }
+
+//       @keyframes slideInRight {
+//         from {
+//           opacity: 0;
+//           transform: translateX(20px);
+//         }
+//         to {
+//           opacity: 1;
+//           transform: translateX(0);
+//         }
+//       }
+
+//       .browser-info h3 {
+//         font-size: 13px;
+//         margin-bottom: 6px;
+//         font-weight: 600;
+//       }
+
+//       .browser-info p {
+//         font-size: 11px;
+//         line-height: 1.5;
+//         opacity: 0.95;
+//       }
+
+//       .browser-image-preview {
+//         position: absolute;
+//         top: 60px;
+//         right: 10px;
+//         background: rgba(30, 30, 30, 0.95);
+//         border: 2px solid rgba(59, 130, 246, 0.5);
+//         border-radius: 8px;
+//         padding: 8px;
+//         max-width: 200px;
+//         z-index: 150;
+//         display: none;
+//       }
+
+//       .browser-image-preview.show {
+//         display: block;
+//         animation: fadeIn 0.3s ease;
+//       }
+
+//       .browser-image-preview img {
+//         width: 100%;
+//         border-radius: 4px;
+//         margin-bottom: 8px;
+//       }
+
+//       .browser-image-preview button {
+//         width: 100%;
+//         padding: 6px;
+//         background: rgba(59, 130, 246, 0.8);
+//         border: none;
+//         border-radius: 4px;
+//         color: white;
+//         font-size: 11px;
+//         font-weight: 600;
+//         cursor: pointer;
+//       }
+
+//       .browser-image-preview button:hover {
+//         background: rgba(59, 130, 246, 1);
+//       }
+
+//       .chat-view {
+//         display: flex;
+//         flex-direction: column;
+//         height: 100%;
+//       }
+
+//       .chat-view.hidden {
+//         display: none;
+//       }
+
+//       .header {
+//         -webkit-backdrop-filter: blur(20px);
+//         backdrop-filter: blur(20px);
+//         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+//         padding: 0px 16px;
+//         display: flex;
+//         justify-content: space-between;
+//         align-items: center;
+//         gap: 12px;
+//         -webkit-app-region: drag;
+//         user-select: none;
+//         flex-shrink: 0;
+//         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+//       }
+
+//       .header button {
+//         -webkit-app-region: no-drag;
+//       }
+
+//       .window-controls {
+//         display: flex;
+//         flex-direction: row;
+//         gap: 6px;
+//       }
+
+//       .control-btn {
+//         width: 32px;
+//         height: 32px;
+//         border-radius: 10px;
+//         border: none;
+//         cursor: pointer;
+//         font-size: 16px;
+//         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+//         display: flex;
+//         align-items: center;
+//         justify-content: center;
+//         -webkit-backdrop-filter: blur(10px);
+//         backdrop-filter: blur(10px);
+//       }
+
+//       .control-btn:hover {
+//         background: rgba(255, 255, 255, 0.15);
+//         transform: scale(1.05);
+//       }
+
+//       .control-btn:active {
+//         transform: scale(0.95);
+//       }
+
+//       .control-btn.minimize {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(59, 130, 246, 0.3),
+//           rgba(37, 99, 235, 0.3)
+//         );
+//         box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+//       }
+
+//       .control-btn.close {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(239, 68, 68, 0.3),
+//           rgba(220, 38, 38, 0.3)
+//         );
+//         box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+//       }
+
+//       .ai-provider-selector {
+//         display: flex;
+//         justify-content: center;
+//         align-items: center;
+//         flex-direction: column;
+//         gap: 3px;
+//         flex: 1;
+//         -webkit-app-region: drag;
+//       }
+
+//       .provider-section {
+//         display: flex;
+//         align-items: center;
+//         gap: 8px;
+//         background: rgba(255, 255, 255, 0.03);
+//         padding: 1px 0px;
+//       }
+
+//       .provider-buttons {
+//         display: flex;
+//         gap: 6px;
+//         flex-wrap: wrap;
+//         flex: 1;
+//       }
+
+//       .ai-btn {
+//         padding: 6px 12px;
+//         border: 1.5px solid rgba(255, 255, 255, 0.2);
+//         border-radius: 8px;
+//         color: rgba(255, 255, 255, 0.7);
+//         cursor: pointer;
+//         font-size: 11px;
+//         font-weight: 600;
+//         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+//         position: relative;
+//         overflow: hidden;
+//       }
+
+//       .ai-btn::before {
+//         content: "";
+//         position: absolute;
+//         top: 0;
+//         left: -100%;
+//         width: 100%;
+//         height: 100%;
+//         background: linear-gradient(
+//           90deg,
+//           transparent,
+//           rgba(255, 255, 255, 0.1),
+//           transparent
+//         );
+//         transition: left 0.5s;
+//       }
+
+//       .ai-btn:hover::before {
+//         left: 100%;
+//       }
+
+//       .ai-btn:hover {
+//         border-color: rgba(255, 255, 255, 0.4);
+//         color: white;
+//         transform: translateY(-1px);
+//         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+//       }
+
+//       .ai-btn.active {
+//         border-color: #3b82f6;
+//         background: linear-gradient(
+//           135deg,
+//           rgba(59, 130, 246, 0.3),
+//           rgba(37, 99, 235, 0.25)
+//         );
+//         color: white;
+//         box-shadow: 0 0 20px rgba(59, 130, 246, 0.4),
+//           inset 0 0 10px rgba(59, 130, 246, 0.1);
+//       }
+
+//       .ai-btn.browser-mode {
+//         border-color: rgba(168, 85, 247, 0.4);
+//       }
+
+//       .ai-btn.browser-mode.active {
+//         border-color: #a855f7;
+//         background: linear-gradient(
+//           135deg,
+//           rgba(168, 85, 247, 0.3),
+//           rgba(147, 51, 234, 0.25)
+//         );
+//         box-shadow: 0 0 20px rgba(168, 85, 247, 0.4),
+//           inset 0 0 10px rgba(168, 85, 247, 0.1);
+//       }
+//       .action-buttons {
+//         display: flex;
+//         flex-direction: column;
+//         gap: 6px;
+//       }
+
+//       .action-row {
+//         display: flex;
+//         gap: 6px;
+//       }
+
+//       .action-btn {
+//         width: 36px;
+//         height: 36px;
+//         border-radius: 10px;
+//         border: 1.5px solid rgba(255, 255, 255, 0.2);
+//         background: rgba(255, 255, 255, 0.08);
+//         cursor: pointer;
+//         font-size: 16px;
+//         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+//         display: flex;
+//         align-items: center;
+//         justify-content: center;
+//         position: relative;
+//       }
+
+//       .action-btn:hover {
+//         background: rgba(255, 255, 255, 0.15);
+//         border-color: rgba(255, 255, 255, 0.4);
+//         transform: scale(1.1);
+//         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+//       }
+
+//       .action-btn:active {
+//         transform: scale(0.95);
+//       }
+
+//       .action-btn.screenshot {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(34, 197, 94, 0.2),
+//           rgba(22, 163, 74, 0.2)
+//         );
+//         border-color: rgba(34, 197, 94, 0.4);
+//       }
+
+//       .action-btn.ocr {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(168, 85, 247, 0.2),
+//           rgba(147, 51, 234, 0.2)
+//         );
+//         border-color: rgba(168, 85, 247, 0.4);
+//       }
+
+//       .action-btn.attach {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(59, 130, 246, 0.2),
+//           rgba(37, 99, 235, 0.2)
+//         );
+//         border-color: rgba(59, 130, 246, 0.4);
+//       }
+
+//       .auto-timer-btn {
+//         position: relative;
+//         display: flex;
+//         align-items: center;
+//         gap: 4px;
+//         padding: 6px 10px;
+//         border-radius: 10px;
+//         border: 1.5px solid rgba(168, 85, 247, 0.4);
+//         background: linear-gradient(
+//           135deg,
+//           rgba(168, 85, 247, 0.15),
+//           rgba(147, 51, 234, 0.15)
+//         );
+//         cursor: pointer;
+//         transition: all 0.2s;
+//         font-size: 13px;
+//       }
+
+//       .auto-timer-btn:hover {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(168, 85, 247, 0.25),
+//           rgba(147, 51, 234, 0.25)
+//         );
+//         transform: scale(1.05);
+//       }
+
+//       .auto-timer-btn.active {
+//         border-color: rgba(34, 197, 94, 0.6);
+//         background: linear-gradient(
+//           135deg,
+//           rgba(34, 197, 94, 0.25),
+//           rgba(22, 163, 74, 0.25)
+//         );
+//         animation: pulse-glow 2s infinite;
+//       }
+
+//       @keyframes pulse-glow {
+//         0%,
+//         100% {
+//           box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+//         }
+//         50% {
+//           box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+//         }
+//       }
+
+//       .timer-display {
+//         font-family: "Courier New", monospace;
+//         font-size: 8px;
+//         font-weight: 700;
+//         min-width: 10px;
+//         text-align: center;
+//         color: white;
+//       }
+
+//       .auto-settings-popup {
+//         position: absolute;
+//         bottom: -5px;
+//         left: 60px;
+//         background: linear-gradient(
+//           135deg,
+//           rgba(15, 23, 42, 0.98),
+//           rgba(30, 41, 59, 0.98)
+//         );
+//         -webkit-backdrop-filter: blur(20px);
+//         backdrop-filter: blur(20px);
+//         border: 1.5px solid rgba(255, 255, 255, 0.15);
+//         border-radius: 5px;
+//         min-width: 100px;
+//         display: none;
+//         z-index: 1000;
+//         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+//       }
+
+//       .auto-settings-popup.show {
+//         display: block;
+//         animation: slideUp 0.2s ease;
+//       }
+
+//       @keyframes slideUp {
+//         from {
+//           opacity: 0;
+//           transform: translateY(5px);
+//         }
+//         to {
+//           opacity: 1;
+//           transform: translateY(0);
+//         }
+//       }
+
+//       .settings-input {
+//         width: 100%;
+//         background: rgba(255, 255, 255, 0.08);
+//         border: 1px solid rgba(255, 255, 255, 0.2);
+//         color: white;
+//         padding: 5px;
+//         border-radius: 8px;
+//         font-size: 12px;
+//         margin-bottom: 5px;
+//         text-align: center;
+//         transition: all 0.2s;
+//       }
+
+//       .settings-input:focus {
+//         outline: none;
+//         border-color: rgba(59, 130, 246, 0.6);
+//         box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+//       }
+
+//       .settings-btn {
+//         width: 100%;
+//         padding: 8px;
+//         background: linear-gradient(
+//           135deg,
+//           rgba(59, 130, 246, 0.8),
+//           rgba(37, 99, 235, 0.8)
+//         );
+//         border: none;
+//         border-radius: 8px;
+//         color: white;
+//         font-size: 11px;
+//         font-weight: 600;
+//         cursor: pointer;
+//         transition: all 0.2s;
+//       }
+
+//       .settings-btn:hover {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(59, 130, 246, 1),
+//           rgba(37, 99, 235, 1)
+//         );
+//         transform: scale(1.05);
+//       }
+//       .chat-container {
+//         flex: 1;
+//         overflow-y: auto;
+//         overflow-x: hidden;
+//         padding: 15px 10px;
+//         display: flex;
+//         flex-direction: column;
+//       }
+
+//       .messages {
+//         display: flex;
+//         flex-direction: column;
+//         gap: 12px;
+//         min-height: min-content;
+//       }
+//       /* Code block styling */
+//       .message pre {
+//         background: rgba(0, 0, 0, 0.3);
+//         border-radius: 8px;
+//         padding: 12px;
+//         overflow-x: auto;
+//         margin: 8px 0;
+//         position: relative;
+//       }
+
+//       .message code {
+//         font-family: "Consolas", "Monaco", "Courier New", monospace;
+//         font-size: 13px;
+//         line-height: 1.5;
+//       }
+
+//       .message pre code {
+//         display: block;
+//         padding: 0;
+//         background: none;
+//         color: #e6edf3;
+//       }
+
+//       .message :not(pre) > code {
+//         background: rgba(255, 255, 255, 0.1);
+//         padding: 2px 6px;
+//         border-radius: 4px;
+//         font-size: 12px;
+//       }
+
+//       /* Copy button for code blocks */
+//       .code-block-wrapper {
+//         position: relative;
+//         margin: 8px 0;
+//       }
+
+//       .copy-code-btn {
+//         position: absolute;
+//         top: 8px;
+//         right: 8px;
+//         background: rgba(59, 130, 246, 0.8);
+//         border: none;
+//         border-radius: 6px;
+//         padding: 6px 12px;
+//         color: white;
+//         font-size: 11px;
+//         cursor: pointer;
+//         opacity: 0;
+//         transition: all 0.2s;
+//         z-index: 10;
+//       }
+
+//       .code-block-wrapper:hover .copy-code-btn {
+//         opacity: 1;
+//       }
+
+//       .copy-code-btn:hover {
+//         background: rgba(59, 130, 246, 1);
+//         transform: scale(1.05);
+//       }
+
+//       .copy-code-btn.copied {
+//         background: rgba(34, 197, 94, 0.9);
+//       }
+
+//       /* Language label */
+//       .code-language {
+//         position: absolute;
+//         top: 8px;
+//         left: 12px;
+//         font-size: 10px;
+//         color: rgba(255, 255, 255, 0.6);
+//         font-weight: 600;
+//         text-transform: uppercase;
+//         pointer-events: none;
+//       }
+//       ::-webkit-scrollbar {
+//         width: 4px;
+//       }
+
+//       ::-webkit-scrollbar-track {
+//         border-radius: 4px;
+//       }
+
+//       ::-webkit-scrollbar-thumb {
+//         background: white;
+//         border-radius: 4px;
+//       }
+
+//       ::-webkit-scrollbar-thumb:hover {
+//         background: rgba(255, 255, 255, 0.5);
+//       }
+
+//       .footer {
+//         flex-shrink: 0;
+//         padding: 5px 5px;
+//         -webkit-backdrop-filter: blur(20px);
+//         backdrop-filter: blur(20px);
+//         border-top: 1px solid rgba(255, 255, 255, 0.1);
+//       }
+
+//       .input-area {
+//         display: flex;
+//         gap: 10px;
+//         align-items: flex-end;
+//       }
+
+//       .input-wrapper {
+//         flex: 1;
+//         border-radius: 12px;
+//         padding: 12px;
+//         display: flex;
+//         flex-direction: column;
+//         gap: 8px;
+//         max-height: 150px;
+//         overflow: hidden;
+//         background: rgba(255, 255, 255, 0.05);
+//         border: 1.5px solid rgba(255, 255, 255, 0.15);
+//         transition: all 0.2s;
+//       }
+
+//       .input-wrapper:focus-within {
+//         border-color: rgba(59, 130, 246, 0.6);
+//         box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+//       }
+
+//       textarea {
+//         background: transparent;
+//         border: none;
+//         color: white;
+//         resize: none;
+//         outline: none;
+//         font-size: 14px;
+//         font-family: inherit;
+//         min-height: 40px;
+//         max-height: 80px;
+//         overflow-y: auto;
+//       }
+
+//       textarea::placeholder {
+//         color: rgba(255, 255, 255, 0.4);
+//       }
+
+//       .send-controls {
+//         display: flex;
+//         flex-direction: column;
+//         gap: 8px;
+//       }
+
+//       .send-btn {
+//         width: 80px;
+//         height: 35px;
+//         border-radius: 12px;
+//         border: none;
+//         background: linear-gradient(
+//           135deg,
+//           rgba(59, 130, 246, 0.8),
+//           rgba(37, 99, 235, 0.8)
+//         );
+//         color: white;
+//         cursor: pointer;
+//         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+//         display: flex;
+//         align-items: center;
+//         justify-content: center;
+//         font-size: 18px;
+//         box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+//       }
+
+//       .send-btn:hover:not(:disabled) {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(59, 130, 246, 1),
+//           rgba(37, 99, 235, 1)
+//         );
+//         transform: scale(1.1);
+//         box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+//       }
+
+//       .send-btn:active:not(:disabled) {
+//         transform: scale(0.95);
+//       }
+
+//       .send-btn:disabled {
+//         opacity: 0.5;
+//         cursor: not-allowed;
+//       }
+
+//       .auto-ss-container {
+//         position: relative;
+//       }
+
+//       .auto-ss-btn {
+//         width: 80px;
+//         height: 30px;
+//         border-radius: 12px;
+//         border: 1.5px solid rgba(34, 197, 94, 0.4);
+//         background: linear-gradient(
+//           135deg,
+//           rgba(34, 197, 94, 0.15),
+//           rgba(22, 163, 74, 0.15)
+//         );
+//         cursor: pointer;
+//         transition: all 0.2s;
+//         display: flex;
+//         flex-direction: row;
+//         align-items: center;
+//         justify-content: center;
+//         gap: 2px;
+//       }
+
+//       .auto-ss-btn:hover {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(34, 197, 94, 0.25),
+//           rgba(22, 163, 74, 0.25)
+//         );
+//         transform: scale(1.05);
+//       }
+
+//       .auto-ss-btn.active {
+//         border-color: rgba(34, 197, 94, 0.6);
+//         background: linear-gradient(
+//           135deg,
+//           rgba(34, 197, 94, 0.3),
+//           rgba(22, 163, 74, 0.3)
+//         );
+//         animation: pulse-glow 2s infinite;
+//       }
+
+//       .auto-ss-icon {
+//         font-size: 16px;
+//       }
+
+//       .auto-ss-timer-text {
+//         font-family: "Courier New", monospace;
+//         font-size: 9px;
+//         font-weight: 700;
+//         color: white;
+//       }
+
+//       .auto-ss-settings {
+//         position: absolute;
+//         bottom: calc(100% + 8px);
+//         right: 0;
+//         background: linear-gradient(
+//           135deg,
+//           rgba(15, 23, 42, 0.98),
+//           rgba(30, 41, 59, 0.98)
+//         );
+//         -webkit-backdrop-filter: blur(20px);
+//         backdrop-filter: blur(20px);
+//         border: 1.5px solid rgba(255, 255, 255, 0.15);
+//         border-radius: 12px;
+//         padding: 12px;
+//         min-width: 160px;
+//         display: none;
+//         z-index: 1000;
+//         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+//       }
+
+//       .auto-ss-settings.show {
+//         display: block;
+//         animation: slideUp 0.2s ease;
+//       }
+
+//       .image-preview-container {
+//         display: flex;
+//         gap: 8px;
+//         flex-wrap: wrap;
+//         max-height: 80px;
+//         overflow-y: auto;
+//       }
+
+//       .image-preview {
+//         position: relative;
+//         width: 60px;
+//         height: 60px;
+//         flex-shrink: 0;
+//         border-radius: 8px;
+//         overflow: hidden;
+//         border: 2px solid rgba(255, 255, 255, 0.2);
+//         transition: all 0.2s;
+//       }
+
+//       .image-preview:hover {
+//         border-color: rgba(59, 130, 246, 0.6);
+//         transform: scale(1.05);
+//       }
+
+//       .image-preview img {
+//         width: 100%;
+//         height: 100%;
+//         object-fit: cover;
+//       }
+
+//       .image-preview button {
+//         position: absolute;
+//         top: -5px;
+//         right: -5px;
+//         background: linear-gradient(
+//           135deg,
+//           rgba(239, 68, 68, 0.9),
+//           rgba(220, 38, 38, 0.9)
+//         );
+//         color: white;
+//         border: none;
+//         border-radius: 50%;
+//         width: 20px;
+//         height: 20px;
+//         cursor: pointer;
+//         font-size: 12px;
+//         display: flex;
+//         align-items: center;
+//         justify-content: center;
+//         transition: all 0.2s;
+//       }
+
+//       .image-preview button:hover {
+//         background: linear-gradient(
+//           135deg,
+//           rgba(239, 68, 68, 1),
+//           rgba(220, 38, 38, 1)
+//         );
+//         transform: scale(1.1);
+//       }
+
+//       .message {
+//         padding: 12px 16px;
+//         border-radius: 12px;
+//         max-width: 80%;
+//         word-wrap: break-word;
+//         animation: slideIn 0.3s ease;
+//       }
+
+//       @keyframes slideIn {
+//         from {
+//           opacity: 0;
+//           transform: translateY(10px);
+//         }
+//         to {
+//           opacity: 1;
+//           transform: translateY(0);
+//         }
+//       }
+
+//       .message.user {
+//         background: rgba(23, 100, 225, 0.9);
+//         align-self: flex-end;
+//         margin-left: auto;
+//       }
+
+//       .message.bot {
+//         background: rgba(15, 88, 204, 0.98);
+//         align-self: flex-start;
+//       }
+
+//       .message.portal {
+//         background: rgba(168, 85, 247, 0.9);
+//         align-self: flex-start;
+//         border: 2px solid rgba(168, 85, 247, 0.5);
+//       }
+
+//       .message.portal::before {
+//         content: "📱 Portal Message";
+//         display: block;
+//         font-size: 10px;
+//         opacity: 0.8;
+//         margin-bottom: 4px;
+//         font-weight: 600;
+//       }
+
+//       .message img {
+//         max-width: 200px;
+//         max-height: 200px;
+//         border-radius: 8px;
+//         margin-top: 8px;
+//         display: block;
+//       }
+
+//       .model-badge {
+//         font-size: 9px;
+//         padding: 2px 6px;
+//         background: rgba(59, 130, 246, 0.3);
+//         border-radius: 4px;
+//         margin-bottom: 4px;
+//         display: inline-block;
+//       }
+
+//       .loading {
+//         display: inline-block;
+//         width: 8px;
+//         height: 8px;
+//         border: 2px solid rgba(255, 255, 255, 0.3);
+//         border-top-color: white;
+//         border-radius: 50%;
+//         animation: spin 0.8s linear infinite;
+//       }
+
+//       @keyframes spin {
+//         to {
+//           transform: rotate(360deg);
+//         }
+//       }
+
+//       @keyframes fadeIn {
+//         from {
+//           opacity: 0;
+//           transform: translateY(5px);
+//         }
+//         to {
+//           opacity: 1;
+//           transform: translateY(0);
+//         }
+//       }
+//     </style>
+//   </head>
+//   <body>
+//     <div class="connection-indicator disconnected" id="connectionIndicator">
+//       <div class="connection-dot"></div>
+//       <span id="connectionText">Disconnected</span>
+//     </div>
+
+//     <div class="container">
+//       <div class="folder-view" id="folderView" onclick="restoreFromFolder()">
+//         <div class="folder-label bg-white/25"></div>
+//       </div>
+
+//       <div class="main-content opacity-[0.7]" id="mainContent">
+//         <!-- Browser View -->
+//         <div class="browser-view" id="browserView">
+//           <div class="header">
+//             <!-- Window Controls -->
+//             <div class="window-controls">
+//               <button onclick="minimizeToFolder()" class="control-btn minimize">
+//                 🥷
+//               </button>
+//               <button id="browserClosebtn" class="control-btn close">✕</button>
+//             </div>
+
+//             <!-- AI Provider Selector -->
+//             <div class="ai-provider-selector">
+//               <!-- Chatbot Section -->
+//               <div class="provider-section">
+//                 <div class="provider-buttons">
+//                   <button
+//                     class="ai-btn"
+//                     data-provider="gemini-2-flash-preview"
+//                     data-mode="chatbot"
+//                   >
+//                     3.0
+//                   </button>
+//                   <button
+//                     class="ai-btn active"
+//                     data-provider="gemini-25-flash"
+//                     data-mode="chatbot"
+//                   >
+//                     2.5
+//                   </button>
+//                   <button
+//                     class="ai-btn"
+//                     data-provider="gemini-25-flash-lite"
+//                     data-mode="chatbot"
+//                   >
+//                     Lite
+//                   </button>
+//                   <button
+//                     class="ai-btn"
+//                     data-provider="Claude"
+//                     data-mode="chatbot"
+//                   >
+//                     Claude
+//                   </button>
+//                   <button
+//                     class="ai-btn"
+//                     data-provider="ChatGPT"
+//                     data-mode="chatbot"
+//                   >
+//                     GPT
+//                   </button>
+//                 </div>
+//               </div>
+
+//               <!-- Browser Section -->
+//               <div class="provider-section">
+//                 <div class="provider-buttons">
+//                   <button
+//                     class="ai-btn browser-mode"
+//                     data-provider="chatgpt"
+//                     data-mode="browser"
+//                   >
+//                     ChatGPT
+//                   </button>
+//                   <button
+//                     class="ai-btn browser-mode active"
+//                     data-provider="claude"
+//                     data-mode="browser"
+//                   >
+//                     Claude
+//                   </button>
+
+//                   <!-- Auto-OCR Timer -->
+//                   <div style="position: relative">
+//                     <button
+//                       class="auto-timer-btn"
+//                       id="browserAutoOcrBtn"
+//                       title="Auto-OCR Timer"
+//                     >
+//                       <span>📝</span>
+//                       <span class="timer-display" id="browserAutoOcrTimer"
+//                         >--</span
+//                       >
+//                     </button>
+
+//                     <div
+//                       class="auto-settings-popup"
+//                       id="browserAutoOcrSettings"
+//                     >
+//                       <input
+//                         type="number"
+//                         id="browserAutoOcrInterval"
+//                         class="settings-input"
+//                         value="30"
+//                         min="5"
+//                         max="300"
+//                         placeholder="Seconds"
+//                       />
+//                       <button
+//                         class="settings-btn"
+//                         onclick="startBrowserAutoOCR()"
+//                       >
+//                         Start
+//                       </button>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+
+//             <!-- Action Buttons -->
+//             <div class="action-buttons">
+//               <div class="action-row">
+//                 <input
+//                   type="file"
+//                   id="browserImageInput"
+//                   accept="image/*"
+//                   multiple
+//                   style="display: none"
+//                 />
+//                 <button
+//                   class="action-btn screenshot"
+//                   id="browserScreenshotBtn"
+//                   title="Screenshot"
+//                 >
+//                   📸
+//                 </button>
+//                 <button class="action-btn ocr" id="browserOcrBtn" title="OCR">
+//                   📝
+//                 </button>
+//               </div>
+//               <div class="action-row">
+//                 <button
+//                   class="action-btn attach"
+//                   id="browserAttachBtn"
+//                   title="Attach"
+//                 >
+//                   📂
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//           <div class="browser-image-preview" id="browserImagePreview">
+//             <img id="browserPreviewImg" src="" alt="Preview" />
+//             <button id="browserPasteBtn">Paste to Chat</button>
+//           </div>
+
+//           <div class="webview-container">
+//             <div class="browser-loading" id="browserLoading">
+//               <div class="browser-spinner"></div>
+//               <p style="color: white">Loading AI interface...</p>
+//             </div>
+
+//             <div class="browser-info" id="browserInfo">
+//               <h3 id="browserInfoTitle">Instructions</h3>
+//               <p id="browserInfoText"></p>
+//             </div>
+
+//             <webview id="browserWebview" class="browser-webview"></webview>
+//           </div>
+//         </div>
+
+//         <!-- Chat View -->
+//         <div class="chat-view" id="chatView">
+//           <!-- Chat View Header -->
+//           <div class="header">
+//             <!-- Window Controls -->
+//             <div class="window-controls">
+//               <button
+//                 onclick="minimizeToFolder()"
+//                 class="control-btn minimize"
+//                 title="Minimize"
+//               >
+//                 🥷
+//               </button>
+//               <button id="closebtn" class="control-btn close" title="Close">
+//                 ✕
+//               </button>
+//             </div>
+
+//             <!-- AI Provider Selector -->
+//             <div class="ai-provider-selector">
+//               <!-- Chatbot Section -->
+//               <div class="provider-section">
+//                 <div class="provider-buttons">
+//                   <button
+//                     class="ai-btn"
+//                     data-provider="gemini-2-flash-preview"
+//                     data-mode="chatbot"
+//                   >
+//                     3.0
+//                   </button>
+//                   <button
+//                     class="ai-btn active"
+//                     data-provider="gemini-25-flash"
+//                     data-mode="chatbot"
+//                   >
+//                     2.5
+//                   </button>
+//                   <button
+//                     class="ai-btn"
+//                     data-provider="gemini-25-flash-lite"
+//                     data-mode="chatbot"
+//                   >
+//                     Lite
+//                   </button>
+//                   <button
+//                     class="ai-btn"
+//                     data-provider="Claude"
+//                     data-mode="chatbot"
+//                   >
+//                     Claude
+//                   </button>
+//                   <button
+//                     class="ai-btn"
+//                     data-provider="ChatGPT"
+//                     data-mode="chatbot"
+//                   >
+//                     GPT
+//                   </button>
+//                 </div>
+//               </div>
+
+//               <!-- Browser Section -->
+//               <div class="provider-section">
+//                 <div class="provider-buttons">
+//                   <button
+//                     class="ai-btn browser-mode"
+//                     data-provider="chatgpt"
+//                     data-mode="browser"
+//                   >
+//                     ChatGPT
+//                   </button>
+//                   <button
+//                     class="ai-btn browser-mode"
+//                     data-provider="claude"
+//                     data-mode="browser"
+//                   >
+//                     Claude
+//                   </button>
+
+//                   <!-- Auto-OCR Timer -->
+//                   <div style="position: relative">
+//                     <button
+//                       class="auto-timer-btn"
+//                       id="autoOcrBtn"
+//                       title="Auto-OCR Timer"
+//                     >
+//                       <span>📝</span>
+//                       <span class="timer-display" id="autoOcrTimer">--</span>
+//                     </button>
+
+//                     <div class="auto-settings-popup" id="autoOcrSettings">
+//                       <input
+//                         type="number"
+//                         id="autoOcrInterval"
+//                         class="settings-input"
+//                         value="30"
+//                         min="5"
+//                         max="300"
+//                         placeholder="Seconds"
+//                       />
+//                       <button class="settings-btn" onclick="startAutoOCR()">
+//                         Start
+//                       </button>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+
+//             <!-- Action Buttons -->
+//             <div class="action-buttons">
+//               <div class="action-row">
+//                 <input
+//                   type="file"
+//                   id="imageInput"
+//                   accept="image/*"
+//                   multiple
+//                   style="display: none"
+//                 />
+//                 <button
+//                   class="action-btn screenshot"
+//                   id="screenshotBtn"
+//                   title="Screenshot"
+//                 >
+//                   📸
+//                 </button>
+//                 <button class="action-btn ocr" id="ocrBtn" title="OCR">
+//                   📝
+//                 </button>
+//               </div>
+//               <div class="action-row">
+//                 <button class="action-btn attach" id="attachBtn" title="Attach">
+//                   📂
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+
+//           <div class="chat-container">
+//             <div class="messages" id="messages"></div>
+//           </div>
+
+//           <div class="footer">
+//             <div class="input-area">
+//               <div class="input-wrapper">
+//                 <div class="image-preview-container" id="imagePreviews"></div>
+//                 <textarea
+//                   id="messageInput"
+//                   placeholder="Type your message..."
+//                   rows="1"
+//                 ></textarea>
+//               </div>
+
+//               <div class="send-controls">
+//                 <!-- Auto Screenshot Button -->
+//                 <div class="auto-ss-container">
+//                   <button
+//                     class="auto-ss-btn"
+//                     id="autoSSBtn"
+//                     title="Auto Screenshot"
+//                   >
+//                     <span class="auto-ss-icon">🤖</span>
+//                     <span class="auto-ss-timer-text" id="autoSSTimer">--</span>
+//                   </button>
+
+//                   <div class="auto-ss-settings" id="autoSSSettings">
+//                     <input
+//                       type="number"
+//                       id="autoSSInterval"
+//                       class="settings-input"
+//                       value="30"
+//                       min="5"
+//                       max="300"
+//                       placeholder="Seconds"
+//                     />
+//                     <button class="settings-btn" onclick="startAutoSS()">
+//                       Start
+//                     </button>
+//                   </div>
+//                 </div>
+
+//                 <!-- Send Button -->
+//                 <button class="send-btn" id="sendBtn" title="Send">
+//                   <svg
+//                     xmlns="http://www.w3.org/2000/svg"
+//                     width="20"
+//                     height="20"
+//                     fill="currentColor"
+//                     viewBox="0 0 256 256"
+//                   >
+//                     <path
+//                       d="M208.49,120.49a12,12,0,0,1-17,0L140,69V216a12,12,0,0,1-24,0V69L64.49,120.49a12,12,0,0,1-17-17l72-72a12,12,0,0,1,17,0l72,72A12,12,0,0,1,208.49,120.49Z"
+//                     ></path>
+//                   </svg>
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+
+//     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+//     <script>
+//       // ==================== SOCKET AND ELEMENT INITIALIZATION ====================
+//       //const socket = io("https://chatbot-al0x.onrender.com/");
+//       const socket = io("http://localhost:3000/");
+
+//       // All element references (declare ONCE at the top)
+//       const messagesDiv = document.getElementById("messages");
+//       const messageInput = document.getElementById("messageInput");
+//       const sendBtn = document.getElementById("sendBtn");
+//       const attachBtn = document.getElementById("attachBtn");
+//       const screenshotBtn = document.getElementById("screenshotBtn");
+//       const imageInput = document.getElementById("imageInput");
+//       const imagePreviewsDiv = document.getElementById("imagePreviews");
+//       const closeBtn = document.getElementById("closebtn");
+//       const folderView = document.getElementById("folderView");
+//       const mainContent = document.getElementById("mainContent");
+//       const connectionIndicator = document.getElementById(
+//         "connectionIndicator"
+//       );
+//       const connectionText = document.getElementById("connectionText");
+//       const autoSSBtn = document.getElementById("autoSSBtn");
+//       const autoSSSettings = document.getElementById("autoSSSettings");
+//       const autoSSTimer = document.getElementById("autoSSTimer");
+
+//       // OCR elements
+//       const ocrBtn = document.getElementById("ocrBtn");
+//       const browserOcrBtn = document.getElementById("browserOcrBtn");
+//       const autoOcrBtn = document.getElementById("autoOcrBtn");
+//       const autoOcrSettings = document.getElementById("autoOcrSettings");
+//       const autoOcrTimer = document.getElementById("autoOcrTimer");
+
+//       // Browser elements
+//       const browserView = document.getElementById("browserView");
+//       const chatView = document.getElementById("chatView");
+//       const browserWebview = document.getElementById("browserWebview");
+//       const browserScreenshotBtn = document.getElementById(
+//         "browserScreenshotBtn"
+//       );
+//       const browserAttachBtn = document.getElementById("browserAttachBtn");
+//       const browserImageInput = document.getElementById("browserImageInput");
+//       const browserClosebtn = document.getElementById("browserClosebtn");
+//       const browserLoading = document.getElementById("browserLoading");
+//       const browserInfo = document.getElementById("browserInfo");
+//       const browserInfoTitle = document.getElementById("browserInfoTitle");
+//       const browserInfoText = document.getElementById("browserInfoText");
+//       const browserImagePreview = document.getElementById(
+//         "browserImagePreview"
+//       );
+//       const browserPreviewImg = document.getElementById("browserPreviewImg");
+//       const browserPasteBtn = document.getElementById("browserPasteBtn");
+//       const browserAutoOcrBtn = document.getElementById("browserAutoOcrBtn");
+//       const browserAutoOcrSettings = document.getElementById(
+//         "browserAutoOcrSettings"
+//       );
+//       const browserAutoOcrTimer = document.getElementById(
+//         "browserAutoOcrTimer"
+//       );
+
+//       // ==================== STATE VARIABLES ====================
+//       let selectedImages = [];
+//       let isMinimized = false;
+//       let currentProvider = "gemini-25-flash";
+//       let autoSSActive = false;
+//       let autoSSCountdown = null;
+//       let autoSSTimeLeft = 0;
+//       let autoOcrActive = false;
+//       let autoOcrCountdown = null;
+//       let autoOcrTimeLeft = 0;
+//       let browserAutoOcrActive = false;
+//       let browserAutoOcrCountdown = null;
+//       let browserAutoOcrTimeLeft = 0;
+//       let currentBrowserProvider = null;
+//       let pendingBrowserImage = null;
+//       let autoSendEnabled = true; // NEW: Auto-send screenshots in browser mode
+
+//       const BROWSER_URLS = {
+//         claude: "https://claude.ai/new",
+//         chatgpt: "https://chat.openai.com/",
+//       };
+
+//       // ==================== PROVIDER BUTTON SETUP ====================
+//       function setupProviderButtons() {
+//         const allProviderButtons = document.querySelectorAll(".ai-btn");
+
+//         allProviderButtons.forEach((btn) => {
+//           btn.addEventListener("click", (e) => {
+//             e.stopPropagation();
+//             const provider = btn.dataset.provider;
+//             const mode = btn.dataset.mode;
+
+//             console.log(`Button clicked: ${provider} (${mode})`);
+//             switchProvider(provider, mode);
+//           });
+//         });
+
+//         console.log("Provider buttons initialized:", allProviderButtons.length);
+//       }
+
+//       function switchProvider(provider, mode = "chatbot") {
+//         currentProvider = provider;
+//         console.log(`Switching to ${provider} (${mode} mode)`);
+
+//         // Update ALL provider buttons in both views
+//         document.querySelectorAll(".ai-btn").forEach((btn) => {
+//           if (btn.dataset.provider === provider && btn.dataset.mode === mode) {
+//             btn.classList.add("active");
+//           } else {
+//             btn.classList.remove("active");
 //           }
 //         });
-        
-//         console.log('✅ Web mode keyboard shortcuts initialized');
-//         console.log('   Space+Space+Space+S - Screenshot');
-//         console.log('   Space+Space+Space+O - OCR');
+
+//         // Handle browser-based providers
+//         if (
+//           mode === "browser" &&
+//           (provider === "claude" || provider === "chatgpt")
+//         ) {
+//           openBrowser(provider);
+//         } else if (mode === "chatbot") {
+//           if (browserView.classList.contains("active")) {
+//             closeBrowser();
+//           }
+//         }
 //       }
-//     })();
-    
-//     // ==================== YOUR EXISTING APP CODE ====================
-//     // (All your existing JavaScript from index.html)
-//     // The app will automatically use window.electronAPI whether in Electron or web
-    
-//     console.log('🚀 Universal chatbot initialized');
-//     console.log('   Works in: Electron, Browser, iFrame, WebView, Any Sandbox');
-//   </script>
-// </body>
+
+//       // ==================== BROWSER FUNCTIONALITY ====================
+//       function openBrowser(provider) {
+//         currentBrowserProvider = provider;
+//         const url = BROWSER_URLS[provider];
+
+//         console.log(`Opening browser for ${provider}: ${url}`);
+
+//         chatView.classList.add("hidden");
+//         browserView.classList.add("active");
+//         browserWebview.src = url;
+
+//         const instructions = {
+//           claude:
+//             'Click 📸 to capture screenshot. Image will appear - click "Paste to Chat" to send it to Claude.',
+//           chatgpt:
+//             'Click 📸 to capture screenshot. Image will appear - click "Paste to Chat" to send it to ChatGPT.',
+//         };
+
+//         browserInfoTitle.textContent = `Using ${
+//           provider === "claude" ? "Claude.ai" : "ChatGPT"
+//         }`;
+//         browserInfoText.textContent = instructions[provider];
+//         browserInfo.classList.remove("hidden");
+
+//         setTimeout(() => browserInfo.classList.add("hidden"), 10000);
+//       }
+
+//       function closeBrowser() {
+//         console.log("Closing browser view");
+
+//         browserView.classList.remove("active");
+//         chatView.classList.remove("hidden");
+//         browserWebview.src = "";
+//         currentBrowserProvider = null;
+//         pendingBrowserImage = null;
+//         browserImagePreview.classList.remove("show");
+
+//         switchProvider("gemini-25-flash", "chatbot");
+//       }
+
+//       function showBrowserImagePreview(imageData) {
+//         pendingBrowserImage = imageData;
+//         browserPreviewImg.src = imageData;
+//         browserImagePreview.classList.add("show");
+//       }
+
+//       async function pasteToBrowserChat() {
+//         if (!pendingBrowserImage) return;
+
+//         const prompt = "Tell only answer";
+
+//         try {
+//           if (currentBrowserProvider === "claude") {
+//             const injectionScript = `
+//                 (async function() {
+//                   try {
+//                     const inputArea = document.querySelector('div[contenteditable="true"]');
+//                     if (inputArea) {
+//                       inputArea.focus();
+//                       inputArea.textContent = "${prompt}";
+//                       inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                      
+//                       // Wait for text to be inserted
+//                       await new Promise(resolve => setTimeout(resolve, 300));
+//                     }
+//                     return 'text_inserted';
+//                   } catch (e) {
+//                     return 'error: ' + e.message;
+//                   }
+//                 })();
+//               `;
+
+//             await browserWebview.executeJavaScript(injectionScript);
+//             await copyImageToClipboard(pendingBrowserImage);
+
+//             // Now paste image and send
+//             const sendScript = `
+//                 (async function() {
+//                   try {
+//                     const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]');
+//                     if (inputArea) {
+//                       inputArea.focus();
+//                       await new Promise(resolve => setTimeout(resolve, 200));
+//                       document.execCommand('paste');
+                      
+//                       // Wait for image to paste
+//                       await new Promise(resolve => setTimeout(resolve, 800));
+                      
+//                       // Click send button
+//                       const sendButton = document.querySelector('button[aria-label="Send message"]');
+//                       if (sendButton && !sendButton.disabled) {
+//                         sendButton.click();
+//                         return 'sent';
+//                       }
+//                     }
+//                     return 'paste_triggered';
+//                   } catch (e) {
+//                     return 'error: ' + e.message;
+//                   }
+//                 })();
+//               `;
+
+//             const result = await browserWebview.executeJavaScript(sendScript);
+
+//             if (result === "sent") {
+//               showBrowserNotification("✅ Sent to Claude successfully!");
+//             } else {
+//               showBrowserNotification("📸 Image pasted! Click send manually.");
+//             }
+//           } else if (currentBrowserProvider === "chatgpt") {
+//             const injectionScript = `
+//                 (async function() {
+//                   try {
+//                     // Try ProseMirror first
+//                     let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
+                    
+//                     if (!inputArea) {
+//                       const textArea = document.querySelector('textarea');
+//                       if (textArea) {
+//                         textArea.focus();
+//                         textArea.value = "${prompt}";
+//                         textArea.dispatchEvent(new Event('input', { bubbles: true }));
+//                         textArea.style.height = 'auto';
+//                         textArea.style.height = textArea.scrollHeight + 'px';
+//                       }
+//                     } else {
+//                       inputArea.focus();
+//                       inputArea.innerHTML = '';
+//                       const paragraph = document.createElement('p');
+//                       paragraph.textContent = "${prompt}";
+//                       inputArea.appendChild(paragraph);
+//                       inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+//                     }
+                    
+//                     await new Promise(resolve => setTimeout(resolve, 300));
+//                     return 'text_inserted';
+//                   } catch (e) {
+//                     return 'error: ' + e.message;
+//                   }
+//                 })();
+//               `;
+
+//             await browserWebview.executeJavaScript(injectionScript);
+//             await copyImageToClipboard(pendingBrowserImage);
+
+//             // Now paste image and send
+//             const sendScript = `
+//                 (async function() {
+//                   try {
+//                     let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
+                    
+//                     if (!inputArea) {
+//                       inputArea = document.querySelector('textarea[name="prompt-textarea"]');
+//                     }
+                    
+//                     if (inputArea) {
+//                       inputArea.focus();
+//                       await new Promise(resolve => setTimeout(resolve, 200));
+//                       document.execCommand('paste');
+                      
+//                       // Wait for image to paste
+//                       await new Promise(resolve => setTimeout(resolve, 800));
+                      
+//                       // Click send button
+//                       const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]');
+//                       if (sendButton && !sendButton.disabled) {
+//                         sendButton.click();
+//                         return 'sent';
+//                       }
+//                     }
+//                     return 'paste_triggered';
+//                   } catch (e) {
+//                     return 'error: ' + e.message;
+//                   }
+//                 })();
+//               `;
+
+//             const result = await browserWebview.executeJavaScript(sendScript);
+
+//             if (result === "sent") {
+//               showBrowserNotification("✅ Sent to ChatGPT successfully!");
+//             } else {
+//               showBrowserNotification("📸 Image pasted! Click send manually.");
+//             }
+//           }
+
+//           setTimeout(() => {
+//             browserImagePreview.classList.remove("show");
+//             pendingBrowserImage = null;
+//           }, 3000);
+//         } catch (error) {
+//           console.error("Paste error:", error);
+//           showBrowserNotification(
+//             "⚠️ Please manually paste the screenshot (it's in your clipboard)"
+//           );
+//         }
+//       }
+
+//       async function copyImageToClipboard(imageDataUrl) {
+//         try {
+//           const response = await fetch(imageDataUrl);
+//           const blob = await response.blob();
+
+//           await navigator.clipboard.write([
+//             new ClipboardItem({
+//               [blob.type]: blob,
+//             }),
+//           ]);
+
+//           console.log("Image copied to clipboard");
+//         } catch (error) {
+//           console.error("Clipboard copy error:", error);
+//         }
+//       }
+
+//       async function copyTextToClipboard(text) {
+//         try {
+//           await navigator.clipboard.writeText(text);
+//           console.log("✅ Text copied to clipboard");
+//           return true;
+//         } catch (error) {
+//           console.error("❌ Clipboard copy error:", error);
+//           return false;
+//         }
+//       }
+
+//       async function injectImageToBrowser(imageDataUrl) {
+//         if (!currentBrowserProvider) {
+//           showBrowserNotification("❌ No browser provider active");
+//           return;
+//         }
+
+//         try {
+//           // First copy to clipboard
+//           await copyImageToClipboard(imageDataUrl);
+
+//           if (currentBrowserProvider === "claude") {
+//             const claudeScript = `
+//                 (async function() {
+//                   try {
+//                     const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"][data-testid="chat-input"]');
+//                     if (!inputArea) return 'input_not_found';
+                    
+//                     inputArea.focus();
+//                     await new Promise(resolve => setTimeout(resolve, 400));
+                    
+//                     // Try multiple paste methods
+//                     // Method 1: execCommand
+//                     let pasted = document.execCommand('paste');
+                    
+//                     // Method 2: Dispatch paste event
+//                     if (!pasted) {
+//                       const pasteEvent = new ClipboardEvent('paste', {
+//                         bubbles: true,
+//                         cancelable: true,
+//                         clipboardData: new DataTransfer()
+//                       });
+//                       inputArea.dispatchEvent(pasteEvent);
+//                     }
+                    
+//                     // Method 3: Keyboard event simulation
+//                     inputArea.dispatchEvent(new KeyboardEvent('keydown', {
+//                       key: 'v',
+//                       code: 'KeyV',
+//                       ctrlKey: true,
+//                       bubbles: true
+//                     }));
+                    
+//                     // Wait for image to be pasted
+//                     await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+//                     ${
+//                       autoSendEnabled
+//                         ? `
+//                     // Find and click send button if auto-send is enabled
+//                     const sendButton = document.querySelector('button[aria-label="Send message"]');
+//                     if (sendButton && !sendButton.disabled) {
+//                       sendButton.click();
+//                       return 'sent';
+//                     }
+//                     `
+//                         : ""
+//                     }
+                    
+//                     return 'paste_triggered';
+//                   } catch (e) {
+//                     return 'error: ' + e.message;
+//                   }
+//                 })();
+//               `;
+
+//             const result = await browserWebview.executeJavaScript(claudeScript);
+
+//             if (result === "sent") {
+//               showBrowserNotification("✅ Screenshot sent to Claude!");
+//             } else {
+//               showBrowserNotification(
+//                 "📸 Image copied! Press Ctrl+V to paste, then send."
+//               );
+//             }
+//           } else if (currentBrowserProvider === "chatgpt") {
+//             const chatgptScript = `
+//                 (async function() {
+//                   try {
+//                     // Find the ProseMirror input
+//                     let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
+                    
+//                     if (!inputArea) {
+//                       inputArea = document.querySelector('textarea[name="prompt-textarea"]');
+//                     }
+                    
+//                     if (!inputArea) return 'input_not_found';
+                    
+//                     inputArea.focus();
+//                     await new Promise(resolve => setTimeout(resolve, 400));
+                    
+//                     // Method 1: Try execCommand paste
+//                     let pasted = document.execCommand('paste');
+                    
+//                     // Method 2: Dispatch paste event with clipboard data
+//                     if (!pasted) {
+//                       const pasteEvent = new ClipboardEvent('paste', {
+//                         bubbles: true,
+//                         cancelable: true
+//                       });
+//                       inputArea.dispatchEvent(pasteEvent);
+//                     }
+                    
+//                     // Method 3: Simulate Ctrl+V keyboard event
+//                     const keyEvent = new KeyboardEvent('keydown', {
+//                       key: 'v',
+//                       code: 'KeyV',
+//                       ctrlKey: true,
+//                       bubbles: true,
+//                       cancelable: true
+//                     });
+//                     inputArea.dispatchEvent(keyEvent);
+                    
+//                     // Also try on document
+//                     document.dispatchEvent(new KeyboardEvent('keydown', {
+//                       key: 'v',
+//                       code: 'KeyV',
+//                       ctrlKey: true,
+//                       bubbles: true
+//                     }));
+                    
+//                     // Wait for image to be pasted
+//                     await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+//                     ${
+//                       autoSendEnabled
+//                         ? `
+//                     // Find and click send button if auto-send is enabled
+//                     const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]');
+//                     if (sendButton && !sendButton.disabled) {
+//                       sendButton.click();
+//                       return 'sent';
+//                     }
+//                     `
+//                         : ""
+//                     }
+                    
+//                     return 'paste_triggered';
+//                   } catch (e) {
+//                     return 'error: ' + e.message;
+//                   }
+//                 })();
+//               `;
+
+//             const result = await browserWebview.executeJavaScript(
+//               chatgptScript
+//             );
+
+//             if (result === "sent") {
+//               showBrowserNotification("✅ Screenshot sent to ChatGPT!");
+//             } else {
+//               showBrowserNotification(
+//                 "📸 Image copied! Press Ctrl+V to paste in ChatGPT."
+//               );
+//             }
+//           }
+//         } catch (error) {
+//           console.error("Image injection error:", error);
+//           showBrowserNotification(
+//             "⚠️ Image in clipboard - paste manually (Ctrl+V)"
+//           );
+//         }
+//       }
+
+//       async function injectTextToBrowser(text) {
+//         if (!currentBrowserProvider) {
+//           showBrowserNotification("❌ No browser provider active");
+//           return;
+//         }
+
+//         try {
+//           const escapedText = text
+//             .replace(/\\/g, "\\\\")
+//             .replace(/`/g, "\\`")
+//             .replace(/"/g, '\\"')
+//             .replace(/'/g, "\\'")
+//             .replace(/\n/g, "\\n")
+//             .replace(/\r/g, "");
+
+//           if (currentBrowserProvider === "claude") {
+//             const claudeScript = `
+//                 (async function() {
+//                   try {
+//                     const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]');
+//                     if (!inputArea) return 'input_not_found';
+                    
+//                     inputArea.focus();
+//                     inputArea.innerHTML = '';
+                    
+//                     const paragraph = document.createElement('p');
+//                     paragraph.textContent = "${escapedText}";
+//                     inputArea.appendChild(paragraph);
+                    
+//                     inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+//                     return 'success';
+//                   } catch (e) {
+//                     return 'error: ' + e.message;
+//                   }
+//                 })();
+//               `;
+
+//             const result = await browserWebview.executeJavaScript(claudeScript);
+
+//             if (result === "success") {
+//               showBrowserNotification("✅ Text inserted into Claude!");
+//             } else {
+//               showBrowserNotification(
+//                 "⚠️ Text copied to clipboard - paste with Ctrl+V"
+//               );
+//               await copyTextToClipboard(text);
+//             }
+//           } else if (currentBrowserProvider === "chatgpt") {
+//             // FIXED: ChatGPT now uses ProseMirror contenteditable div
+//             const chatgptScript = `
+//                 (async function() {
+//                   try {
+//                     // Try ProseMirror contenteditable div (new ChatGPT UI)
+//                     let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
+                    
+//                     // Fallback to textarea (old ChatGPT UI)
+//                     if (!inputArea) {
+//                       const textarea = document.querySelector('textarea[name="prompt-textarea"]');
+//                       if (textarea) {
+//                         textarea.style.display = 'block';
+//                         textarea.focus();
+//                         textarea.value = "${escapedText}";
+//                         textarea.dispatchEvent(new Event('input', { bubbles: true }));
+//                         textarea.style.height = 'auto';
+//                         textarea.style.height = textarea.scrollHeight + 'px';
+//                         return 'success_textarea';
+//                       }
+//                     }
+                    
+//                     if (!inputArea) return 'input_not_found';
+                    
+//                     // Clear existing content
+//                     inputArea.innerHTML = '';
+                    
+//                     // Create paragraph element
+//                     const paragraph = document.createElement('p');
+//                     paragraph.textContent = "${escapedText}";
+                    
+//                     // Insert into ProseMirror
+//                     inputArea.appendChild(paragraph);
+                    
+//                     // Focus the input
+//                     inputArea.focus();
+                    
+//                     // Trigger input events
+//                     inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+//                     inputArea.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+//                     // Remove placeholder if exists
+//                     const placeholder = inputArea.querySelector('p.placeholder');
+//                     if (placeholder && placeholder !== paragraph) {
+//                       placeholder.remove();
+//                     }
+                    
+//                     return 'success';
+//                   } catch (e) {
+//                     return 'error: ' + e.message;
+//                   }
+//                 })();
+//               `;
+
+//             const result = await browserWebview.executeJavaScript(
+//               chatgptScript
+//             );
+
+//             if (result === "success" || result === "success_textarea") {
+//               showBrowserNotification("✅ Text inserted into ChatGPT!");
+//             } else {
+//               showBrowserNotification(
+//                 "⚠️ Text copied to clipboard - paste with Ctrl+V"
+//               );
+//               await copyTextToClipboard(text);
+//             }
+//           }
+//         } catch (error) {
+//           console.error("Text injection error:", error);
+//           showBrowserNotification(
+//             "⚠️ Injection failed. Text copied to clipboard."
+//           );
+//           await copyTextToClipboard(text);
+//         }
+//       }
+
+//       function showBrowserNotification(message) {
+//         const notification = document.createElement("div");
+//         notification.style.cssText = `
+//             position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+//             background: rgba(59, 130, 246, 0.95);
+//             padding: 12px 20px; border-radius: 8px; font-size: 12px; z-index: 1000;
+//             animation: slideInRight 0.3s ease; color: white; font-weight: 600;
+//             box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 90%;
+//             text-align: center;
+//           `;
+//         notification.textContent = message;
+//         document.body.appendChild(notification);
+//         setTimeout(() => notification.remove(), 5000);
+//       }
+
+//       // ==================== BROWSER EVENT LISTENERS ====================
+//       browserScreenshotBtn.addEventListener("click", async () => {
+//         try {
+//           browserScreenshotBtn.disabled = true;
+//           browserScreenshotBtn.textContent = "⏳";
+
+//           const screenshotData = await window.electronAPI.captureScreen();
+
+//           if (screenshotData) {
+//             await copyImageToClipboard(screenshotData);
+//             showBrowserImagePreview(screenshotData);
+
+//             // Show instruction notification
+//             showBrowserNotification(
+//               "📸 Screenshot ready! Clicking in the chat input..."
+//             );
+
+//             // Delay injection slightly
+//             setTimeout(async () => {
+//               // Try auto-inject
+//               await injectImageToBrowser(screenshotData);
+
+//               // Fallback: Show manual paste instruction
+//               setTimeout(() => {
+//                 showBrowserNotification(
+//                   "💡 TIP: If image didn't paste, press Ctrl+V in the chat box!"
+//                 );
+//               }, 2000);
+//             }, 500);
+//           } else {
+//             showBrowserNotification("❌ Screenshot capture failed");
+//           }
+//         } catch (error) {
+//           console.error("Browser screenshot error:", error);
+//           showBrowserNotification("❌ Screenshot failed");
+//         } finally {
+//           browserScreenshotBtn.disabled = false;
+//           browserScreenshotBtn.textContent = "📸";
+//         }
+//       });
+
+//       // Monitor clipboard paste events in browser mode
+//       if (browserWebview) {
+//         browserWebview.addEventListener("did-finish-load", () => {
+//           // Inject clipboard paste helper into webview
+//           const clipboardHelper = `
+//               (function() {
+//                 console.log('Clipboard paste helper loaded');
+                
+//                 // Listen for paste events
+//                 document.addEventListener('paste', (e) => {
+//                   console.log('Paste event detected in browser');
+//                 });
+                
+//                 // Add keyboard shortcut handler
+//                 document.addEventListener('keydown', (e) => {
+//                   if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+//                     console.log('Ctrl+V detected, paste should trigger');
+//                   }
+//                 });
+//               })();
+//             `;
+
+//           browserWebview.executeJavaScript(clipboardHelper).catch((err) => {
+//             console.log("Could not inject clipboard helper:", err);
+//           });
+//         });
+//       }
+
+//       browserPasteBtn.addEventListener("click", () => {
+//         pasteToBrowserChat();
+//       });
+
+//       browserAttachBtn.addEventListener("click", () => {
+//         browserImageInput.click();
+//       });
+
+//       browserImageInput.addEventListener("change", async (e) => {
+//         const files = Array.from(e.target.files);
+//         if (files.length > 0) {
+//           const file = files[0];
+//           const reader = new FileReader();
+//           reader.onload = (event) => {
+//             showBrowserImagePreview(event.target.result);
+//             showBrowserNotification(
+//               `📂 Image loaded! Click "Paste to Chat" to send it.`
+//             );
+//           };
+//           reader.readAsDataURL(file);
+//         }
+//         browserImageInput.value = "";
+//       });
+
+//       browserWebview.addEventListener("did-start-loading", () => {
+//         browserLoading.classList.remove("hidden");
+//       });
+
+//       browserWebview.addEventListener("did-stop-loading", () => {
+//         browserLoading.classList.add("hidden");
+//       });
+
+//       browserWebview.addEventListener("did-fail-load", (e) => {
+//         if (e.errorCode !== -3) {
+//           browserLoading.innerHTML =
+//             '<p style="color: #ef4444;">Failed to load. Check connection.</p>';
+//         }
+//       });
+
+//       browserClosebtn.addEventListener("click", () => {
+//         if (window.electronAPI && window.electronAPI.closeWindow) {
+//           window.electronAPI.closeWindow();
+//         }
+//       });
+
+//       // ==================== OCR FUNCTIONALITY ====================
+//       function showOCRLoading(buttonElement, message = "Extracting text...") {
+//         const originalText = buttonElement.textContent;
+//         buttonElement.disabled = true;
+//         buttonElement.textContent = "⏳";
+
+//         const notification = document.createElement("div");
+//         notification.style.cssText = `
+//             position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+//             background: rgba(59, 130, 246, 0.95);
+//             padding: 12px 20px; border-radius: 8px; font-size: 12px; z-index: 1000;
+//             color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+//             max-width: 90%; text-align: center;
+//           `;
+//         notification.id = "ocr-loading-notification";
+//         notification.textContent = message;
+//         document.body.appendChild(notification);
+
+//         return () => {
+//           buttonElement.disabled = false;
+//           buttonElement.textContent = originalText;
+//           const notif = document.getElementById("ocr-loading-notification");
+//           if (notif) notif.remove();
+//         };
+//       }
+
+//       ocrBtn.addEventListener("click", async () => {
+//         try {
+//           const removeLoading = showOCRLoading(
+//             ocrBtn,
+//             "📸 Capturing screenshot..."
+//           );
+
+//           const screenshotData = await window.electronAPI.captureScreen();
+
+//           if (!screenshotData) {
+//             removeLoading();
+//             alert("Failed to capture screenshot");
+//             return;
+//           }
+
+//           const notif = document.getElementById("ocr-loading-notification");
+//           if (notif) notif.textContent = "📝 Extracting text from image...";
+
+//           const result = await window.electronAPI.extractTextFromImage(
+//             screenshotData
+//           );
+
+//           removeLoading();
+
+//           if (!result.success || !result.text) {
+//             showBrowserNotification(
+//               "❌ No text found in screenshot. Try a clearer image."
+//             );
+//             return;
+//           }
+
+//           console.log(
+//             `Extracted ${result.length} characters:`,
+//             result.text.substring(0, 100) + "..."
+//           );
+
+//           if (currentProvider.startsWith("gemini-")) {
+//             messageInput.value = result.text;
+//             messageInput.style.height = "auto";
+//             messageInput.style.height =
+//               Math.min(messageInput.scrollHeight, 80) + "px";
+//             messageInput.focus();
+
+//             showBrowserNotification(
+//               `✅ Extracted ${result.length} characters. Click Send!`
+//             );
+//           } else {
+//             if (!browserView.classList.contains("active")) {
+//               openBrowser(currentProvider);
+//             }
+
+//             setTimeout(() => {
+//               injectTextToBrowser(result.text);
+//             }, 2000);
+//           }
+//         } catch (error) {
+//           console.error("OCR error:", error);
+//           showBrowserNotification("❌ OCR failed: " + error.message);
+//         }
+//       });
+
+//       browserOcrBtn.addEventListener("click", async () => {
+//         try {
+//           const removeLoading = showOCRLoading(
+//             browserOcrBtn,
+//             "📸 Capturing screenshot..."
+//           );
+
+//           const screenshotData = await window.electronAPI.captureScreen();
+
+//           if (!screenshotData) {
+//             removeLoading();
+//             showBrowserNotification("❌ Failed to capture screenshot");
+//             return;
+//           }
+
+//           const notif = document.getElementById("ocr-loading-notification");
+//           if (notif) notif.textContent = "📝 Extracting text...";
+
+//           const result = await window.electronAPI.extractTextFromImage(
+//             screenshotData
+//           );
+
+//           removeLoading();
+
+//           if (!result.success || !result.text) {
+//             showBrowserNotification("❌ No text found in screenshot");
+//             return;
+//           }
+
+//           showBrowserNotification(
+//             `✅ Extracted ${result.length} characters. Inserting...`
+//           );
+
+//           setTimeout(() => {
+//             injectTextToBrowser(result.text);
+//           }, 500);
+//         } catch (error) {
+//           console.error("Browser OCR error:", error);
+//           showBrowserNotification("❌ OCR failed: " + error.message);
+//         }
+//       });
+
+//       // ==================== AUTO-OCR FUNCTIONALITY ====================
+//       autoOcrBtn.addEventListener("click", () => {
+//         if (!autoOcrActive) {
+//           autoOcrSettings.classList.toggle("show");
+//         } else {
+//           stopAutoOCR();
+//         }
+//       });
+
+//       function startAutoOCR() {
+//         const interval =
+//           parseInt(document.getElementById("autoOcrInterval").value) || 30;
+//         autoOcrTimeLeft = interval;
+//         autoOcrActive = true;
+
+//         autoOcrBtn.classList.add("active");
+//         autoOcrBtn.title = "Auto-OCR Active - Click to stop";
+//         autoOcrSettings.classList.remove("show");
+
+//         updateOcrTimerDisplay();
+
+//         showBrowserNotification(
+//           `🤖 Auto-OCR started! Will capture every ${interval} seconds`
+//         );
+
+//         autoOcrCountdown = setInterval(() => {
+//           autoOcrTimeLeft--;
+//           updateOcrTimerDisplay();
+
+//           if (autoOcrTimeLeft <= 0) {
+//             captureAndOcrAuto();
+//             autoOcrTimeLeft = interval;
+//           }
+//         }, 1000);
+//       }
+
+//       function stopAutoOCR() {
+//         autoOcrActive = false;
+//         clearInterval(autoOcrCountdown);
+//         autoOcrBtn.classList.remove("active");
+//         autoOcrBtn.title = "Auto-OCR Timer";
+//         autoOcrTimer.textContent = "--";
+
+//         showBrowserNotification("⏹️ Auto-OCR stopped");
+//       }
+
+//       function updateOcrTimerDisplay() {
+//         const secs = autoOcrTimeLeft % 60;
+//         autoOcrTimer.textContent = `${String(secs).padStart(2, "0")}s`;
+//       }
+
+//       async function captureAndOcrAuto() {
+//         try {
+//           console.log("🤖 Auto-OCR capture triggered");
+
+//           const screenshotData = await window.electronAPI.captureScreen();
+
+//           if (!screenshotData) {
+//             console.error("Auto-OCR: Screenshot capture failed");
+//             return;
+//           }
+
+//           const result = await window.electronAPI.extractTextFromImage(
+//             screenshotData
+//           );
+
+//           if (!result.success || !result.text) {
+//             showBrowserNotification("🤖 Auto-OCR: No text found");
+//             return;
+//           }
+
+//           console.log(`🤖 Auto-OCR extracted ${result.length} characters`);
+
+//           if (browserView.classList.contains("active")) {
+//             injectTextToBrowser(result.text);
+//             showBrowserNotification(
+//               `🤖 Auto-OCR: ${result.length} chars extracted & inserted!`
+//             );
+//             return;
+//           }
+
+//           if (currentProvider === "claude" || currentProvider === "chatgpt") {
+//             openBrowser(currentProvider);
+//             setTimeout(() => {
+//               injectTextToBrowser(result.text);
+//               showBrowserNotification(
+//                 `🤖 Auto-OCR: ${result.length} chars extracted!`
+//               );
+//             }, 2000);
+//             return;
+//           }
+
+//           messageInput.value = result.text;
+//           messageInput.style.height = "auto";
+//           messageInput.style.height =
+//             Math.min(messageInput.scrollHeight, 80) + "px";
+
+//           showBrowserNotification(
+//             `🤖 Auto-OCR: ${result.length} chars extracted. Review & send!`
+//           );
+//         } catch (error) {
+//           console.error("Auto-OCR error:", error);
+//         }
+//       }
+
+//       // ==================== BROWSER AUTO-OCR ====================
+//       browserAutoOcrBtn.addEventListener("click", () => {
+//         if (!browserAutoOcrActive) {
+//           browserAutoOcrSettings.classList.toggle("show");
+//         } else {
+//           stopBrowserAutoOCR();
+//         }
+//       });
+
+//       function startBrowserAutoOCR() {
+//         const interval =
+//           parseInt(document.getElementById("browserAutoOcrInterval").value) ||
+//           30;
+//         browserAutoOcrTimeLeft = interval;
+//         browserAutoOcrActive = true;
+
+//         browserAutoOcrBtn.classList.add("active");
+//         browserAutoOcrBtn.title = "Auto-OCR Active - Click to stop";
+//         browserAutoOcrSettings.classList.remove("show");
+
+//         updateBrowserOcrTimerDisplay();
+
+//         showBrowserNotification(
+//           `🤖 Auto-OCR started! Will capture every ${interval} seconds`
+//         );
+
+//         browserAutoOcrCountdown = setInterval(() => {
+//           browserAutoOcrTimeLeft--;
+//           updateBrowserOcrTimerDisplay();
+
+//           if (browserAutoOcrTimeLeft <= 0) {
+//             captureAndOcrAutoBrowser();
+//             browserAutoOcrTimeLeft = interval;
+//           }
+//         }, 1000);
+//       }
+
+//       function stopBrowserAutoOCR() {
+//         browserAutoOcrActive = false;
+//         clearInterval(browserAutoOcrCountdown);
+//         browserAutoOcrBtn.classList.remove("active");
+//         browserAutoOcrBtn.title = "Auto-OCR Timer";
+//         browserAutoOcrTimer.textContent = "--";
+
+//         showBrowserNotification("⏹️ Auto-OCR stopped");
+//       }
+
+//       function updateBrowserOcrTimerDisplay() {
+//         const secs = browserAutoOcrTimeLeft % 60;
+//         browserAutoOcrTimer.textContent = `${String(secs).padStart(2, "0")}s`;
+//       }
+
+//       async function captureAndOcrAutoBrowser() {
+//         try {
+//           console.log("🤖 Browser Auto-OCR capture triggered");
+
+//           const screenshotData = await window.electronAPI.captureScreen();
+
+//           if (!screenshotData) {
+//             console.error("Auto-OCR: Screenshot capture failed");
+//             return;
+//           }
+
+//           const result = await window.electronAPI.extractTextFromImage(
+//             screenshotData
+//           );
+
+//           if (!result.success || !result.text) {
+//             showBrowserNotification("🤖 Auto-OCR: No text found");
+//             return;
+//           }
+
+//           console.log(
+//             `🤖 Browser Auto-OCR extracted ${result.length} characters`
+//           );
+
+//           await injectTextToBrowser(result.text);
+//           showBrowserNotification(
+//             `🤖 Auto-OCR: ${result.length} chars inserted!`
+//           );
+//         } catch (error) {
+//           console.error("Browser Auto-OCR error:", error);
+//         }
+//       }
+
+//       // ==================== AUTO SCREENSHOT ====================
+//       autoSSBtn.addEventListener("click", () => {
+//         if (!autoSSActive) {
+//           autoSSSettings.classList.toggle("show");
+//         } else {
+//           stopAutoSS();
+//         }
+//       });
+
+//       function startAutoSS() {
+//         const interval =
+//           parseInt(document.getElementById("autoSSInterval").value) || 30;
+//         autoSSTimeLeft = interval;
+//         autoSSActive = true;
+
+//         autoSSBtn.classList.add("active");
+//         autoSSBtn.title = "Click to stop";
+//         autoSSSettings.classList.remove("show");
+
+//         updateTimerDisplay();
+
+//         autoSSCountdown = setInterval(() => {
+//           autoSSTimeLeft--;
+//           updateTimerDisplay();
+
+//           if (autoSSTimeLeft <= 0) {
+//             captureAndSendAuto();
+//             autoSSTimeLeft = interval;
+//           }
+//         }, 1000);
+//       }
+
+//       function stopAutoSS() {
+//         autoSSActive = false;
+//         clearInterval(autoSSCountdown);
+//         autoSSBtn.classList.remove("active");
+//         autoSSBtn.title = "Tell only answer";
+//         autoSSTimer.textContent = "--";
+//       }
+
+//       function updateTimerDisplay() {
+//         const secs = autoSSTimeLeft % 60;
+//         autoSSTimer.textContent = `${String(secs).padStart(2, "0")}s`;
+//       }
+
+//       async function captureAndSendAuto() {
+//         try {
+//           const screenshotData = await window.electronAPI.captureScreen();
+
+//           if (screenshotData) {
+//             if (browserView.classList.contains("active")) {
+//               showBrowserImagePreview(screenshotData);
+//               showBrowserNotification(
+//                 '🤖 Auto-screenshot! Click "Paste to Chat" to send.'
+//               );
+//               return;
+//             }
+
+//             if (currentProvider === "claude" || currentProvider === "chatgpt") {
+//               openBrowser(currentProvider);
+//               setTimeout(() => {
+//                 showBrowserImagePreview(screenshotData);
+//                 showBrowserNotification(
+//                   '🤖 Auto-screenshot! Click "Paste to Chat" to send.'
+//                 );
+//               }, 2000);
+//               return;
+//             }
+
+//             const autoImage = {
+//               data: screenshotData,
+//               name: `auto_${Date.now()}.png`,
+//               mimeType: "image/png",
+//             };
+
+//             addMessage("Tell only answer", true, [autoImage], currentProvider);
+
+//             const messageData = {
+//               prompt: "Tell only answer and provide insights.",
+//               images: [autoImage],
+//               provider: currentProvider,
+//             };
+
+//             showLoading();
+//             socket.emit("send_message", messageData);
+//           }
+//         } catch (error) {
+//           console.error("Auto screenshot error:", error);
+//         }
+//       }
+
+//       // ==================== WINDOW CONTROLS ====================
+//       function minimizeToFolder() {
+//         if (window.electronAPI && window.electronAPI.minimizeToFolder) {
+//           window.electronAPI.minimizeToFolder();
+//           mainContent.classList.add("hidden");
+//           folderView.classList.add("active");
+//           isMinimized = true;
+//         }
+//       }
+
+//       function restoreFromFolder() {
+//         if (
+//           window.electronAPI &&
+//           window.electronAPI.restoreFromFolder &&
+//           isMinimized
+//         ) {
+//           window.electronAPI.restoreFromFolder();
+//           folderView.classList.remove("active");
+//           mainContent.classList.remove("hidden");
+//           isMinimized = false;
+//         }
+//       }
+
+//       if (window.electronAPI && window.electronAPI.onRestore) {
+//         window.electronAPI.onRestore(() => {
+//           folderView.classList.remove("active");
+//           mainContent.classList.remove("hidden");
+//           isMinimized = false;
+//         });
+//       }
+
+//       messageInput.addEventListener("input", () => {
+//         messageInput.style.height = "auto";
+//         messageInput.style.height =
+//           Math.min(messageInput.scrollHeight, 80) + "px";
+//       });
+
+//       closeBtn.addEventListener("click", () => {
+//         if (window.electronAPI && window.electronAPI.closeWindow) {
+//           window.electronAPI.closeWindow();
+//         }
+//       });
+
+//       // ==================== SCREENSHOT FUNCTIONALITY ====================
+//       screenshotBtn.addEventListener("click", async () => {
+//         try {
+//           screenshotBtn.disabled = true;
+//           screenshotBtn.textContent = "⏳";
+
+//           const screenshotData = await window.electronAPI.captureScreen();
+
+//           if (screenshotData) {
+//             const newImage = {
+//               data: screenshotData,
+//               name: `screenshot_${Date.now()}.png`,
+//               mimeType: "image/png",
+//             };
+
+//             if (currentProvider === "claude" || currentProvider === "chatgpt") {
+//               if (!browserView.classList.contains("active")) {
+//                 openBrowser(currentProvider);
+//               }
+
+//               setTimeout(() => {
+//                 showBrowserImagePreview(screenshotData);
+//                 showBrowserNotification(
+//                   '📸 Screenshot captured! Click "Paste to Chat".'
+//                 );
+//               }, 1000);
+
+//               return;
+//             }
+
+//             selectedImages.push(newImage);
+//             updateImagePreviews();
+
+//             if (!messageInput.value.trim()) {
+//               messageInput.value = "Tell only answer";
+//             }
+//           } else {
+//             alert("Failed to capture screenshot");
+//           }
+//         } catch (error) {
+//           console.error("Screenshot error:", error);
+//           alert("Screenshot capture failed");
+//         } finally {
+//           screenshotBtn.disabled = false;
+//           screenshotBtn.textContent = "📸";
+//         }
+//       });
+
+//       if (window.electronAPI && window.electronAPI.onScreenshotTrigger) {
+//         window.electronAPI.onScreenshotTrigger(() => {
+//           if (browserView.classList.contains("active")) {
+//             browserScreenshotBtn.click();
+//           } else {
+//             screenshotBtn.click();
+//           }
+//         });
+//       }
+
+//       // ==================== IMAGE ATTACHMENT ====================
+//       attachBtn.addEventListener("click", () => {
+//         imageInput.click();
+//       });
+
+//       imageInput.addEventListener("change", (e) => {
+//         const files = Array.from(e.target.files);
+//         files.forEach((file) => {
+//           const reader = new FileReader();
+//           reader.onload = (event) => {
+//             selectedImages.push({
+//               data: event.target.result,
+//               name: file.name,
+//               mimeType: file.type,
+//             });
+//             updateImagePreviews();
+//           };
+//           reader.readAsDataURL(file);
+//         });
+//         imageInput.value = "";
+//       });
+
+//       function updateImagePreviews() {
+//         imagePreviewsDiv.innerHTML = "";
+//         selectedImages.forEach((img, index) => {
+//           const preview = document.createElement("div");
+//           preview.className = "image-preview";
+//           preview.innerHTML = `
+//               <img src="${img.data}" alt="${img.name}">
+//               <button onclick="removeImage(${index})">×</button>
+//             `;
+//           imagePreviewsDiv.appendChild(preview);
+//         });
+//       }
+
+//       window.removeImage = function (index) {
+//         selectedImages.splice(index, 1);
+//         updateImagePreviews();
+//       };
+
+//       // ==================== MESSAGING ====================
+//       function addMessage(
+//         text,
+//         isUser,
+//         images = [],
+//         sender = null,
+//         provider = null
+//       ) {
+//         const messageDiv = document.createElement("div");
+//         const messageClass =
+//           sender === "portal" ? "portal" : isUser ? "user" : "bot";
+//         messageDiv.className = `message ${messageClass}`;
+
+//         let content = "";
+
+//         if (!isUser && provider) {
+//           const modelNames = {
+//             "gemini-2-flash-preview": "🤖 Gemini 3.0 Flash-Preview",
+//             "gemini-25-flash": "🤖 Gemini 2.5 Flash",
+//             "gemini-25-flash-lite": "🤖 Gemini 2.5 Lite",
+//             Claude: "🧠 Claude Sonnet 4 (API)",
+//             ChatGPT: "💬 ChatGPT (API)",
+//             claude: "🧠 Claude Browser",
+//             chatgpt: "💬 ChatGPT Browser",
+//           };
+//           content += `<div class="model-badge">${
+//             modelNames[provider] || provider
+//           }</div>`;
+//         }
+
+//         if (images.length > 0) {
+//           images.forEach((img) => {
+//             content += `<img src="${img.data}" alt="${img.name}">`;
+//           });
+//         }
+
+//         // NEW: Render markdown for bot messages
+//         if (!isUser && text) {
+//           content += `<div class="message-content">${renderMarkdown(
+//             text
+//           )}</div>`;
+//         } else {
+//           content += `<div>${text}</div>`;
+//         }
+
+//         messageDiv.innerHTML = content;
+
+//         // Add copy buttons to code blocks
+//         if (!isUser) {
+//           addCopyButtonsToCodeBlocks(messageDiv);
+//         }
+
+//         messagesDiv.appendChild(messageDiv);
+
+//         const chatContainer = document.querySelector(".chat-container");
+//         chatContainer.scrollTop = chatContainer.scrollHeight;
+//       }
+
+//       // NEW: Markdown rendering function
+//       function renderMarkdown(text) {
+//         // Configure marked options
+//         marked.setOptions({
+//           highlight: function (code, lang) {
+//             if (lang && hljs.getLanguage(lang)) {
+//               try {
+//                 return hljs.highlight(code, { language: lang }).value;
+//               } catch (err) {
+//                 console.error("Highlight error:", err);
+//               }
+//             }
+//             return hljs.highlightAuto(code).value;
+//           },
+//           breaks: true,
+//           gfm: true,
+//         });
+
+//         return marked.parse(text);
+//       }
+
+//       // NEW: Add copy buttons to code blocks
+//       function addCopyButtonsToCodeBlocks(messageDiv) {
+//         const codeBlocks = messageDiv.querySelectorAll("pre code");
+
+//         codeBlocks.forEach((codeBlock) => {
+//           const pre = codeBlock.parentElement;
+//           const wrapper = document.createElement("div");
+//           wrapper.className = "code-block-wrapper";
+
+//           // Detect language
+//           const classes = codeBlock.className.split(" ");
+//           const langClass = classes.find((c) => c.startsWith("language-"));
+//           const language = langClass
+//             ? langClass.replace("language-", "")
+//             : "code";
+
+//           // Add language label
+//           const langLabel = document.createElement("span");
+//           langLabel.className = "code-language";
+//           langLabel.textContent = language;
+
+//           // Create copy button
+//           const copyBtn = document.createElement("button");
+//           copyBtn.className = "copy-code-btn";
+//           copyBtn.textContent = "📋 Copy";
+
+//           copyBtn.addEventListener("click", async () => {
+//             const code = codeBlock.textContent;
+//             try {
+//               await navigator.clipboard.writeText(code);
+//               copyBtn.textContent = "✅ Copied!";
+//               copyBtn.classList.add("copied");
+
+//               setTimeout(() => {
+//                 copyBtn.textContent = "📋 Copy";
+//                 copyBtn.classList.remove("copied");
+//               }, 2000);
+//             } catch (err) {
+//               console.error("Copy failed:", err);
+//               copyBtn.textContent = "❌ Failed";
+//               setTimeout(() => {
+//                 copyBtn.textContent = "📋 Copy";
+//               }, 2000);
+//             }
+//           });
+
+//           // Wrap the pre element
+//           pre.parentNode.insertBefore(wrapper, pre);
+//           wrapper.appendChild(pre);
+//           wrapper.appendChild(langLabel);
+//           wrapper.appendChild(copyBtn);
+//         });
+//       }
+
+//       function showLoading() {
+//         const loadingDiv = document.createElement("div");
+//         loadingDiv.className = "message bot";
+//         loadingDiv.id = "loading";
+//         loadingDiv.innerHTML = '<div class="loading"></div>';
+//         messagesDiv.appendChild(loadingDiv);
+
+//         const chatContainer = document.querySelector(".chat-container");
+//         chatContainer.scrollTop = chatContainer.scrollHeight;
+//       }
+
+//       function removeLoading() {
+//         const loading = document.getElementById("loading");
+//         if (loading) loading.remove();
+//       }
+
+//       function sendMessage() {
+//         const text = messageInput.value.trim();
+
+//         if (!text && selectedImages.length === 0) return;
+
+//         if (currentProvider === "claude" || currentProvider === "chatgpt") {
+//           if (!browserView.classList.contains("active")) {
+//             openBrowser(currentProvider);
+//           }
+
+//           showBrowserNotification(
+//             "💬 Please type your message directly in the " +
+//               (currentProvider === "claude" ? "Claude" : "ChatGPT") +
+//               " interface."
+//           );
+
+//           messageInput.value = "";
+//           messageInput.style.height = "auto";
+//           selectedImages = [];
+//           updateImagePreviews();
+//           return;
+//         }
+
+//         addMessage(
+//           text || "Sent images",
+//           true,
+//           selectedImages,
+//           null,
+//           currentProvider
+//         );
+
+//         const messageData = {
+//           prompt: text,
+//           images: selectedImages,
+//           provider: currentProvider,
+//         };
+
+//         sendBtn.disabled = true;
+//         showLoading();
+
+//         socket.emit("send_message", messageData);
+
+//         messageInput.value = "";
+//         messageInput.style.height = "auto";
+//         selectedImages = [];
+//         updateImagePreviews();
+//       }
+
+//       sendBtn.addEventListener("click", sendMessage);
+
+//       messageInput.addEventListener("keydown", (e) => {
+//         if (e.key === "Enter" && !e.shiftKey) {
+//           e.preventDefault();
+//           sendMessage();
+//         }
+//       });
+
+//       // ==================== SOCKET LISTENERS ====================
+//       socket.on("portal_notification", (data) => {
+//         console.log("Received portal message:", data);
+//         addMessage(data.message, false, [], "portal");
+
+//         const notification = document.createElement("div");
+//         notification.style.cssText = `
+//             position: fixed; top: 60px; right: 20px; background: rgba(168, 85, 247, 0.95);
+//             padding: 12px 20px; border-radius: 8px; animation: slideInRight 0.3s ease;
+//             z-index: 1000; max-width: 300px;
+//           `;
+//         notification.innerHTML = `
+//             <div style="font-weight: 600; font-size: 12px; margin-bottom: 4px;">📱 Portal Message</div>
+//             <div style="font-size: 14px;">${data.message.substring(0, 60)}${
+//           data.message.length > 60 ? "..." : ""
+//         }</div>
+//           `;
+//         document.body.appendChild(notification);
+//         setTimeout(() => notification.remove(), 5000);
+//       });
+
+//       socket.on("bot_reply", (data) => {
+//         removeLoading();
+//         const reply = typeof data === "string" ? data : data.reply;
+//         const provider =
+//           typeof data === "object" ? data.provider : currentProvider;
+//         addMessage(reply, false, [], null, provider);
+//         sendBtn.disabled = false;
+//       });
+
+//       socket.on("connect", () => {
+//         console.log("Connected to server");
+//         socket.emit("identify", { type: "chatbot" });
+//       });
+
+//       socket.on("disconnect", () => {
+//         console.log("Disconnected from server");
+//       });
+
+//       socket.on("portal_status", (data) => {
+//         console.log(
+//           "Portal status:",
+//           data.connected ? "Connected" : "Disconnected"
+//         );
+
+//         if (data.connected) {
+//           connectionIndicator.classList.remove("disconnected");
+//           connectionIndicator.classList.add("connected");
+//           connectionText.textContent = "Portal Connected";
+//         } else {
+//           connectionIndicator.classList.remove("connected");
+//           connectionIndicator.classList.add("disconnected");
+//           connectionText.textContent = "Portal Offline";
+//         }
+//       });
+
+//       // ==================== KEYBOARD SHORTCUTS ====================
+//       document.addEventListener("keydown", (e) => {
+//         if (browserView.classList.contains("active")) {
+//           if (e.key === "Escape") {
+//             closeBrowser();
+//           }
+//           if (e.ctrlKey && e.key === "v" && pendingBrowserImage) {
+//             showBrowserNotification(
+//               '💡 Tip: Click "Paste to Chat" or paste directly!'
+//             );
+//           }
+//         }
+//       });
+
+//       if (window.electronAPI && window.electronAPI.onOcrTrigger) {
+//         window.electronAPI.onOcrTrigger(() => {
+//           console.log("OCR triggered via keyboard shortcut");
+//           if (browserView.classList.contains("active")) {
+//             browserOcrBtn.click();
+//           } else {
+//             ocrBtn.click();
+//           }
+//         });
+//       }
+
+//       // ==================== CLICK OUTSIDE HANDLERS ====================
+//       document.addEventListener("click", (e) => {
+//         if (
+//           !autoSSBtn.contains(e.target) &&
+//           !autoSSSettings.contains(e.target)
+//         ) {
+//           autoSSSettings.classList.remove("show");
+//         }
+
+//         if (
+//           !autoOcrBtn.contains(e.target) &&
+//           !autoOcrSettings.contains(e.target)
+//         ) {
+//           autoOcrSettings.classList.remove("show");
+//         }
+
+//         if (
+//           !browserAutoOcrBtn.contains(e.target) &&
+//           !browserAutoOcrSettings.contains(e.target)
+//         ) {
+//           browserAutoOcrSettings.classList.remove("show");
+//         }
+//       });
+
+//       // ==================== GLOBAL FUNCTION EXPORTS ====================
+//       window.removeImage = window.removeImage;
+//       window.startAutoSS = startAutoSS;
+//       window.startAutoOCR = startAutoOCR;
+//       window.startBrowserAutoOCR = startBrowserAutoOCR;
+//       window.restoreFromFolder = restoreFromFolder;
+
+//       // ==================== INITIALIZATION ====================
+//       document.addEventListener("DOMContentLoaded", () => {
+//         setupProviderButtons();
+//         console.log("✅ Application initialized with multi-model support");
+//       });
+
+//       if (document.readyState === "loading") {
+//         document.addEventListener("DOMContentLoaded", setupProviderButtons);
+//       } else {
+//         setupProviderButtons();
+//       }
+//       // Click test functionality
+//       document.addEventListener("DOMContentLoaded", function () {
+//         console.log("🖱️  Click handler initialized");
+
+//         // Track all clicks for debugging
+//         let clickCount = 0;
+//         document.addEventListener("click", function (e) {
+//           clickCount++;
+//           console.log(
+//             `Click #${clickCount} detected on:`,
+//             e.target.tagName,
+//             e.target.className
+//           );
+
+//           // Visual feedback
+//           const ripple = document.createElement("div");
+//           ripple.style.cssText = `
+//         position: fixed;
+//         left: ${e.clientX - 5}px;
+//         top: ${e.clientY - 5}px;
+//         width: 10px;
+//         height: 10px;
+//         background: rgba(59, 130, 246, 0.5);
+//         border-radius: 50%;
+//         pointer-events: none;
+//         animation: ripple 0.6s ease-out;
+//         z-index: 10000;
+//       `;
+//           document.body.appendChild(ripple);
+//           setTimeout(() => ripple.remove(), 600);
+//         });
+
+//         // Add ripple animation
+//         if (!document.querySelector("#ripple-style")) {
+//           const style = document.createElement("style");
+//           style.id = "ripple-style";
+//           style.textContent = `
+//         @keyframes ripple {
+//           0% {
+//             transform: scale(1);
+//             opacity: 1;
+//           }
+//           100% {
+//             transform: scale(4);
+//             opacity: 0;
+//           }
+//         }
+//       `;
+//           document.head.appendChild(style);
+//         }
+
+//         // Log button click status
+//         document.querySelectorAll("button").forEach((btn, index) => {
+//           btn.addEventListener("click", function () {
+//             console.log(
+//               `✅ Button ${index} clicked successfully:`,
+//               btn.textContent || btn.title
+//             );
+//           });
+//         });
+
+//         // Debug mode: Show clickable regions
+//         if (window.location.search.includes("debug=true")) {
+//           document
+//             .querySelectorAll("button, input, textarea, .ai-btn, .action-btn")
+//             .forEach((el) => {
+//               el.style.outline = "2px solid rgba(0, 255, 0, 0.5)";
+//             });
+//           console.log("🐛 Debug mode: Clickable regions highlighted");
+//         }
+//       });
+//     </script>
+//   </body>
 // </html>
