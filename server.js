@@ -126,8 +126,12 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://chatbot-delta-ten-87.vercel.app",
-    methods: ["GET", "POST"]
+    origin: [
+      "https://chatbot-sepia-sigma.vercel.app",  // Must match the app.use(cors) above
+      "http://localhost:5173"
+    ],
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
