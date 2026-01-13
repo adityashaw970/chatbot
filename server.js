@@ -1,4 +1,5 @@
-// server.js - Updated with Multi-Model Support
+// server.js - COMPLETE CORS FIX
+
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -11,22 +12,34 @@ const ChatSession = require("./src/models/ChatSession");
 
 const app = express();
 
+// ✅ FIXED CORS CONFIGURATION
 app.use(cors({
   origin: [
-    "https://chatbot-sepia-sigma.vercel.app/",
-    "http://localhost:5173"
+    "https://chatbot-sepia-sigma.vercel.app",  // Your Vercel frontend (no trailing slash)
+    "http://localhost:5173",                   // Local development
+    "http://localhost:5174"                    // Alternative local port
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Cache preflight for 10 minutes
 }));
 
 // Add security headers
 app.use((req, res, next) => {
+  // Log incoming requests for debugging
+  console.log(`📨 ${req.method} ${req.url} from ${req.headers.origin || 'unknown'}`);
+  
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // Changed from DENY
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  
+  // Don't set HSTS in development
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  
   next();
 });
 
@@ -34,16 +47,39 @@ app.use(express.json());
 
 connectDB();
 
+// ✅ ADD HEALTH CHECK ROUTE FIRST (for debugging)
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    cors: 'enabled'
+  });
+});
+
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Chatbot API Server',
+    endpoints: {
+      health: '/health',
+      sessions: '/api/sessions',
+      socketio: 'socket.io connected'
+    }
+  });
+});
+
 // REST API Routes for Portal
 app.get('/api/sessions', async (req, res) => {
   try {
+    console.log('📋 Fetching sessions...');
     const sessions = await ChatSession.find()
       .sort({ updatedAt: -1 })
       .select('socketId lastMessage createdAt updatedAt aiProvider')
       .limit(100);
+    
+    console.log(`✅ Found ${sessions.length} sessions`);
     res.json(sessions);
   } catch (error) {
-    console.error('Error fetching sessions:', error);
+    console.error('❌ Error fetching sessions:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -51,13 +87,13 @@ app.get('/api/sessions', async (req, res) => {
 app.delete('/api/sessions/all', async (req, res) => {
   try {
     const result = await ChatSession.deleteMany({});
-    console.log(`Deleted ${result.deletedCount} sessions`);
+    console.log(`🗑️  Deleted ${result.deletedCount} sessions`);
     res.json({ 
       message: 'All sessions deleted successfully',
       deletedCount: result.deletedCount
     });
   } catch (error) {
-    console.error('Error deleting all sessions:', error);
+    console.error('❌ Error deleting all sessions:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -70,7 +106,7 @@ app.get('/api/sessions/:sessionId/messages', async (req, res) => {
     }
     res.json(session.history);
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    console.error('❌ Error fetching messages:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -107,7 +143,7 @@ app.post('/api/sessions/:sessionId/messages', async (req, res) => {
     
     res.json(newMessage);
   } catch (error) {
-    console.error('Error adding message:', error);
+    console.error('❌ Error adding message:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -117,24 +153,27 @@ app.delete('/api/sessions/:sessionId', async (req, res) => {
     await ChatSession.findByIdAndDelete(req.params.sessionId);
     res.json({ message: 'Session deleted successfully' });
   } catch (error) {
-    console.error('Error deleting session:', error);
+    console.error('❌ Error deleting session:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 const httpServer = createServer(app);
 
+// ✅ FIXED SOCKET.IO CORS (must match above)
 const io = new Server(httpServer, {
   cors: {
     origin: [
-      "https://chatbot-sepia-sigma.vercel.app",  // Must match the app.use(cors) above
-      "http://localhost:5173"
+      "https://chatbot-sepia-sigma.vercel.app",
+      "http://localhost:5173",
+      "http://localhost:5174"
     ],
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+    allowedHeaders: ["Content-Type"]
+  },
+  transports: ['websocket', 'polling']
 });
-
 
 const generateResponse = require("./src/service/ai.service");
 const transcribeAudio = require("./src/service/transcription.service");
@@ -182,28 +221,26 @@ io.on("connection", (socket) => {
     }
   }, 2000);
   
- socket.on("send_message", async (msg) => {
-  const messageText = msg.prompt || "";
-  const images = msg.images || [];
-  let provider = msg.provider || 'gemini-25-flash';
-  
-  // Normalize provider names (Claude -> claude, ChatGPT -> chatgpt)
-  const providerMap = {
-    'Claude': 'claude',
-    'ChatGPT': 'chatgpt'
-  };
-  provider = providerMap[provider] || provider;
-  
-  const session = chatSessions.get(socket.id);
-  if (!session) {
-    console.log("⚠️  No session found for:", socket.id);
-    return;
-  }
+  socket.on("send_message", async (msg) => {
+    const messageText = msg.prompt || "";
+    const images = msg.images || [];
+    let provider = msg.provider || 'gemini-25-flash';
+    
+    const providerMap = {
+      'Claude': 'claude',
+      'ChatGPT': 'chatgpt'
+    };
+    provider = providerMap[provider] || provider;
+    
+    const session = chatSessions.get(socket.id);
+    if (!session) {
+      console.log("⚠️  No session found for:", socket.id);
+      return;
+    }
 
-  try {
-    console.log(`🤖 Processing message with ${provider}...`);
+    try {
+      console.log(`🤖 Processing message with ${provider}...`);
       
-      // Save user message to database
       const dbSession = await ChatSession.findById(session.dbId);
       if (dbSession) {
         dbSession.history.push({
@@ -223,8 +260,6 @@ io.on("connection", (socket) => {
         await dbSession.save();
       }
       
-      // Only process Gemini models on server
-     // Process Gemini, Claude, and ChatGPT on server
       if (provider.startsWith('gemini-') || provider === 'claude' || provider === 'chatgpt') {
         const reply = await generateResponse(messageText, images, session.history, provider);
         
@@ -251,10 +286,9 @@ io.on("connection", (socket) => {
           });
         });
       }
-      // Claude/ChatGPT handled in browser - no server processing needed
       
     } catch (e) {
-      console.error("Error generating AI response:", e);
+      console.error("❌ Error generating AI response:", e);
       socket.emit("bot_reply", { 
         reply: `Error generating response from ${provider}. Please check your API key.`,
         error: true
@@ -273,20 +307,19 @@ io.on("connection", (socket) => {
       }
 
       const audioBuffer = Buffer.from(buffer);
-      
       console.log(`Processing audio: ${audioBuffer.length} bytes, type: ${mimeType}`);
       
       const transcript = await transcribeAudio(audioBuffer, mimeType);
       
       if (transcript && transcript.trim()) {
-        console.log("Transcription successful:", transcript.substring(0, 100) + "...");
+        console.log("✅ Transcription successful:", transcript.substring(0, 100) + "...");
         socket.emit("transcription_result", transcript);
       } else {
         socket.emit("transcription_error", "No speech detected in audio");
       }
       
     } catch (e) {
-      console.error("Transcription error:", e);
+      console.error("❌ Transcription error:", e);
       socket.emit("transcription_error", e.message || "Failed to transcribe audio");
     }
   });
@@ -362,7 +395,6 @@ async function handleChatbotConnection(socket) {
   chatbotSockets.set(socket.id, socket);
 }
 
-// Add this route in server.js after your existing routes
 const { getKeyManagerStatus } = require("./src/service/ai.service");
 
 app.get('/api/keys/status', (req, res) => {
@@ -382,16 +414,9 @@ app.get('/api/keys/status', (req, res) => {
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   // console.log("=".repeat(60));
-  // console.log(`🚀 Server running at http://localhost:${PORT}`);
-  // console.log(`🤖 AI Providers:`);
-  // console.log(`   📊 Server-side (Chatbot Mode):`);
-  // console.log(`      - Gemini 2.0 Flash Preview`);
-  // console.log(`      - Gemini 2.5 Flash`);
-  // console.log(`      - Gemini 2.5 Flash Lite`);
-  // console.log(`   🌐 Browser-based:`);
-  // console.log(`      - Claude Sonnet 4 (claude.ai)`);
-  // console.log(`      - ChatGPT (chat.openai.com)`);
-  // console.log(`🎤 Transcription: ${process.env.TRANSCRIPTION_SERVICE || 'deepgram'}`);
-  // console.log(`💾 MongoDB: Connected`);
+  // console.log(`🚀 Server running on port ${PORT}`);
+  // console.log(`📍 Backend URL: https://chatbot-al0x.onrender.com`);
+  // console.log(`🌐 Frontend: https://chatbot-sepia-sigma.vercel.app`);
+  // console.log(`✅ CORS enabled for frontend`);
   // console.log("=".repeat(60));
 });
