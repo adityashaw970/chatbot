@@ -74,8 +74,8 @@ const ChatHistoryPortal = () => {
   const dragStart = useRef({ x: 0, y: 0 });
   const imageOffset = useRef({ x: 0, y: 0 });
 
-  // const API_URL = "https://chatbot-al0x.onrender.com/";
-  const API_URL = "http://localhost:3000/";
+  const API_URL = "https://chatbot-al0x.onrender.com/";
+  // const API_URL = "http://localhost:3000/";
 
   useEffect(() => {
     const handler = (e) => {
