@@ -13,7 +13,7 @@ const app = express();
 
 app.use(cors({
   origin: [
-    "https://chatbot-delta-ten-87.vercel.app",
+    "https://chatbot-sepia-sigma.vercel.app/",
     "http://localhost:5173"
   ],
   credentials: true,
