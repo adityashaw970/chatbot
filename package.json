@@ -82,6 +82,7 @@
     "node-global-key-listener": "^0.3.0",
     "node-record-lpcm16": "^1.0.1",
     "openai": "^4.104.0",
+    "sharp": "^0.34.5",
     "sheryjs": "^1.0.0-beta.0.1.8",
     "socket.io": "^4.8.1",
     "tesseract.js": "^7.0.0",

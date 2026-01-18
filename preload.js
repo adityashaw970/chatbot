@@ -1,4 +1,3 @@
-//preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -8,18 +7,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   restoreFromFolder: () => ipcRenderer.send('restore-from-folder'),
   
+  // Simple drag functions
+  moveWindow: (x, y) => ipcRenderer.send('move-window', { x, y }),
+  
+  getWindowPosition: () => ipcRenderer.invoke('get-window-position'),
+  
+  lockWindowSize: () => ipcRenderer.send('lock-window-size'),
+  
+  unlockWindowSize: () => ipcRenderer.send('unlock-window-size'),
+  
+  // Screenshot and capture
   captureScreen: () => ipcRenderer.invoke('capture-screenshot'),
   
   captureFullPage: () => ipcRenderer.invoke('capture-full-page'),
   
   getAudioSources: () => ipcRenderer.invoke('get-audio-sources'),
   
-  // NEW: OCR functionality
+  // OCR
   extractTextFromImage: (imageData) => ipcRenderer.invoke('extract-text-from-image', imageData),
 
+  // Event listeners
   onOcrTrigger: (callback) => {
-  ipcRenderer.on('trigger-ocr', callback);
+    ipcRenderer.on('trigger-ocr', callback);
   },
+  
   onScreenshotTrigger: (callback) => {
     ipcRenderer.on('trigger-screenshot', callback);
   },
@@ -34,5 +45,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   onCaptureDetected: (callback) => {
     ipcRenderer.on('capture-detected', callback);
+  },
+  
+  onGlobalTypingActivate: (callback) => {
+    ipcRenderer.on('activate-global-typing', callback);
   }
 });

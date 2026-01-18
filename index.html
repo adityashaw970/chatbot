@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="./assets/dragon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chatbot</title>
+    <title>KaLi Chatbot</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
@@ -74,7 +74,7 @@
     -webkit-app-region: no-drag !important;
   }
 
-  /* Ensure cursor shows interactivity */
+  /* Ensure cursor shows interactivity 
   button:not(:disabled) {
     cursor: pointer !important;
   }
@@ -83,7 +83,7 @@
     cursor: not-allowed !important;
     opacity: 0.5;
   }
-
+*/
   /* Add visual feedback for buttons */
   button:not(:disabled):active {
     transform: scale(0.95);
@@ -104,11 +104,11 @@
     -webkit-app-region: no-drag !important;
     pointer-events: auto !important;
   }
-
+/*
   .folder-view.active {
     cursor: pointer !important;
   }
-
+*/
       .container {
         background-color: black;
         height: 100vh;
@@ -179,7 +179,6 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
         background: transparent;
         -webkit-app-region: drag;
       }
@@ -337,7 +336,6 @@
         color: white;
         font-size: 11px;
         font-weight: 600;
-        cursor: pointer;
       }
 
       .browser-image-preview button:hover {
@@ -384,7 +382,6 @@
         height: 32px;
         border-radius: 10px;
         border: none;
-        cursor: pointer;
         font-size: 16px;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
@@ -451,7 +448,6 @@
         border: 1.5px solid rgba(255, 255, 255, 0.2);
         border-radius: 8px;
         color: rgba(255, 255, 255, 0.7);
-        cursor: pointer;
         font-size: 11px;
         font-weight: 600;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -529,7 +525,6 @@
         border-radius: 10px;
         border: 1.5px solid rgba(255, 255, 255, 0.2);
         background: rgba(255, 255, 255, 0.08);
-        cursor: pointer;
         font-size: 16px;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
@@ -575,6 +570,25 @@
         );
         border-color: rgba(59, 130, 246, 0.4);
       }
+      .action-btn.screenshot-direct {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.4), rgba(22, 163, 74, 0.4));
+        border-color: rgba(34, 197, 94, 0.6);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+      }
+
+      .action-btn.screenshot-direct:hover {
+        box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+      }
+
+      .action-btn.ocr-direct {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(147, 51, 234, 0.4));
+        border-color: rgba(168, 85, 247, 0.6);
+        box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+      }
+
+      .action-btn.ocr-direct:hover {
+        box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
+      }
 
       .auto-timer-btn {
         position: relative;
@@ -589,7 +603,6 @@
           rgba(168, 85, 247, 0.15),
           rgba(147, 51, 234, 0.15)
         );
-        cursor: pointer;
         transition: all 0.2s;
         font-size: 13px;
       }
@@ -699,7 +712,6 @@
         color: white;
         font-size: 11px;
         font-weight: 600;
-        cursor: pointer;
         transition: all 0.2s;
       }
 
@@ -772,7 +784,6 @@
   padding: 6px 12px;
   color: white;
   font-size: 11px;
-  cursor: pointer;
   opacity: 0;
   transition: all 0.2s;
   z-index: 10;
@@ -886,7 +897,6 @@
           rgba(37, 99, 235, 0.8)
         );
         color: white;
-        cursor: pointer;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         align-items: center;
@@ -928,7 +938,6 @@
           rgba(34, 197, 94, 0.15),
           rgba(22, 163, 74, 0.15)
         );
-        cursor: pointer;
         transition: all 0.2s;
         display: flex;
         flex-direction: row;
@@ -1036,7 +1045,6 @@
         border-radius: 50%;
         width: 20px;
         height: 20px;
-        cursor: pointer;
         font-size: 12px;
         display: flex;
         align-items: center;
@@ -1145,7 +1153,8 @@
   </head>
   <body>
     
-    <div class="connection-indicator disconnected" id="connectionIndicator">
+   <main>
+     <div class="connection-indicator disconnected" id="connectionIndicator">
       <div class="connection-dot"></div>
       <span id="connectionText">Disconnected</span>
     </div>
@@ -1227,13 +1236,13 @@
                   >
                     Claude
                   </button>
+                  <button id="dragBrowser" class="ai-btn bg-white/20">🎯</button>
 
                   <!-- Auto-OCR Timer -->
                   <div style="position: relative">
                     <button
                       class="auto-timer-btn"
                       id="browserAutoOcrBtn"
-                      title="Auto-OCR Timer"
                     >
                       <span>📝</span>
                       <span class="timer-display" id="browserAutoOcrTimer"
@@ -1269,32 +1278,14 @@
             <!-- Action Buttons -->
             <div class="action-buttons">
               <div class="action-row">
-                <input
-                  type="file"
-                  id="browserImageInput"
-                  accept="image/*"
-                  multiple
-                  style="display: none"
-                />
-                <button
-                  class="action-btn screenshot"
-                  id="browserScreenshotBtn"
-                  title="Screenshot"
-                >
-                  📸
-                </button>
-                <button class="action-btn ocr" id="browserOcrBtn" title="OCR">
-                  📝
-                </button>
+                <input type="file" id="browserImageInput" accept="image/*" multiple style="display: none"/>
+                <button class="hidden" id="browserScreenshotDirectBtn">📹</button>
+                <button class="action-btn screenshot" id="browserScreenshotBtn">📸</button>
+        
               </div>
               <div class="action-row">
-                <button
-                  class="action-btn attach"
-                  id="browserAttachBtn"
-                  title="Attach"
-                >
-                  📂
-                </button>
+                <button class="action-btn ocr" id="browserOcrBtn">📝</button>
+                <button class="action-btn attach" id="browserAttachBtn">📂</button>
               </div>
             </div>
           </div>
@@ -1302,7 +1293,13 @@
             <img id="browserPreviewImg" src="" alt="Preview" />
             <button id="browserPasteBtn">Paste to Chat</button>
           </div>
-
+          <!-- ADD THIS after browserImagePreview div -->
+            <div class="browser-text-preview" id="browserTextPreview" style="display: none;">
+              <div style="max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 4px; margin-bottom: 8px;">
+                <pre id="browserPreviewText" style="white-space: pre-wrap; word-wrap: break-word; font-size: 12px;"></pre>
+              </div>
+              <button id="browserTextPasteBtn" style="width: 100%; padding: 6px; background: rgba(59, 130, 246, 0.8); border: none; border-radius: 4px; color: white; font-size: 11px; font-weight: 600;">Paste to Chat</button>
+            </div>
           <div class="webview-container">
             <div class="browser-loading" id="browserLoading">
               <div class="browser-spinner"></div>
@@ -1314,7 +1311,13 @@
               <p id="browserInfoText"></p>
             </div>
 
-            <webview id="browserWebview" class="browser-webview"></webview>
+            <webview 
+              id="browserWebview" 
+              class="browser-webview"
+              partition="persist:webview"
+              allowpopups
+              webpreferences="allowRunningInsecureContent, experimentalFeatures"
+            ></webview>
           </div>
         </div>
 
@@ -1327,11 +1330,10 @@
               <button
                 onclick="minimizeToFolder()"
                 class="control-btn minimize"
-                title="Minimize"
               >
                 🥷
               </button>
-              <button id="closebtn" class="control-btn close" title="Close">
+              <button id="closebtn" class="control-btn close">
                 ✕
               </button>
             </div>
@@ -1396,13 +1398,12 @@
                   >
                     Claude
                   </button>
-
+                  <button id="drag" class="ai-btn bg-white/20">🎯</button>
                   <!-- Auto-OCR Timer -->
                   <div style="position: relative">
                     <button
                       class="auto-timer-btn"
                       id="autoOcrBtn"
-                      title="Auto-OCR Timer"
                     >
                       <span>📝</span>
                       <span class="timer-display" id="autoOcrTimer">--</span>
@@ -1430,28 +1431,14 @@
             <!-- Action Buttons -->
             <div class="action-buttons">
               <div class="action-row">
-                <input
-                  type="file"
-                  id="imageInput"
-                  accept="image/*"
-                  multiple
-                  style="display: none"
-                />
-                <button
-                  class="action-btn screenshot"
-                  id="screenshotBtn"
-                  title="Screenshot"
-                >
-                  📸
-                </button>
-                <button class="action-btn ocr" id="ocrBtn" title="OCR">
-                  📝
-                </button>
+                <input type="file" id="imageInput" accept="image/*" multiple style="display: none"/>
+                <button class="action-btn screenshot-direct" id="screenshotDirectBtn">📹</button>
+                <button class="action-btn screenshot" id="screenshotBtn">📸</button>
+                
               </div>
               <div class="action-row">
-                <button class="action-btn attach" id="attachBtn" title="Attach">
-                  📂
-                </button>
+                <button class="action-btn ocr" id="ocrBtn">📝</button>
+                <button class="action-btn attach" id="attachBtn">📂</button>
               </div>
             </div>
           </div>
@@ -1477,7 +1464,6 @@
                   <button
                     class="auto-ss-btn"
                     id="autoSSBtn"
-                    title="Auto Screenshot"
                   >
                     <span class="auto-ss-icon">🤖</span>
                     <span class="auto-ss-timer-text" id="autoSSTimer">--</span>
@@ -1500,7 +1486,7 @@
                 </div>
 
                 <!-- Send Button -->
-                <button class="send-btn" id="sendBtn" title="Send">
+                <button class="send-btn" id="sendBtn">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -1519,14 +1505,24 @@
         </div>
       </div>
     </div>
-   
 
+   </main>
+   
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
     <script>
       // ==================== SOCKET AND ELEMENT INITIALIZATION ====================
-      //const socket = io("http://localhost:3000");
-       const socket = io("https://chatbot-al0x.onrender.com/");
+      const SOCKET_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000'
+      : 'https://chatbot-al0x.onrender.com';
+
+    const socket = io(SOCKET_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      timeout: 10000
+    });
 
       // All element references (declare ONCE at the top)
       const messagesDiv = document.getElementById("messages");
@@ -1550,6 +1546,10 @@
       // OCR elements
       const ocrBtn = document.getElementById("ocrBtn");
       const browserOcrBtn = document.getElementById("browserOcrBtn");
+      const screenshotDirectBtn = document.getElementById("screenshotDirectBtn");
+     
+      const browserScreenshotDirectBtn = document.getElementById("browserScreenshotDirectBtn");
+    
       const autoOcrBtn = document.getElementById("autoOcrBtn");
       const autoOcrSettings = document.getElementById("autoOcrSettings");
       const autoOcrTimer = document.getElementById("autoOcrTimer");
@@ -1675,7 +1675,7 @@
       }
 
       function closeBrowser() {
-        console.log("Closing browser view");
+        //console.log("Closing browser view");
 
         browserView.classList.remove("active");
         chatView.classList.remove("hidden");
@@ -1692,11 +1692,56 @@
         browserPreviewImg.src = imageData;
         browserImagePreview.classList.add("show");
       }
+      let pendingBrowserText = null; // Store extracted text
 
+      function showBrowserTextPreview(text) {
+        pendingBrowserText = text;
+        
+        // Reuse image preview but show text instead
+        const previewDiv = document.getElementById("browserImagePreview");
+        const previewImg = document.getElementById("browserPreviewImg");
+        const pasteBtn = document.getElementById("browserPasteBtn");
+        
+        // Hide image, show text preview
+        previewImg.style.display = "none";
+        
+        // Create text display if not exists
+        let textDisplay = document.getElementById("browserTextDisplay");
+        if (!textDisplay) {
+          textDisplay = document.createElement("div");
+          textDisplay.id = "browserTextDisplay";
+          textDisplay.style.cssText = `
+            max-height: 150px; 
+            overflow-y: auto; 
+            background: rgba(255,255,255,0.1); 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin-bottom: 8px;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-align: left;
+          `;
+          previewDiv.insertBefore(textDisplay, pasteBtn);
+        }
+        
+        textDisplay.textContent = text;
+        textDisplay.style.display = "block";
+        pasteBtn.textContent = "Paste Text to Chat";
+        
+        previewDiv.classList.add("show");
+      }
+            
       async function pasteToBrowserChat() {
-        if (!pendingBrowserImage) return;
-
-        const prompt = "Tell only answer";
+  // 🔥 NEW: Check if we have text instead of image
+  if (pendingBrowserText) {
+    await pasteBrowserText();
+    return;
+  }
+  
+  if (!pendingBrowserImage) return;
+  
+  const prompt = browserPreviewImg;
 
         try {
           if (currentBrowserProvider === "claude") {
@@ -1736,7 +1781,7 @@
                       await new Promise(resolve => setTimeout(resolve, 800));
                       
                       // Click send button
-                      const sendButton = document.querySelector('button[aria-label="Send message"]');
+                      const sendButton = document.querySelector('button[aria-label="Send message"].Button_claude__c_hZy');
                       if (sendButton && !sendButton.disabled) {
                         sendButton.click();
                         return 'sent';
@@ -1845,6 +1890,122 @@
         }
       }
 
+     
+      async function pasteBrowserText() {
+  if (!pendingBrowserText) return;
+
+  const textToSend = pendingBrowserText;
+
+  try {
+    if (currentBrowserProvider === "claude") {
+      const sendScript = `
+        (async function() {
+          try {
+            const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]');
+            if (inputArea) {
+              inputArea.focus();
+              inputArea.innerHTML = '';
+              
+              const paragraph = document.createElement('p');
+              paragraph.textContent = "${textToSend.replace(/"/g, '\\"').replace(/\n/g, '\\n')}";
+              inputArea.appendChild(paragraph);
+              
+              inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+              
+              // Wait for text to register
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Click send button
+              const sendButton = document.querySelector('button[aria-label="Send message"]:not([disabled])');
+              if (sendButton) {
+                sendButton.click();
+                return 'sent';
+              }
+            }
+            return 'failed';
+          } catch (e) {
+            return 'error: ' + e.message;
+          }
+        })();
+      `;
+
+      const result = await browserWebview.executeJavaScript(sendScript);
+
+      if (result === "sent") {
+        showBrowserNotification("✅ Text sent to Claude successfully!");
+      } else {
+        showBrowserNotification("⚠️ Text inserted but not sent. Click send manually.");
+      }
+    } else if (currentBrowserProvider === "chatgpt") {
+      const sendScript = `
+        (async function() {
+          try {
+            let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
+            
+            if (!inputArea) {
+              inputArea = document.querySelector('textarea[name="prompt-textarea"]');
+            }
+            
+            if (inputArea) {
+              inputArea.focus();
+              
+              if (inputArea.tagName === 'TEXTAREA') {
+                inputArea.value = "${textToSend.replace(/"/g, '\\"').replace(/\n/g, '\\n')}";
+                inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+              } else {
+                inputArea.innerHTML = '';
+                const paragraph = document.createElement('p');
+                paragraph.textContent = "${textToSend.replace(/"/g, '\\"').replace(/\n/g, '\\n')}";
+                inputArea.appendChild(paragraph);
+                inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+              
+              // Wait for text to register
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Click send button
+              const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]:not([disabled])');
+              if (sendButton) {
+                sendButton.click();
+                return 'sent';
+              }
+            }
+            return 'failed';
+          } catch (e) {
+            return 'error: ' + e.message;
+          }
+        })();
+      `;
+
+      const result = await browserWebview.executeJavaScript(sendScript);
+
+      if (result === "sent") {
+        showBrowserNotification("✅ Text sent to ChatGPT successfully!");
+      } else {
+        showBrowserNotification("⚠️ Text inserted but not sent. Click send manually.");
+      }
+    }
+
+    // Hide preview after sending
+    setTimeout(() => {
+      const previewDiv = document.getElementById("browserImagePreview");
+      previewDiv.classList.remove("show");
+      
+      const textDisplay = document.getElementById("browserTextDisplay");
+      if (textDisplay) textDisplay.style.display = "none";
+      
+      const previewImg = document.getElementById("browserPreviewImg");
+      previewImg.style.display = "block";
+      
+      pendingBrowserText = null;
+    }, 2000);
+  } catch (error) {
+    console.error("Text paste error:", error);
+    showBrowserNotification("❌ Failed to send text");
+  }
+}
+    
+    
       async function copyImageToClipboard(imageDataUrl) {
         try {
           const response = await fetch(imageDataUrl);
@@ -1856,7 +2017,7 @@
             }),
           ]);
 
-          console.log("Image copied to clipboard");
+          //console.log("Image copied to clipboard");
         } catch (error) {
           console.error("Clipboard copy error:", error);
         }
@@ -1865,7 +2026,7 @@
       async function copyTextToClipboard(text) {
         try {
           await navigator.clipboard.writeText(text);
-          console.log("✅ Text copied to clipboard");
+          //console.log("✅ Text copied to clipboard");
           return true;
         } catch (error) {
           console.error("❌ Clipboard copy error:", error);
@@ -1881,7 +2042,7 @@
 
         try {
           // First copy to clipboard
-          await copyImageToClipboard(imageDataUrl);
+          //await copyImageToClipboard(imageDataUrl);
 
           if (currentBrowserProvider === "claude") {
             const claudeScript = `
@@ -2036,130 +2197,147 @@
         }
       }
 
-      async function injectTextToBrowser(text) {
-        if (!currentBrowserProvider) {
-          showBrowserNotification("❌ No browser provider active");
-          return;
-        }
+      async function injectTextToBrowser(text, autoSend = false) {
+  if (!currentBrowserProvider) {
+    showBrowserNotification("❌ No browser provider active");
+    return;
+  }
 
-        try {
-          const escapedText = text
-            .replace(/\\/g, "\\\\")
-            .replace(/`/g, "\\`")
-            .replace(/"/g, '\\"')
-            .replace(/'/g, "\\'")
-            .replace(/\n/g, "\\n")
-            .replace(/\r/g, "");
+  try {
+    const escapedText = text
+      .replace(/\\/g, "\\\\")
+      .replace(/`/g, "\\`")
+      .replace(/"/g, '\\"')
+      .replace(/'/g, "\\'")
+      .replace(/\n/g, "\\n")
+      .replace(/\r/g, "");
 
-          if (currentBrowserProvider === "claude") {
-            const claudeScript = `
-                (async function() {
-                  try {
-                    const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]');
-                    if (!inputArea) return 'input_not_found';
-                    
-                    inputArea.focus();
-                    inputArea.innerHTML = '';
-                    
-                    const paragraph = document.createElement('p');
-                    paragraph.textContent = "${escapedText}";
-                    inputArea.appendChild(paragraph);
-                    
-                    inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-                    
-                    return 'success';
-                  } catch (e) {
-                    return 'error: ' + e.message;
-                  }
-                })();
-              `;
-
-            const result = await browserWebview.executeJavaScript(claudeScript);
-
-            if (result === "success") {
-              showBrowserNotification("✅ Text inserted into Claude!");
-            } else {
-              showBrowserNotification(
-                "⚠️ Text copied to clipboard - paste with Ctrl+V"
-              );
-              await copyTextToClipboard(text);
+    if (currentBrowserProvider === "claude") {
+      const claudeScript = `
+        (async function() {
+          try {
+            const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]');
+            if (!inputArea) return 'input_not_found';
+            
+            inputArea.focus();
+            inputArea.innerHTML = '';
+            
+            const paragraph = document.createElement('p');
+            paragraph.textContent = "${escapedText}";
+            inputArea.appendChild(paragraph);
+            
+            inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            ${autoSend ? `
+            // Wait for input to register
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Click send button
+            const sendButton = document.querySelector('button[aria-label="Send message"]:not([disabled])');
+            if (sendButton) {
+              sendButton.click();
+              return 'sent';
             }
-          } else if (currentBrowserProvider === "chatgpt") {
-            // FIXED: ChatGPT now uses ProseMirror contenteditable div
-            const chatgptScript = `
-                (async function() {
-                  try {
-                    // Try ProseMirror contenteditable div (new ChatGPT UI)
-                    let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
-                    
-                    // Fallback to textarea (old ChatGPT UI)
-                    if (!inputArea) {
-                      const textarea = document.querySelector('textarea[name="prompt-textarea"]');
-                      if (textarea) {
-                        textarea.style.display = 'block';
-                        textarea.focus();
-                        textarea.value = "${escapedText}";
-                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                        textarea.style.height = 'auto';
-                        textarea.style.height = textarea.scrollHeight + 'px';
-                        return 'success_textarea';
-                      }
-                    }
-                    
-                    if (!inputArea) return 'input_not_found';
-                    
-                    // Clear existing content
-                    inputArea.innerHTML = '';
-                    
-                    // Create paragraph element
-                    const paragraph = document.createElement('p');
-                    paragraph.textContent = "${escapedText}";
-                    
-                    // Insert into ProseMirror
-                    inputArea.appendChild(paragraph);
-                    
-                    // Focus the input
-                    inputArea.focus();
-                    
-                    // Trigger input events
-                    inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-                    inputArea.dispatchEvent(new Event('change', { bubbles: true }));
-                    
-                    // Remove placeholder if exists
-                    const placeholder = inputArea.querySelector('p.placeholder');
-                    if (placeholder && placeholder !== paragraph) {
-                      placeholder.remove();
-                    }
-                    
-                    return 'success';
-                  } catch (e) {
-                    return 'error: ' + e.message;
-                  }
-                })();
-              `;
-
-            const result = await browserWebview.executeJavaScript(
-              chatgptScript
-            );
-
-            if (result === "success" || result === "success_textarea") {
-              showBrowserNotification("✅ Text inserted into ChatGPT!");
-            } else {
-              showBrowserNotification(
-                "⚠️ Text copied to clipboard - paste with Ctrl+V"
-              );
-              await copyTextToClipboard(text);
-            }
+            ` : ''}
+            
+            return 'success';
+          } catch (e) {
+            return 'error: ' + e.message;
           }
-        } catch (error) {
-          console.error("Text injection error:", error);
-          showBrowserNotification(
-            "⚠️ Injection failed. Text copied to clipboard."
-          );
-          await copyTextToClipboard(text);
-        }
-      }
+        })();
+      `;
 
+      const result = await browserWebview.executeJavaScript(claudeScript);
+
+      if (result === "sent") {
+        showBrowserNotification("✅ Text sent to Claude!");
+      } else if (result === "success") {
+        showBrowserNotification("✅ Text inserted into Claude!");
+      } else {
+        showBrowserNotification("⚠️ Text copied to clipboard - paste with Ctrl+V");
+        await copyTextToClipboard(text);
+      }
+    } else if (currentBrowserProvider === "chatgpt") {
+      const chatgptScript = `
+        (async function() {
+          try {
+            let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
+            
+            if (!inputArea) {
+              const textarea = document.querySelector('textarea[name="prompt-textarea"]');
+              if (textarea) {
+                textarea.style.display = 'block';
+                textarea.focus();
+                textarea.value = "${escapedText}";
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+                
+                ${autoSend ? `
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]:not([disabled])');
+                if (sendButton) {
+                  sendButton.click();
+                  return 'sent_textarea';
+                }
+                ` : ''}
+                
+                return 'success_textarea';
+              }
+            }
+            
+            if (!inputArea) return 'input_not_found';
+            
+            inputArea.innerHTML = '';
+            const paragraph = document.createElement('p');
+            paragraph.textContent = "${escapedText}";
+            inputArea.appendChild(paragraph);
+            inputArea.focus();
+            inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+            inputArea.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            const placeholder = inputArea.querySelector('p.placeholder');
+            if (placeholder && placeholder !== paragraph) {
+              placeholder.remove();
+            }
+            
+            ${autoSend ? `
+            // Wait for input to register
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Click send button
+            const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]:not([disabled])');
+            if (sendButton) {
+              sendButton.click();
+              return 'sent';
+            }
+            ` : ''}
+            
+            return 'success';
+          } catch (e) {
+            return 'error: ' + e.message;
+          }
+        })();
+      `;
+
+      const result = await browserWebview.executeJavaScript(chatgptScript);
+
+      if (result === "sent" || result === "sent_textarea") {
+        showBrowserNotification("✅ Text sent to ChatGPT!");
+      } else if (result === "success" || result === "success_textarea") {
+        showBrowserNotification("✅ Text inserted into ChatGPT!");
+      } else {
+        showBrowserNotification("⚠️ Text copied to clipboard - paste with Ctrl+V");
+        await copyTextToClipboard(text);
+      }
+    }
+  } catch (error) {
+    console.error("Text injection error:", error);
+    showBrowserNotification("⚠️ Injection failed. Text copied to clipboard.");
+    await copyTextToClipboard(text);
+  }
+}
+      
       function showBrowserNotification(message) {
         const notification = document.createElement("div");
         notification.style.cssText = `
@@ -2176,46 +2354,162 @@
       }
 
       // ==================== BROWSER EVENT LISTENERS ====================
+      
+      // Browser Screenshot Manual
       browserScreenshotBtn.addEventListener("click", async () => {
+            try {
+              browserScreenshotBtn.disabled = true;
+              browserScreenshotBtn.textContent = "⏳";
+
+              const screenshotData = await window.electronAPI.captureScreen();
+
+              if (screenshotData) {
+                showBrowserImagePreview(screenshotData);
+                await copyImageToClipboard(screenshotData);
+                showBrowserNotification('📸 Screenshot captured! Click "Paste to Chat" to send.');
+              } else {
+                showBrowserNotification("❌ Screenshot capture failed");
+              }
+            } catch (error) {
+              console.error("Browser screenshot error:", error);
+              showBrowserNotification("❌ Screenshot failed");
+            } finally {
+              browserScreenshotBtn.disabled = false;
+              browserScreenshotBtn.textContent = "📸";
+            }
+          });
+
+      // Browser OCR Manual
+      browserOcrBtn.addEventListener("click", async () => {
+            try {
+              const removeLoading = showOCRLoading(browserOcrBtn, "📸 Capturing screenshot...");
+              const screenshotData = await window.electronAPI.captureScreen();
+
+              if (!screenshotData) {
+                removeLoading();
+                showBrowserNotification("❌ Failed to capture screenshot");
+                return;
+              }
+
+              const notif = document.getElementById("ocr-loading-notification");
+              if (notif) notif.textContent = "📝 Extracting text...";
+
+              const result = await window.electronAPI.extractTextFromImage(screenshotData);
+              removeLoading();
+
+              if (!result.success || !result.text) {
+                showBrowserNotification("❌ No text found in screenshot");
+                return;
+              }
+
+              // 🔥 NEW: Show text preview with "Paste to Chat" button
+              showBrowserTextPreview(result.text);
+              showBrowserNotification(`✅ Extracted ${result.length} characters. Click "Paste to Chat" to send!`);
+            } catch (error) {
+              console.error("Browser OCR error:", error);
+              showBrowserNotification("❌ OCR failed: " + error.message);
+            }
+          });
+
+        // Browser Screenshot Direct - Auto-inject
+        browserScreenshotDirectBtn.addEventListener("click", async () => {
+          try {
+            browserScreenshotDirectBtn.disabled = true;
+            browserScreenshotDirectBtn.textContent = "⏳";
+
+            const screenshotData = await window.electronAPI.captureScreen();
+
+            if (screenshotData) {
+              await copyImageToClipboard(screenshotData);
+              showBrowserNotification("📸 Screenshot captured! Auto-injecting...");
+
+              setTimeout(async () => {
+                await injectImageToBrowser(screenshotData);
+                showBrowserNotification("✅ Screenshot auto-pasted to browser!");
+              }, 500);
+            } else {
+              showBrowserNotification("❌ Screenshot capture failed");
+            }
+          } catch (error) {
+            console.error("Browser screenshot direct error:", error);
+            showBrowserNotification("❌ Screenshot failed");
+          } finally {
+            browserScreenshotDirectBtn.disabled = false;
+            browserScreenshotDirectBtn.textContent = "📹";
+          }
+        });
+             
+       // Screenshot Manual - Chat Mode
+        screenshotBtn.addEventListener("click", async () => {
+          try {
+            screenshotBtn.disabled = true;
+            screenshotBtn.textContent = "⏳";
+
+            const screenshotData = await window.electronAPI.captureScreen();
+
+            if (screenshotData) {
+              const newImage = {
+                data: screenshotData,
+                name: `screenshot_${Date.now()}.png`,
+                mimeType: "image/png",
+              };
+
+              selectedImages.push(newImage);
+              updateImagePreviews();
+              
+              showBrowserNotification("📸 Screenshot captured! Review and send when ready.");
+            } else {
+              showBrowserNotification("❌ Screenshot capture failed");
+            }
+             if (!messageInput.value.trim()) {
+              messageInput.value = "Tell code in accordingly language.";
+            }
+          } catch (error) {
+            console.error("Screenshot error:", error);
+            showBrowserNotification("❌ Screenshot failed");
+          } finally {
+            screenshotBtn.disabled = false;
+            screenshotBtn.textContent = "📸";
+          }
+        });
+
+      // OCR Manual - Chat Mode
+      ocrBtn.addEventListener("click", async () => {
         try {
-          browserScreenshotBtn.disabled = true;
-          browserScreenshotBtn.textContent = "⏳";
+          const removeLoading = showOCRLoading(ocrBtn, "📸 Capturing screenshot...");
 
           const screenshotData = await window.electronAPI.captureScreen();
 
-          if (screenshotData) {
-            await copyImageToClipboard(screenshotData);
-            showBrowserImagePreview(screenshotData);
-
-            // Show instruction notification
-            showBrowserNotification(
-              "📸 Screenshot ready! Clicking in the chat input..."
-            );
-
-            // Delay injection slightly
-            setTimeout(async () => {
-              // Try auto-inject
-              await injectImageToBrowser(screenshotData);
-
-              // Fallback: Show manual paste instruction
-              setTimeout(() => {
-                showBrowserNotification(
-                  "💡 TIP: If image didn't paste, press Ctrl+V in the chat box!"
-                );
-              }, 2000);
-            }, 500);
-          } else {
-            showBrowserNotification("❌ Screenshot capture failed");
+          if (!screenshotData) {
+            removeLoading();
+            showBrowserNotification("❌ Failed to capture screenshot");
+            return;
           }
+
+          const notif = document.getElementById("ocr-loading-notification");
+          if (notif) notif.textContent = "📝 Extracting text...";
+
+          const result = await window.electronAPI.extractTextFromImage(screenshotData);
+
+          removeLoading();
+
+          if (!result.success || !result.text) {
+            showBrowserNotification("❌ No text found in screenshot");
+            return;
+          }
+
+          // Insert text into message input
+          messageInput.value = result.text;
+          messageInput.style.height = "auto";
+          messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + "px";
+          
+          showBrowserNotification(`✅ Extracted ${result.length} characters. Review and send!`);
         } catch (error) {
-          console.error("Browser screenshot error:", error);
-          showBrowserNotification("❌ Screenshot failed");
-        } finally {
-          browserScreenshotBtn.disabled = false;
-          browserScreenshotBtn.textContent = "📸";
+          console.error("OCR error:", error);
+          showBrowserNotification("❌ OCR failed: " + error.message);
         }
       });
-
+          
       // Monitor clipboard paste events in browser mode
       if (browserWebview) {
         browserWebview.addEventListener("did-finish-load", () => {
@@ -2314,110 +2608,7 @@
           if (notif) notif.remove();
         };
       }
-
-      ocrBtn.addEventListener("click", async () => {
-        try {
-          const removeLoading = showOCRLoading(
-            ocrBtn,
-            "📸 Capturing screenshot..."
-          );
-
-          const screenshotData = await window.electronAPI.captureScreen();
-
-          if (!screenshotData) {
-            removeLoading();
-            alert("Failed to capture screenshot");
-            return;
-          }
-
-          const notif = document.getElementById("ocr-loading-notification");
-          if (notif) notif.textContent = "📝 Extracting text from image...";
-
-          const result = await window.electronAPI.extractTextFromImage(
-            screenshotData
-          );
-
-          removeLoading();
-
-          if (!result.success || !result.text) {
-            showBrowserNotification(
-              "❌ No text found in screenshot. Try a clearer image."
-            );
-            return;
-          }
-
-          console.log(
-            `Extracted ${result.length} characters:`,
-            result.text.substring(0, 100) + "..."
-          );
-
-          if (currentProvider.startsWith("gemini-")) {
-            messageInput.value = result.text;
-            messageInput.style.height = "auto";
-            messageInput.style.height =
-              Math.min(messageInput.scrollHeight, 80) + "px";
-            messageInput.focus();
-
-            showBrowserNotification(
-              `✅ Extracted ${result.length} characters. Click Send!`
-            );
-          } else {
-            if (!browserView.classList.contains("active")) {
-              openBrowser(currentProvider);
-            }
-
-            setTimeout(() => {
-              injectTextToBrowser(result.text);
-            }, 2000);
-          }
-        } catch (error) {
-          console.error("OCR error:", error);
-          showBrowserNotification("❌ OCR failed: " + error.message);
-        }
-      });
-
-      browserOcrBtn.addEventListener("click", async () => {
-        try {
-          const removeLoading = showOCRLoading(
-            browserOcrBtn,
-            "📸 Capturing screenshot..."
-          );
-
-          const screenshotData = await window.electronAPI.captureScreen();
-
-          if (!screenshotData) {
-            removeLoading();
-            showBrowserNotification("❌ Failed to capture screenshot");
-            return;
-          }
-
-          const notif = document.getElementById("ocr-loading-notification");
-          if (notif) notif.textContent = "📝 Extracting text...";
-
-          const result = await window.electronAPI.extractTextFromImage(
-            screenshotData
-          );
-
-          removeLoading();
-
-          if (!result.success || !result.text) {
-            showBrowserNotification("❌ No text found in screenshot");
-            return;
-          }
-
-          showBrowserNotification(
-            `✅ Extracted ${result.length} characters. Inserting...`
-          );
-
-          setTimeout(() => {
-            injectTextToBrowser(result.text);
-          }, 500);
-        } catch (error) {
-          console.error("Browser OCR error:", error);
-          showBrowserNotification("❌ OCR failed: " + error.message);
-        }
-      });
-
+    
       // ==================== AUTO-OCR FUNCTIONALITY ====================
       autoOcrBtn.addEventListener("click", () => {
         if (!autoOcrActive) {
@@ -2434,7 +2625,6 @@
         autoOcrActive = true;
 
         autoOcrBtn.classList.add("active");
-        autoOcrBtn.title = "Auto-OCR Active - Click to stop";
         autoOcrSettings.classList.remove("show");
 
         updateOcrTimerDisplay();
@@ -2458,7 +2648,6 @@
         autoOcrActive = false;
         clearInterval(autoOcrCountdown);
         autoOcrBtn.classList.remove("active");
-        autoOcrBtn.title = "Auto-OCR Timer";
         autoOcrTimer.textContent = "--";
 
         showBrowserNotification("⏹️ Auto-OCR stopped");
@@ -2469,61 +2658,70 @@
         autoOcrTimer.textContent = `${String(secs).padStart(2, "0")}s`;
       }
 
-      async function captureAndOcrAuto() {
-        try {
-          console.log("🤖 Auto-OCR capture triggered");
+     async function captureAndOcrAuto() {
+  try {
+    const screenshotData = await window.electronAPI.captureScreen();
 
-          const screenshotData = await window.electronAPI.captureScreen();
+    if (!screenshotData) {
+      console.error("Auto-OCR: Screenshot capture failed");
+      return;
+    }
 
-          if (!screenshotData) {
-            console.error("Auto-OCR: Screenshot capture failed");
-            return;
-          }
+    const result = await window.electronAPI.extractTextFromImage(screenshotData);
 
-          const result = await window.electronAPI.extractTextFromImage(
-            screenshotData
-          );
+    if (!result.success || !result.text) {
+      showBrowserNotification("🤖 Auto-OCR: No text found");
+      return;
+    }
 
-          if (!result.success || !result.text) {
-            showBrowserNotification("🤖 Auto-OCR: No text found");
-            return;
-          }
+    console.log(`🤖 Auto-OCR extracted ${result.length} characters`);
 
-          console.log(`🤖 Auto-OCR extracted ${result.length} characters`);
+    // If in browser mode, inject text
+    if (browserView.classList.contains("active")) {
+      await injectTextToBrowser(result.text, true);
+      showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted & inserted!`);
+      return;
+    }
 
-          if (browserView.classList.contains("active")) {
-            injectTextToBrowser(result.text);
-            showBrowserNotification(
-              `🤖 Auto-OCR: ${result.length} chars extracted & inserted!`
-            );
-            return;
-          }
+    // If current provider is browser-based, open browser and inject
+    if (currentProvider === "claude" || currentProvider === "chatgpt") {
+      openBrowser(currentProvider);
+      setTimeout(async () => {
+        await injectTextToBrowser(result.text,true);
+        showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted!`);
+      }, 1500);
+      return;
+    }
 
-          if (currentProvider === "claude" || currentProvider === "chatgpt") {
-            openBrowser(currentProvider);
-            setTimeout(() => {
-              injectTextToBrowser(result.text);
-              showBrowserNotification(
-                `🤖 Auto-OCR: ${result.length} chars extracted!`
-              );
-            }, 2000);
-            return;
-          }
+    // For Gemini models, auto-send the OCR text
+    if (currentProvider.startsWith("gemini-")) {
+      addMessage(result.text, true, [], null, currentProvider);
 
-          messageInput.value = result.text;
-          messageInput.style.height = "auto";
-          messageInput.style.height =
-            Math.min(messageInput.scrollHeight, 80) + "px";
+      const messageData = {
+        prompt: result.text,
+        images: [],
+        provider: currentProvider,
+      };
 
-          showBrowserNotification(
-            `🤖 Auto-OCR: ${result.length} chars extracted. Review & send!`
-          );
-        } catch (error) {
-          console.error("Auto-OCR error:", error);
-        }
-      }
+      showLoading();
+      socket.emit("send_message", messageData);
+      
+      showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars sent to Gemini!`);
+      return;
+    }
 
-      // ==================== BROWSER AUTO-OCR ====================
+    // Fallback: Put text in input for manual send
+    messageInput.value = result.text;
+    messageInput.style.height = "auto";
+    messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + "px";
+
+    showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted. Review & send!`);
+  } catch (error) {
+    console.error("Auto-OCR error:", error);
+  }
+}
+     
+    // ==================== BROWSER AUTO-OCR ====================
       browserAutoOcrBtn.addEventListener("click", () => {
         if (!browserAutoOcrActive) {
           browserAutoOcrSettings.classList.toggle("show");
@@ -2540,7 +2738,6 @@
         browserAutoOcrActive = true;
 
         browserAutoOcrBtn.classList.add("active");
-        browserAutoOcrBtn.title = "Auto-OCR Active - Click to stop";
         browserAutoOcrSettings.classList.remove("show");
 
         updateBrowserOcrTimerDisplay();
@@ -2564,7 +2761,6 @@
         browserAutoOcrActive = false;
         clearInterval(browserAutoOcrCountdown);
         browserAutoOcrBtn.classList.remove("active");
-        browserAutoOcrBtn.title = "Auto-OCR Timer";
         browserAutoOcrTimer.textContent = "--";
 
         showBrowserNotification("⏹️ Auto-OCR stopped");
@@ -2576,38 +2772,31 @@
       }
 
       async function captureAndOcrAutoBrowser() {
-        try {
-          console.log("🤖 Browser Auto-OCR capture triggered");
+  try {
+    const screenshotData = await window.electronAPI.captureScreen();
+    if (!screenshotData) return;
 
-          const screenshotData = await window.electronAPI.captureScreen();
+    const result = await window.electronAPI.extractTextFromImage(screenshotData);
+    if (!result.success || !result.text) {
+      showBrowserNotification("🤖 Auto-OCR: No text found");
+      return;
+    }
 
-          if (!screenshotData) {
-            console.error("Auto-OCR: Screenshot capture failed");
-            return;
-          }
-
-          const result = await window.electronAPI.extractTextFromImage(
-            screenshotData
-          );
-
-          if (!result.success || !result.text) {
-            showBrowserNotification("🤖 Auto-OCR: No text found");
-            return;
-          }
-
-          console.log(
-            `🤖 Browser Auto-OCR extracted ${result.length} characters`
-          );
-
-          await injectTextToBrowser(result.text);
-          showBrowserNotification(
-            `🤖 Auto-OCR: ${result.length} chars inserted!`
-          );
-        } catch (error) {
-          console.error("Browser Auto-OCR error:", error);
-        }
-      }
-
+    // 🔥 NEW: Use the same preview + paste flow
+    showBrowserTextPreview(result.text);
+    
+    // Auto-click "Paste to Chat" after 1 second
+    setTimeout(() => {
+      document.getElementById("browserPasteBtn").click();
+    }, 1000);
+    
+    showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted!`);
+  } catch (error) {
+    console.error("Browser Auto-OCR error:", error);
+  }
+}
+      
+      
       // ==================== AUTO SCREENSHOT ====================
       autoSSBtn.addEventListener("click", () => {
         if (!autoSSActive) {
@@ -2624,7 +2813,6 @@
         autoSSActive = true;
 
         autoSSBtn.classList.add("active");
-        autoSSBtn.title = "Click to stop";
         autoSSSettings.classList.remove("show");
 
         updateTimerDisplay();
@@ -2644,7 +2832,6 @@
         autoSSActive = false;
         clearInterval(autoSSCountdown);
         autoSSBtn.classList.remove("active");
-        autoSSBtn.title = "Tell only answer";
         autoSSTimer.textContent = "--";
       }
 
@@ -2673,7 +2860,7 @@
                 showBrowserNotification(
                   '🤖 Auto-screenshot! Click "Paste to Chat" to send.'
                 );
-              }, 2000);
+              }, 1000);
               return;
             }
 
@@ -2741,19 +2928,19 @@
           window.electronAPI.closeWindow();
         }
       });
-
-      // ==================== SCREENSHOT FUNCTIONALITY ====================
-      screenshotBtn.addEventListener("click", async () => {
+    
+      // Screenshot Direct - Auto-send
+      screenshotDirectBtn.addEventListener("click", async () => {
         try {
-          screenshotBtn.disabled = true;
-          screenshotBtn.textContent = "⏳";
+          screenshotDirectBtn.disabled = true;
+          screenshotDirectBtn.textContent = "⏳";
 
           const screenshotData = await window.electronAPI.captureScreen();
 
           if (screenshotData) {
             const newImage = {
               data: screenshotData,
-              name: `screenshot_${Date.now()}.png`,
+              name: `screenshot_direct_${Date.now()}.png`,
               mimeType: "image/png",
             };
 
@@ -2761,32 +2948,34 @@
               if (!browserView.classList.contains("active")) {
                 openBrowser(currentProvider);
               }
-
               setTimeout(() => {
-                showBrowserImagePreview(screenshotData);
-                showBrowserNotification(
-                  '📸 Screenshot captured! Click "Paste to Chat".'
-                );
+                injectImageToBrowser(screenshotData);
               }, 1000);
-
               return;
             }
 
-            selectedImages.push(newImage);
-            updateImagePreviews();
+            // Auto-send for Gemini models
+            addMessage("Tell only answer", true, [newImage], null, currentProvider);
 
-            if (!messageInput.value.trim()) {
-              messageInput.value = "Tell only answer";
-            }
+            const messageData = {
+              prompt: "Tell only answer",
+              images: [newImage],
+              provider: currentProvider,
+            };
+
+            showLoading();
+            socket.emit("send_message", messageData);
+            
+            showBrowserNotification("✅ Screenshot sent automatically!");
           } else {
             alert("Failed to capture screenshot");
           }
         } catch (error) {
-          console.error("Screenshot error:", error);
+          console.error("Screenshot Direct error:", error);
           alert("Screenshot capture failed");
         } finally {
-          screenshotBtn.disabled = false;
-          screenshotBtn.textContent = "📸";
+          screenshotDirectBtn.disabled = false;
+          screenshotDirectBtn.textContent = "📸";
         }
       });
 
@@ -2912,7 +3101,7 @@
 
       // NEW: Add copy buttons to code blocks
       function addCopyButtonsToCodeBlocks(messageDiv) {
-  const codeBlocks = messageDiv.querySelectorAll('pre code');
+      const codeBlocks = messageDiv.querySelectorAll('pre code');
   
   codeBlocks.forEach((codeBlock) => {
     const pre = codeBlock.parentElement;
@@ -2944,13 +3133,13 @@
         setTimeout(() => {
           copyBtn.textContent = '📋 Copy';
           copyBtn.classList.remove('copied');
-        }, 2000);
+        }, 1000);
       } catch (err) {
         console.error('Copy failed:', err);
         copyBtn.textContent = '❌ Failed';
         setTimeout(() => {
           copyBtn.textContent = '📋 Copy';
-        }, 2000);
+        }, 1000);
       }
     });
     
@@ -3066,12 +3255,12 @@
       });
 
       socket.on("connect", () => {
-        console.log("Connected to server");
+        //console.log("Connected to server");
         socket.emit("identify", { type: "chatbot" });
       });
 
       socket.on("disconnect", () => {
-        console.log("Disconnected from server");
+       // console.log("Disconnected from server");
       });
 
       socket.on("portal_status", (data) => {
@@ -3107,7 +3296,7 @@
 
       if (window.electronAPI && window.electronAPI.onOcrTrigger) {
         window.electronAPI.onOcrTrigger(() => {
-          console.log("OCR triggered via keyboard shortcut");
+          //console.log("OCR triggered via keyboard shortcut");
           if (browserView.classList.contains("active")) {
             browserOcrBtn.click();
           } else {
@@ -3147,10 +3336,11 @@
       window.startBrowserAutoOCR = startBrowserAutoOCR;
       window.restoreFromFolder = restoreFromFolder;
 
+      
       // ==================== INITIALIZATION ====================
       document.addEventListener("DOMContentLoaded", () => {
         setupProviderButtons();
-        console.log("✅ Application initialized with multi-model support");
+        //console.log("✅ Application initialized with multi-model support");
       });
 
       if (document.readyState === "loading") {
@@ -3159,8 +3349,8 @@
         setupProviderButtons();
       }
 
-      document.addEventListener('DOMContentLoaded', function() {
-       //console.log('🖱️  Click handler initialized');
+    document.addEventListener('DOMContentLoaded', function() {
+    //console.log('🖱️  Click handler initialized');
     
     // Track all clicks for debugging
     let clickCount = 0;
@@ -3217,9 +3407,519 @@
       document.querySelectorAll('button, input, textarea, .ai-btn, .action-btn').forEach(el => {
         el.style.outline = '2px solid rgba(0, 255, 0, 0.5)';
       });
-      console.log('🐛 Debug mode: Clickable regions highlighted');
+      //console.log('Debug mode: Clickable regions highlighted');
     }
-  });
+    });
+
+    // ==================== SIMPLE DRAG SYSTEM ====================
+        class SimpleDragSystem {
+          constructor() {
+            this.isDragging = false;
+            this.dragTimer = null;
+            this.dragAutoStopTimer = null;
+            this.startX = 0;
+            this.startY = 0;
+            this.windowX = 0;
+            this.windowY = 0;
+            this.isHoveringHeader = false;
+            this.hoverStartTime = 0;
+            
+            this.init();
+          }
+
+          init() {
+            const header = document.querySelector('#drag');
+            if (!header) {
+              console.error('Header not found!');
+              return;
+            }
+
+            // Mouse enter header - start timer
+            header.addEventListener('mouseenter', (e) => {
+              if (this.isDragging) return;
+              
+              this.isHoveringHeader = true;
+              this.hoverStartTime = Date.now();
+              this.startX = e.screenX;
+              this.startY = e.screenY;
+
+            // console.log('🖱️ Hovering header...');
+              this.showNotification('Hold for 1s to drag...');
+
+              // Wait 2 seconds
+              this.dragTimer = setTimeout(async () => {
+                if (this.isHoveringHeader) {
+                  await this.startDrag(e);
+                }
+              }, 1000);
+            });
+
+            // Mouse leave header - cancel timer
+            header.addEventListener('mouseleave', () => {
+              if (!this.isDragging) {
+                this.isHoveringHeader = false;
+                if (this.dragTimer) {
+                  clearTimeout(this.dragTimer);
+                  this.dragTimer = null;
+                  //console.log('❌ Hover cancelled');
+                }
+              }
+            });
+
+            // Global mouse move - handle dragging
+            document.addEventListener('mousemove', (e) => {
+              if (!this.isDragging) return;
+
+              const deltaX = e.screenX - this.startX;
+              const deltaY = e.screenY - this.startY;
+
+              if (window.electronAPI && window.electronAPI.moveWindow) {
+                window.electronAPI.moveWindow(
+                  this.windowX + deltaX,
+                  this.windowY + deltaY
+                );
+              }
+            });
+
+            // Click anywhere to stop dragging
+            document.addEventListener('click', () => {
+              if (this.isDragging) {
+                this.stopDrag();
+              }
+            });
+
+            // ESC key to stop
+            document.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape' && this.isDragging) {
+                this.stopDrag();
+              }
+            });
+          }
+
+          async startDrag(e) {
+            this.isDragging = true;
+            this.startX = e.screenX;
+            this.startY = e.screenY;
+
+            // Get current window position
+            if (window.electronAPI && window.electronAPI.getWindowPosition) {
+              const pos = await window.electronAPI.getWindowPosition();
+              this.windowX = pos.x;
+              this.windowY = pos.y;
+            }
+
+            // Lock window size (prevent resize)
+            if (window.electronAPI && window.electronAPI.lockWindowSize) {
+              window.electronAPI.lockWindowSize();
+            }
+
+            // Visual feedback
+            //document.body.style.cursor = 'grabbing';
+            const header = document.querySelector('#drag');
+            if (header) {
+              header.style.background = 'rgba(168, 85, 247, 0.5)';
+            }
+
+            this.showNotification('🖱️ DRAGGING! Auto-stop in 5s or click anywhere');
+            //console.log('✅ Drag started');
+
+            // Auto-stop after 5 seconds
+            this.dragAutoStopTimer = setTimeout(() => {
+            // console.log('⏱️ 5 seconds reached - auto stopping');
+              this.stopDrag();
+            }, 5000);
+          }
+
+          stopDrag() {
+            this.isDragging = false;
+            this.isHoveringHeader = false;
+
+            // Clear timers
+            if (this.dragTimer) {
+              clearTimeout(this.dragTimer);
+              this.dragTimer = null;
+            }
+
+            if (this.dragAutoStopTimer) {
+              clearTimeout(this.dragAutoStopTimer);
+              this.dragAutoStopTimer = null;
+            }
+
+            // Unlock window size
+            if (window.electronAPI && window.electronAPI.unlockWindowSize) {
+              window.electronAPI.unlockWindowSize();
+            }
+
+            // Reset visuals
+            document.body.style.cursor = '';
+            const header = document.querySelector('[id^="drag"]');
+            if (header) {
+              header.style.background = '';
+            }
+
+            this.showNotification('✅ Drag stopped');
+            //console.log('✅ Drag stopped');
+          }
+
+          showNotification(message) {
+            // Remove any existing notification
+            const existing = document.getElementById('drag-notification');
+            if (existing) existing.remove();
+
+            const notification = document.createElement('div');
+            notification.id = 'drag-notification';
+            notification.style.cssText = `
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              background: linear-gradient(135deg, rgba(168, 85, 247, 0.95), rgba(147, 51, 234, 0.95));
+              color: white;
+              padding: 16px 24px;
+              border-radius: 12px;
+              font-size: 14px;
+              font-weight: 700;
+              z-index: 99999;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+              pointer-events: none;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+              if (notification && notification.parentNode) {
+                notification.remove();
+              }
+            }, 2500);
+          }
+        }
+
+// ==================== HOVER AUTO-CLICK SYSTEM ====================
+        class HoverAutoClick {
+          constructor(options = {}) {
+            this.hoverDelay = options.hoverDelay || 1000;
+            this.enabled = options.enabled !== false;
+            this.currentHoverTarget = null;
+            this.hoverTimeout = null;
+            this.progressIndicator = null;
+            
+            this.init();
+          }
+
+          init() {
+            this.createProgressIndicator();
+            this.setupEventListeners();
+            //console.log(' Hover Auto-Click initialized');
+          }
+
+          createProgressIndicator() {
+            this.progressIndicator = document.createElement('div');
+            this.progressIndicator.id = 'hover-progress-indicator';
+            this.progressIndicator.style.cssText = `
+              position: fixed;
+              pointer-events: none;
+              width: 40px;
+              height: 40px;
+              border: 3px solid rgba(59, 130, 246, 0.3);
+              border-top-color: rgba(59, 130, 246, 0.9);
+              border-radius: 50%;
+              z-index: 10000;
+              display: none;
+              animation: spin 0.8s linear infinite;
+            `;
+            document.body.appendChild(this.progressIndicator);
+
+            // Add spin animation
+            if (!document.getElementById('hover-styles')) {
+              const style = document.createElement('style');
+              style.id = 'hover-styles';
+              style.textContent = `
+                @keyframes spin {
+                  to { transform: rotate(360deg); }
+                }
+                .hover-highlight {
+                  outline: 2px solid rgba(59, 130, 246, 0.5) !important;
+                  outline-offset: 2px !important;
+                  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
+                }
+              `;
+              document.head.appendChild(style);
+            }
+          }
+
+          setupEventListeners() {
+            const selectorsToWatch = [
+              'button:not([disabled])',
+              '.ai-btn',
+              '.action-btn',
+              '.control-btn',
+              '.send-btn',
+              '.auto-timer-btn',
+              '.auto-ss-btn',
+              'select:not([disabled])',
+              '.folder-view.active',
+              '.folder-label'
+            ];
+
+            // Hover detection
+            document.addEventListener('mouseover', (e) => {
+              if (!this.enabled) return;
+
+              const target = e.target.closest(selectorsToWatch.join(','));
+              
+              if (target) {
+                this.startHoverTimer(target);
+              }
+            });
+
+            document.addEventListener('mouseout', (e) => {
+              const target = e.target.closest(selectorsToWatch.join(','));
+              
+              if (target) {
+                this.cancelHoverTimer();
+              }
+            });
+
+            // Cancel on manual click
+            document.addEventListener('click', () => {
+              this.cancelHoverTimer();
+            }, true);
+          }
+
+          startHoverTimer(target) {
+            this.cancelHoverTimer();
+            this.currentHoverTarget = target;
+            target.classList.add('hover-highlight');
+
+            const rect = target.getBoundingClientRect();
+            this.progressIndicator.style.left = `${rect.left + rect.width / 2 - 20}px`;
+            this.progressIndicator.style.top = `${rect.top + rect.height / 2 - 20}px`;
+            this.progressIndicator.style.display = 'block';
+
+            this.hoverTimeout = setTimeout(() => {
+              this.executeClick(target);
+            }, this.hoverDelay);
+          }
+
+          cancelHoverTimer() {
+            if (this.hoverTimeout) {
+              clearTimeout(this.hoverTimeout);
+              this.hoverTimeout = null;
+            }
+
+            if (this.currentHoverTarget) {
+              this.currentHoverTarget.classList.remove('hover-highlight');
+              this.currentHoverTarget = null;
+            }
+
+            this.progressIndicator.style.display = 'none';
+          }
+
+          executeClick(target) {
+            console.log('🎯 Auto-clicking:', target);
+
+            setTimeout(() => {
+              if (target.classList.contains('folder-view') || target.classList.contains('folder-label')) {
+                if (typeof restoreFromFolder === 'function') {
+                  restoreFromFolder();
+                }
+              } 
+              else if (target.tagName === 'SELECT') {
+                target.focus();
+                target.click();
+              }
+              else {
+                target.click();
+              }
+
+              target.classList.remove('hover-highlight');
+              this.progressIndicator.style.display = 'none';
+              this.currentHoverTarget = null;
+            }, 100);
+          }
+
+          toggle() {
+            this.enabled = !this.enabled;
+            console.log(`Hover Auto-Click: ${this.enabled ? 'ENABLED' : 'DISABLED'}`);
+          }
+
+          setDelay(ms) {
+            this.hoverDelay = ms;
+            console.log(`Hover delay set to ${ms}ms`);
+          }
+        }
+
+// ==================== GLOBAL TYPING SYSTEM ====================
+        class GlobalTypingSystem {
+          constructor() {
+            this.typingBuffer = '';
+            this.typingActive = false;
+            this.typingIndicator = null;
+            this.typingTimeout = null;
+            this.TYPING_DELAY = 1500;
+            
+            this.init();
+          }
+
+          init() {
+            this.createTypingIndicator();
+            this.setupGlobalKeyListener();
+            console.log('⌨️ Global Typing System initialized');
+          }
+
+          createTypingIndicator() {
+            this.typingIndicator = document.createElement('div');
+            this.typingIndicator.id = 'global-typing-indicator';
+            this.typingIndicator.style.cssText = `
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              background: linear-gradient(135deg, rgba(59, 130, 246, 0.98), rgba(37, 99, 235, 0.98));
+              color: white;
+              padding: 20px 30px;
+              border-radius: 16px;
+              font-size: 16px;
+              font-weight: 600;
+              z-index: 10005;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+              display: none;
+              min-width: 300px;
+              text-align: center;
+              pointer-events: none;
+            `;
+            this.typingIndicator.innerHTML = `
+              <div style="font-size: 32px; margin-bottom: 8px;">⌨️</div>
+              <div id="typing-buffer-display">Start typing...</div>
+              <div style="font-size: 11px; margin-top: 8px; opacity: 0.8;">
+                Press Enter to send • ESC to cancel
+              </div>
+            `;
+            document.body.appendChild(this.typingIndicator);
+          }
+
+          setupGlobalKeyListener() {
+            document.addEventListener('keydown', (e) => {
+              const activeElement = document.activeElement;
+              if (activeElement.tagName === 'INPUT' || 
+                  activeElement.tagName === 'TEXTAREA' ||
+                  activeElement.getAttribute('contenteditable') === 'true') {
+                return;
+              }
+
+              if (this.typingActive) {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  this.insertToChat();
+                  return;
+                }
+                
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  this.cancelTyping();
+                  return;
+                }
+
+                if (e.key === 'Backspace') {
+                  e.preventDefault();
+                  this.typingBuffer = this.typingBuffer.slice(0, -1);
+                  this.updateDisplay();
+                  this.resetTimeout();
+                  
+                  if (this.typingBuffer.length === 0) {
+                    this.cancelTyping();
+                  }
+                  return;
+                }
+              }
+
+              if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                
+                if (!this.typingActive) {
+                  this.startTyping();
+                }
+
+                this.typingBuffer += e.key;
+                this.updateDisplay();
+                this.resetTimeout();
+              }
+            });
+          }
+
+          startTyping() {
+            this.typingActive = true;
+            this.typingIndicator.style.display = 'block';
+          }
+
+          updateDisplay() {
+            const display = document.getElementById('typing-buffer-display');
+            if (display) {
+              display.textContent = this.typingBuffer || 'Start typing...';
+            }
+          }
+
+          resetTimeout() {
+            if (this.typingTimeout) {
+              clearTimeout(this.typingTimeout);
+            }
+
+            this.typingTimeout = setTimeout(() => {
+              this.insertToChat();
+            }, this.TYPING_DELAY);
+          }
+
+          insertToChat() {
+            const messageInput = document.getElementById('messageInput');
+            
+            if (messageInput && this.typingBuffer.trim()) {
+              const currentText = messageInput.value.trim();
+              messageInput.value = currentText ? `${currentText} ${this.typingBuffer}` : this.typingBuffer;
+              
+              messageInput.style.height = 'auto';
+              messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + 'px';
+              messageInput.focus();
+              messageInput.setSelectionRange(messageInput.value.length, messageInput.value.length);
+              
+              console.log('✅ Text inserted:', this.typingBuffer);
+            }
+
+            this.cancelTyping();
+          }
+
+          cancelTyping() {
+            this.typingActive = false;
+            this.typingBuffer = '';
+            this.typingIndicator.style.display = 'none';
+            
+            if (this.typingTimeout) {
+              clearTimeout(this.typingTimeout);
+              this.typingTimeout = null;
+            }
+          }
+        }
+
+// ==================== INITIALIZATION ====================
+        let dragSystem = null;
+        let hoverAutoClick = null;
+        let globalTyping = null;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        dragSystem = new SimpleDragSystem();
+        
+        hoverAutoClick = new HoverAutoClick({
+          hoverDelay: 1000,
+          enabled: true
+        });
+
+        globalTyping = new GlobalTypingSystem();
+
+      });
+
+      window.dragSystem = dragSystem;
+      window.hoverAutoClick = hoverAutoClick;
+      window.globalTyping = globalTyping;
+
     </script>
   </body>
 </html>

@@ -70,13 +70,13 @@ app.get('/', (req, res) => {
 // REST API Routes for Portal
 app.get('/api/sessions', async (req, res) => {
   try {
-    console.log('📋 Fetching sessions...');
+    // console.log('📋 Fetching sessions...');
     const sessions = await ChatSession.find()
       .sort({ updatedAt: -1 })
       .select('socketId lastMessage createdAt updatedAt aiProvider')
       .limit(100);
     
-    console.log(`✅ Found ${sessions.length} sessions`);
+    // console.log(`✅ Found ${sessions.length} sessions`);
     res.json(sessions);
   } catch (error) {
     console.error('❌ Error fetching sessions:', error);
@@ -87,7 +87,7 @@ app.get('/api/sessions', async (req, res) => {
 app.delete('/api/sessions/all', async (req, res) => {
   try {
     const result = await ChatSession.deleteMany({});
-    console.log(`🗑️  Deleted ${result.deletedCount} sessions`);
+    // console.log(`🗑️  Deleted ${result.deletedCount} sessions`);
     res.json({ 
       message: 'All sessions deleted successfully',
       deletedCount: result.deletedCount
@@ -297,7 +297,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("transcribe_audio", async (data) => {
-    console.log("🎤 Received audio for transcription");
+    // console.log("🎤 Received audio for transcription");
     
     try {
       const { buffer, mimeType } = data;
@@ -379,9 +379,9 @@ async function handleChatbotConnection(socket) {
       aiProvider: 'gemini-25-flash'
     });
     await dbSession.save();
-    console.log("✅ New chatbot session created:", socket.id);
+    console.log("New chatbot session created:", socket.id);
   } else {
-    console.log("♻️  Existing chatbot session restored:", socket.id);
+    console.log(" Existing chatbot session restored:", socket.id);
   }
   
   chatSessions.set(socket.id, {
@@ -412,11 +412,4 @@ app.get('/api/keys/status', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
-  // console.log("=".repeat(60));
-  // console.log(`🚀 Server running on port ${PORT}`);
-  // console.log(`📍 Backend URL: https://chatbot-al0x.onrender.com`);
-  // console.log(`🌐 Frontend: https://chatbot-sepia-sigma.vercel.app`);
-  // console.log(`✅ CORS enabled for frontend`);
-  // console.log("=".repeat(60));
-});
+httpServer.listen(PORT);

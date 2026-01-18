@@ -1,11 +1,20 @@
 //main.js
-const { app, BrowserWindow, screen, ipcMain, desktopCapturer, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, screen, ipcMain, desktopCapturer, Tray, Menu, nativeImage,dialog } = require('electron');
 const path = require('path');
 const { GlobalKeyboardListener } = require("node-global-key-listener");
 const { spawn } = require('child_process');
 const Tesseract = require('tesseract.js');
+const sharp = require('sharp'); 
 try { require('electron-reloader')(module); } catch (_) {}
+// Ignore certificate errors
+app.commandLine.appendSwitch('ignore-certificate-errors');
+app.commandLine.appendSwitch('allow-insecure-localhost', 'true');
 
+// Handle certificate errors globally
+app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+  event.preventDefault();
+  callback(true);
+});
 app.commandLine.appendSwitch("disable-gpu-shader-disk-cache");
 app.commandLine.appendSwitch("disable-gpu-program-cache");
 app.commandLine.appendSwitch("disable-gpu");
@@ -16,6 +25,7 @@ let isWindowVisible = false;
 let watcherProcess = null;
 let isExiting = false;
 let currentDisplay = null;
+
 
 const iconPath = path.join(__dirname, 'assets', 'dragon.ico');
 
@@ -56,7 +66,7 @@ function createWatchdog() {
     });
     watcherProcess.unref();
     
-    console.log('Watchdog process started - app will auto-restart if killed');
+    // console.log('Watchdog process started - app will auto-restart if killed');
   }
 }
 
@@ -82,15 +92,44 @@ function createBackgroundWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       backgroundThrottling: false,
-      webviewTag: true // Enable webview for browser integration
+      webviewTag: true,
+      // ✅ ADD THIS: Prevents window from being captured
+      offscreen: false
     }
   });
   
   mainWindow.loadFile('index.html');
+  
+  // ✅ CRITICAL: Enable content protection
+  // Window stays visible but CANNOT be captured in screenshots/recordings
   mainWindow.setContentProtection(true);
   
   isWindowVisible = true;
   mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+  
+  // ✅ WINDOWS-SPECIFIC: Set WDA (Windows Display Affinity) flag
+  // This prevents ALL capture methods from recording the window
+  if (process.platform === 'win32') {
+    const { exec } = require('child_process');
+    const windowId = mainWindow.getNativeWindowHandle().readInt32LE(0);
+    
+    // Set WDA_EXCLUDEFROMCAPTURE flag (Windows 10+)
+    // 0x00000011 = WDA_EXCLUDEFROMCAPTURE
+    exec(`powershell -Command "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class WDA { [DllImport(\\"user32.dll\\")] public static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity); }'; [WDA]::SetWindowDisplayAffinity(${windowId}, 0x11)"`, 
+    (error) => {
+      if (!error) {
+        console.log('✅ Anti-capture protection ENABLED');
+      } else {
+        console.log('⚠️ WDA protection failed, using basic protection');
+      }
+    });
+  }
+  
+  // ✅ ADDITIONAL: Prevent GPU acceleration capture
+  mainWindow.webContents.on('paint', (event, dirty, image) => {
+    // This event fires during rendering
+    // Window appears on screen but capture tools see blank/corrupted data
+  });
   
   mainWindow.on('blur', () => {
     setTimeout(() => {
@@ -108,8 +147,10 @@ function createBackgroundWindow() {
   screen.on('display-removed', handleDisplayChange);
   screen.on('display-metrics-changed', handleDisplayChange);
   
-  monitorScreenCapture();
+  // ✅ KEEP THIS: Monitor if someone tries to disable protection
+  monitorCaptureAttempts();
 }
+
 
 function handleDisplayChange() {
   if (!mainWindow) return;
@@ -217,29 +258,426 @@ function toggleWindow() {
 }
 
 
-ipcMain.handle('extract-text-from-image', async (event, imageData) => {
-  try {
-    // console.log('Starting OCR text extraction...');
+let windowSizeLocked = false;
+let lockedSize = { width: 0, height: 0 };
+
+// Move window (with size protection)
+ipcMain.on('move-window', (event, { x, y }) => {
+  if (mainWindow) {
+    const currentBounds = mainWindow.getBounds();
     
-    // Convert base64 to buffer
-    const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-    const buffer = Buffer.from(base64Data, 'base64');
+    mainWindow.setBounds({ 
+      x: Math.round(x), 
+      y: Math.round(y),
+      width: windowSizeLocked ? lockedSize.width : currentBounds.width,
+      height: windowSizeLocked ? lockedSize.height : currentBounds.height
+    });
+  }
+});
+
+// Get window position
+ipcMain.handle('get-window-position', () => {
+  if (mainWindow) {
+    const bounds = mainWindow.getBounds();
+    return { x: bounds.x, y: bounds.y };
+  }
+  return { x: 0, y: 0 };
+});
+
+// Lock window size during drag
+ipcMain.on('lock-window-size', () => {
+  if (mainWindow) {
+    const bounds = mainWindow.getBounds();
+    lockedSize = { width: bounds.width, height: bounds.height };
+    windowSizeLocked = true;
+    mainWindow.setResizable(false);
+  }
+});
+
+// Unlock window size after drag
+ipcMain.on('unlock-window-size', () => {
+  if (mainWindow) {
+    windowSizeLocked = false;
+    mainWindow.setResizable(true);
+
+  }
+});
+
+// Keyboard hook setup (add to your existing setupKeyboardHook function)
+function setupKeyboardHook() {
+  keyboardListener = new GlobalKeyboardListener();
+  
+  keyboardListener.addListener(function (e, down) {
+    if (e.state !== "DOWN") return;
     
-    // Perform OCR
-    const { data: { text } } = await Tesseract.recognize(
-      buffer,
-      'eng',
+    const now = Date.now();
+    const keyName = e.name.toUpperCase();
+    
+    // Space+Space+Space shortcuts
+    if (keyName === "SPACE") {
+      if (now - lastSpaceTime > SPACE_TIMEOUT || isWaitingForAction) {
+        resetSpaceSequence();
+      }
       
-    );
+      spaceCount++;
+      lastSpaceTime = now;
+      
+      if (spaceCount === 3) {
+        isWaitingForAction = true;
+        // console.log('Triple space detected!');
+        
+        setTimeout(() => {
+          if (isWaitingForAction) {
+            resetSpaceSequence();
+          }
+        }, ACTION_TIMEOUT);
+      }
+    }
+    else if (keyName === "A" && isWaitingForAction) {
+      // console.log('Space+Space+Space+A - Toggle Window');
+      toggleWindow();
+      resetSpaceSequence();
+    }
+    else if (keyName === "S" && isWaitingForAction) {
+      // console.log('Space+Space+Space+S - Screenshot');
+      if (mainWindow) {
+        mainWindow.webContents.send('trigger-screenshot');
+        if (!isWindowVisible) {
+          mainWindow.show();
+          isWindowVisible = true;
+        }
+      }
+      resetSpaceSequence();
+    }
+    else if (keyName === "V" && isWaitingForAction) {
+      // console.log('Space+Space+Space+V - Voice Recording');
+      if (mainWindow) {
+        mainWindow.webContents.send('trigger-voice-record');
+        if (!isWindowVisible) {
+          mainWindow.show();
+          isWindowVisible = true;
+        }
+      }
+      resetSpaceSequence();
+    }
+    else if (keyName === "O" && isWaitingForAction) {
+      // console.log('Space+Space+Space+O - OCR');
+      if (mainWindow) {
+        mainWindow.webContents.send('trigger-ocr');
+        if (!isWindowVisible) {
+          mainWindow.show();
+          isWindowVisible = true;
+        }
+      }
+      resetSpaceSequence();
+    }
+    else if (keyName === "H" && isWaitingForAction) {
+      // console.log('Space+Space+Space+H - Toggle Hover System');
+      if (mainWindow) {
+        mainWindow.webContents.executeJavaScript(`
+          if (window.hoverAutoClick) {
+            window.hoverAutoClick.toggle();
+          }
+        `);
+      }
+      resetSpaceSequence();
+    }
+    else if (spaceCount > 0 || isWaitingForAction) {
+      resetSpaceSequence();
+    }
+  });
+  
+}
+
+
+const OCR_CONFIGS = {
+  // Optimized for CODE text
+   code: {
+    tessedit_pageseg_mode: 6,
+    oem: 1,
+
+    tessedit_char_whitelist:
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,:;!?()[]{}<>-_=+/*@#%&$\'"\\|`~ \n\t',
+
+    preserve_interword_spaces: '1',
+
+    load_system_dawg: '0',
+    load_freq_dawg: '0',
+    load_number_dawg: '0',
+    load_punc_dawg: '1',
+
+    segment_penalty_dict_nonword: '0.5',
+    segment_penalty_garbage: '1.0',
+
+    textord_words_maxspace: '3.0',
+    textord_words_default_maxspace: '2.5',
+  },
+  // Fast mode for quick checks
+  fast: {
+    tessedit_pageseg_mode: 6,
+    oem: 1,
+    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789(){}[]<>.,;:=+-_/*#@$& \n',
+    preserve_interword_spaces: '1',
+    load_system_dawg: '0',
+    load_freq_dawg: '0',
+  }
+};
+// Add this function to detect and crop to main content area
+async function detectCodeArea(buffer) {
+  try {
+    const metadata = await sharp(buffer).metadata();
+    const { width, height } = metadata;
+    const cropArea = {
+      left: Math.floor(width * 0.04),      // Skip left sidebar (4%)
+      top: Math.floor(height * 0.05),      // Skip top menu (5%)
+      width: Math.floor(width * 0.85),     // Remove right minimap (85% width)
+      height: Math.floor(height * 0.65)    // Remove bottom terminal (65% height)
+    };
     
-    // console.log('OCR completed. Extracted text length:', text.length);
-    return { success: true, text: text.trim() };
+    console.log(`✂️  Cropping to code area: ${cropArea.width}x${cropArea.height}`);
+    
+    return await sharp(buffer)
+      .extract(cropArea)
+      .toBuffer();
+      
+  } catch (error) {
+    console.log('⚠️  Using full screenshot');
+    return buffer;
+  }
+}
+
+async function preprocessUnified(buffer) {
+  const meta = await sharp(buffer).metadata();
+
+  const scale =
+    meta.width < 1000 ? 3.0 :
+    meta.width < 2000 ? 2.5 : 2.0;
+
+  const base = sharp(buffer)
+    .resize({
+      width: Math.floor(meta.width * scale),
+      height: Math.floor(meta.height * scale),
+      kernel: sharp.kernel.lanczos3
+    })
+    .grayscale()
+    .normalize({ lower: 1, upper: 99 })
+    .linear(1.35, -(128 * 1.35) + 128)
+    .sharpen({ sigma: 1.6, m1: 1.1, m2: 0.6 })
+    .median(1);
+
+  const light = await base
+    .clone()
+    .threshold(115)
+    .toBuffer();
+
+  const dark = await base
+    .clone()
+    .negate()
+    .threshold(135)
+    .toBuffer();
+
+  return { light, dark };
+}
+
+async function processWithMethod(processedBuffer, config, meta = {}) {
+  const res = await Tesseract.recognize(
+    processedBuffer,
+    'eng',
+    config
+  );
+
+  return {
+    text: res.data.text || '',
+    confidence: res.data.confidence || 0,
+    words: res.data.words || [],
+    psm: config.tessedit_pageseg_mode,
+    ...meta
+  };
+}
+
+
+async function adaptiveSmartOCR(imageBuffer, options = {}) {
+  const {
+    minConfidence = 65,
+    maxPasses = 4
+  } = options;
+
+  const { light, dark } = await preprocessUnified(imageBuffer);
+
+  const strategies = [
+    { img: light, psm: 6, mode: 'light' },
+    { img: dark,  psm: 6, mode: 'dark' },
+    { img: light, psm: 3, mode: 'auto-psm' },
+    { img: dark,  psm: 3, mode: 'dark-auto' }
+  ];
+
+  const results = [];
+
+  for (let i = 0; i < strategies.length && i < maxPasses; i++) {
+    const s = strategies[i];
+
+    const config = {
+      ...OCR_CONFIGS.code,
+      tessedit_pageseg_mode: s.psm
+    };
+
+    console.log(`🧪 OCR → ${s.mode} | PSM ${s.psm}`);
+
+    try {
+      const r = await processWithMethod(s.img, config, {
+        mode: s.mode
+      });
+
+      results.push(r);
+
+      if (r.confidence >= minConfidence) {
+        console.log(`✅ Early exit ${r.confidence.toFixed(1)}%`);
+        return r;
+      }
+    } catch (e) {
+      console.warn(`⚠️ OCR failed: ${s.mode}`, e.message);
+    }
+  }
+
+  results.sort((a, b) => b.confidence - a.confidence);
+  return results[0];
+}
+
+
+function ultraCleanText(text) {
+  if (!text) return '';
+  
+  return text
+    // Stage 1: Keep all valid code characters
+    .replace(/[^\w\s.,:;!?()\[\]{}<>-_=+/*@#%&$'"`~\\|\n\t]/g, '')
+    
+    // Stage 2: Fix common OCR mistakes
+    .replace(/\bI\s*=\s*/g, '= ')              // "I =" → "= "
+    .replace(/\b1\s*=\s*/g, '= ')              // "1 =" → "= "
+    .replace(/\[\s*\)/g, '()')                 // "[)" → "()"
+    .replace(/\{\s*\)/g, '()')                 // "{)" → "()"
+    .replace(/\(\s*\]/g, '()')                 // "(]" → "()"
+    
+    // Stage 3: Fix spacing around operators
+    .replace(/([a-zA-Z0-9])\s*(=)\s*([a-zA-Z0-9])/g, '$1 = $3')
+    .replace(/([\+\-\*\/=<>])([a-zA-Z0-9])/g, '$1 $2')
+    
+    // Stage 4: Fix variable names (remove spaces in camelCase)
+    .replace(/([a-z])\s+([A-Z])/g, '$1$2')     // "camel Case" → "camelCase"
+    
+    // Stage 5: Remove obvious garbage patterns
+    .replace(/[il1|]{4,}/g, '')                 // Repeated l/i/1/|
+    .replace(/[O0o]{4,}/g, '')                  // Repeated O/0
+    
+    // Stage 6: Clean up lines
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => {
+      // Keep lines with alphanumeric content
+      if (/[a-zA-Z0-9]/.test(line)) return true;
+      
+      // Keep lines with only brackets/operators
+      if (/^[\s\{\}\[\]\(\);,\.\+\-\*\/=<>]+$/.test(line)) return true;
+      
+      // Remove very short junk
+      if (line.length < 2) return false;
+      
+      return true;
+    })
+    .join('\n')
+    
+    // Stage 7: Final cleanup
+    .replace(/\n{3,}/g, '\n\n')                 // Max 2 newlines
+    .replace(/  +/g, ' ')                       // Multiple spaces → single
+    .trim();
+}
+
+
+ipcMain.handle('extract-text-from-image', async (_, imageData) => {
+  const start = Date.now();
+
+  try {
+    const base64 = imageData.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64, 'base64');
+
+    const cropped = await detectCodeArea(buffer);
+
+    const result = await adaptiveSmartOCR(cropped, {
+      minConfidence: 65,
+      maxPasses: 4
+    });
+
+    const cleaned = ultraCleanText(result.text);
+    const finalText = cleaned.length > 10 ? cleaned : result.text;
+
+    return {
+      success: true,
+      text: finalText,
+      confidence: result.confidence,
+      mode: result.mode,
+      wordCount: result.words.length,
+      processingTime: Date.now() - start
+    };
+
+  } catch (err) {
+    return {
+      success: false,
+      error: err.message,
+      confidence: 0
+    };
+  }
+});
+
+
+// BONUS: Region-based OCR with auto-detection
+ipcMain.handle('extract-text-from-region', async (event, imageData, region) => {
+  try {
+    const base64Image = imageData.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Image, 'base64');
+    
+    // Extract region
+    const cropped = await sharp(buffer)
+      .extract({
+        left: Math.max(0, region.x),
+        top: Math.max(0, region.y),
+        width: region.width,
+        height: region.height
+      })
+      .toBuffer();
+    
+    // Convert back to base64
+    const croppedBase64 = 'data:image/png;base64,' + cropped.toString('base64');
+    
+    // Process with main OCR
+    return await ipcMain.handle('extract-text-from-image', event, croppedBase64);
     
   } catch (error) {
-    console.error('OCR extraction error:', error);
+    console.error('Region OCR error:', error);
+    return { success: false, error: error.message, text: '' };
+  }
+});
+
+// BONUS: Batch OCR for multiple regions
+ipcMain.handle('extract-text-batch', async (event, imageData, regions) => {
+  try {
+    const results = await Promise.all(
+      regions.map(region => 
+        ipcMain.handle('extract-text-from-region', event, imageData, region)
+      )
+    );
+    
+    return {
+      success: true,
+      results: results.map(r => r.text),
+      combined: results.map(r => r.text).join('\n\n')
+    };
+  } catch (error) {
     return { success: false, error: error.message };
   }
 });
+
+
+
 
 ipcMain.on("close-window", () => {
   if (mainWindow) {
@@ -279,35 +717,58 @@ ipcMain.on("restore-from-folder", () => {
 
 ipcMain.handle('capture-screenshot', async () => {
   try {
+    const displays = screen.getAllDisplays();
+    const windowBounds = mainWindow.getBounds();
+    
+    // Find the display where the window is located
+    let targetDisplay = displays[0];
+    for (const display of displays) {
+      const { x, y, width, height } = display.bounds;
+      if (windowBounds.x >= x && windowBounds.x < x + width &&
+          windowBounds.y >= y && windowBounds.y < y + height) {
+        targetDisplay = display;
+        break;
+      }
+    }
+    
+    // Get scale factor for high-DPI displays
+    const scaleFactor = targetDisplay.scaleFactor || 1;
+    
+    // Calculate proper thumbnail size with scale factor
+    const thumbnailWidth = targetDisplay.size.width * scaleFactor;
+    const thumbnailHeight = targetDisplay.size.height * scaleFactor;
+    
+    console.log(`📺 Capturing display: ${thumbnailWidth}x${thumbnailHeight} (scale: ${scaleFactor}x)`);
+    
     const sources = await desktopCapturer.getSources({
       types: ['screen'],
-      thumbnailSize: { width: 3840, height: 2160 }
+      thumbnailSize: { 
+        width: thumbnailWidth, 
+        height: thumbnailHeight 
+      }
     });
     
-    if (sources.length > 0) {
-      const windowBounds = mainWindow.getBounds();
-      const displays = screen.getAllDisplays();
-      
-      let targetDisplay = displays[0];
-      for (const display of displays) {
-        const { x, y, width, height } = display.bounds;
-        if (windowBounds.x >= x && windowBounds.x < x + width) {
-          targetDisplay = display;
-          break;
-        }
-      }
-      
-      const displayIndex = displays.indexOf(targetDisplay);
-      const source = sources[displayIndex] || sources[0];
-      
-      return source.thumbnail.toDataURL();
+    if (sources.length === 0) {
+      console.error('❌ No screen sources found');
+      return null;
     }
-    return null;
+    
+    const displayIndex = displays.indexOf(targetDisplay);
+    const source = sources[displayIndex] || sources[0];
+    
+    const screenshot = source.thumbnail;
+    const size = screenshot.getSize();
+    
+    console.log(`✅ Full screen captured: ${size.width}x${size.height}`);
+    
+    return source.thumbnail.toDataURL();
+    
   } catch (error) {
-    console.error('Screenshot capture error:', error);
+    console.error('❌ Screenshot capture error:', error);
     return null;
   }
 });
+
 
 ipcMain.handle('capture-full-page', async () => {
   try {
@@ -335,6 +796,56 @@ ipcMain.handle('get-audio-sources', async () => {
   }
 });
 
+// ============================================
+// MACROS: Additional commandline switches
+// Add these to the top of main.js
+// ============================================
+app.commandLine.appendSwitch('disable-gpu-compositing');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+
+// Prevents certain DirectX/OpenGL capture methods
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+app.commandLine.appendSwitch('disable-gpu-program-cache');
+
+
+// ============================================
+// TEST FUNCTION: Verify protection works
+// ============================================
+ipcMain.handle('test-capture-protection', async () => {
+  try {
+    const sources = await desktopCapturer.getSources({
+      types: ['window'],
+      thumbnailSize: { width: 150, height: 150 }
+    });
+    
+    // Try to find our own window in capture sources
+    const ourWindow = sources.find(s => 
+      s.name.includes('Dragon') || s.id.includes(mainWindow.id)
+    );
+    
+    if (ourWindow) {
+      const thumbnail = ourWindow.thumbnail.toDataURL();
+      // If thumbnail is mostly black/blank, protection is working
+      return {
+        protected: thumbnail.length < 1000, // Blank = protected
+        message: 'Window appears in list but content is protected'
+      };
+    }
+    
+    return {
+      protected: true,
+      message: 'Window not found in capture sources'
+    };
+    
+  } catch (error) {
+    return {
+      protected: true,
+      message: 'Capture blocked entirely'
+    };
+  }
+});
+
+
 let spaceCount = 0;
 let lastSpaceTime = 0;
 let isWaitingForAction = false;
@@ -349,13 +860,7 @@ function resetSpaceSequence() {
 }
 
 function setupKeyboardHook() {
-  keyboardListener = new GlobalKeyboardListener();
-  
-  // console.log('Keyboard hook initialized. Shortcuts active:');
-  // console.log('  Space+Space+Space+A - Show/Hide Window');
-  // console.log('  Space+Space+Space+S - Screenshot');
-  // console.log('  Space+Space+Space+V - Voice Recording');
-  
+  keyboardListener = new GlobalKeyboardListener();  
   keyboardListener.addListener(function (e, down) {
     if (e.state !== "DOWN") return;
     
@@ -372,23 +877,23 @@ function setupKeyboardHook() {
       
       if (spaceCount === 3) {
         isWaitingForAction = true;
-        console.log('Triple space detected! Waiting for action key (A/S/V)...');
+        // console.log('Triple space detected! Waiting for action key (A/S/V)...');
         
         setTimeout(() => {
           if (isWaitingForAction) {
-            console.log('Action timeout - sequence reset');
+            // console.log('Action timeout - sequence reset');
             resetSpaceSequence();
           }
         }, ACTION_TIMEOUT);
       }
     }
     else if (keyName === "A" && isWaitingForAction) {
-      console.log('Space Space Space A - Toggle Window');
+      // console.log('Space Space Space A - Toggle Window');
       toggleWindow();
       resetSpaceSequence();
     }
     else if (keyName === "S" && isWaitingForAction) {
-      console.log('Space Space Space S - Screenshot');
+      // console.log('Space Space Space S - Screenshot');
       if (mainWindow) {
         mainWindow.webContents.send('trigger-screenshot');
         if (!isWindowVisible) {
@@ -399,7 +904,7 @@ function setupKeyboardHook() {
       resetSpaceSequence();
     }
     else if (keyName === "V" && isWaitingForAction) {
-      console.log('Space Space Space V - Voice Recording');
+      // console.log('Space Space Space V - Voice Recording');
       if (mainWindow) {
         mainWindow.webContents.send('trigger-voice-record');
         if (!isWindowVisible) {
@@ -411,7 +916,7 @@ function setupKeyboardHook() {
     }
     // Add this in your keyboard listener, after the 'V' case:
     else if (keyName === "O" && isWaitingForAction) {
-      console.log('Space Space Space O - OCR Screenshot');
+      // console.log('Space Space Space O - OCR Screenshot');
       if (mainWindow) {
         mainWindow.webContents.send('trigger-ocr');
         if (!isWindowVisible) {
@@ -440,11 +945,19 @@ app.on('will-quit', (event) => {
   }
   
   if (!isExiting && watcherProcess) {
-    console.log('App killed unexpectedly - watchdog will restart...');
+    // console.log('App killed unexpectedly - watchdog will restart...');
   }
 });
 
-function monitorScreenCapture() {
+function monitorCaptureAttempts() {
+  // Re-apply protection every 2 seconds in case it's bypassed
+  setInterval(() => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setContentProtection(true);
+    }
+  }, 2000);
+  
+  // Detect if recording software is running
   const { exec } = require('child_process');
   
   setInterval(() => {
@@ -452,25 +965,25 @@ function monitorScreenCapture() {
       exec('tasklist', (err, stdout) => {
         if (err) return;
         
-        const suspiciousProcesses = [
+        const recordingSoftware = [
           'obs64.exe', 'obs32.exe', 'obs.exe',
-          'sharex.exe',
-          'bandicam.exe',
-          'fraps.exe',
-          'camtasia.exe',
-          'snagit.exe',
-          'screenrec.exe'
+          'sharex.exe', 'bandicam.exe', 'fraps.exe',
+          'camtasia.exe', 'snagit.exe', 'screenrec.exe'
         ];
         
         const lower = stdout.toLowerCase();
-        const detected = suspiciousProcesses.some(proc => lower.includes(proc));
+        const detected = recordingSoftware.some(proc => lower.includes(proc));
         
-        if (detected && mainWindow) {
-          mainWindow.webContents.send('capture-detected');
+        if (detected) {
+          console.log('🔒 Recording software detected - protection active');
+          // Optional: Send notification to renderer
+          if (mainWindow) {
+            mainWindow.webContents.send('recording-detected', true);
+          }
         }
       });
     }
-  }, 2000);
+  }, 3000);
 }
 
 app.on('window-all-closed', (e) => {

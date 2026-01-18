@@ -17,7 +17,7 @@ class StealthAntiFocusV3 {
    */
   async makeStealthOverlay(window) {
     if (!this.isWindows || !window) {
-      console.log('ℹ️  Non-Windows platform');
+      console.log('Non-Windows platform');
       return false;
     }
     
@@ -131,14 +131,14 @@ class StealthAntiFocusV3 {
       }
     }, 500);
     
-    console.log('✅ Topmost monitoring active');
+    console.log('Topmost monitoring active');
   }
 
   stopTopmostMonitoring() {
     if (this.topmostMonitor) {
       clearInterval(this.topmostMonitor);
       this.topmostMonitor = null;
-      console.log('🛑 Topmost monitoring stopped');
+      console.log('Topmost monitoring stopped');
     }
   }
 
@@ -226,7 +226,7 @@ class StealthAntiFocusV3 {
       
       const success = stdout.trim() === 'SUCCESS';
       if (success) {
-        console.log('✅ Capture protection enabled');
+        console.log('Capture protection enabled');
       }
       
       return success;
