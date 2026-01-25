@@ -13,7 +13,7 @@
   },
   "build": {
     "appId": "com.chatbot.app",
-    "productName": "Dragon Chatbot",
+    "productName": "KaLi Chatbot",
     "directories": {
       "output": "dist"
     },
@@ -24,7 +24,7 @@
       "!.git"
     ],
     "win": {
-      "icon": "assets/dragon.png",
+      "icon": "assets/dragon.ico",
       "target": [
         {
           "target": "nsis",
@@ -46,7 +46,6 @@
       "category": "public.app-category.productivity"
     },
     "linux": {
-      "icon": "assets/dragon.png",
       "target": [
         "AppImage",
         "deb"
@@ -58,12 +57,12 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Dragon Chatbot"
+      "shortcutName": "KaLi Chatbot"
     }
   },
   "devDependencies": {
     "electron": "^39.2.6",
-    "electron-builder": "^25.1.8",
+    "electron-builder": "^26.4.0",
     "electron-reloader": "^1.2.3",
     "nodemon": "^3.1.0"
   },
@@ -77,15 +76,18 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "fluent-ffmpeg": "^2.1.3",
+    "form-data": "^4.0.5",
     "mic": "^2.1.2",
     "mongoose": "^9.0.2",
-    "node-global-key-listener": "^0.3.0",
+    "multer": "^2.0.2",
+    "node-fetch": "^2.7.0",
     "node-record-lpcm16": "^1.0.1",
     "openai": "^4.104.0",
     "sharp": "^0.34.5",
-    "sheryjs": "^1.0.0-beta.0.1.8",
     "socket.io": "^4.8.1",
     "tesseract.js": "^7.0.0",
+    "uiohook-napi": "^1.5.4",
     "wav": "^1.0.2"
   }
 }

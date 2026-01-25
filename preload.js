@@ -1,5 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// security
+window.addEventListener('DOMContentLoaded', () => {
+  // Prevent right-click
+  window.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+  });
+});
+
+// Main API
+
 contextBridge.exposeInMainWorld('electronAPI', {
   closeWindow: () => ipcRenderer.send('close-window'),
   
@@ -27,13 +38,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   extractTextFromImage: (imageData) => ipcRenderer.invoke('extract-text-from-image', imageData),
 
   // Event listeners
-  onOcrTrigger: (callback) => {
-    ipcRenderer.on('trigger-ocr', callback);
-  },
+  onOcrTrigger: (callback) => { ipcRenderer.on('trigger-ocr', callback); },
   
-  onScreenshotTrigger: (callback) => {
-    ipcRenderer.on('trigger-screenshot', callback);
-  },
+  onScreenshotTrigger: (callback) => { ipcRenderer.on('trigger-screenshot', callback);},
   
   onVoiceRecordTrigger: (callback) => {
     ipcRenderer.on('trigger-voice-record', callback);
@@ -49,5 +56,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   onGlobalTypingActivate: (callback) => {
     ipcRenderer.on('activate-global-typing', callback);
-  }
+  },
+  copyImageToClipboard: (imageDataUrl) => ipcRenderer.invoke('copy-image-to-clipboard', imageDataUrl),
+
+  pasteToWebview: (webviewId) => ipcRenderer.invoke('paste-to-webview', webviewId),
+
+  onTriggerWebviewPaste: (callback) => ipcRenderer.on('trigger-webview-paste', callback),
+
+  getAudioDevices: () => ipcRenderer.invoke('get-audio-devices'),
+
+  startContinuousTranscription: (config) => 
+    ipcRenderer.send('start-continuous-transcription', config),
+
+  stopContinuousTranscription: () => 
+    ipcRenderer.send('stop-continuous-transcription'),
+
+  onTranscriptionStarted: (callback) => 
+    ipcRenderer.on('transcription-started', (_, data) => callback(data)),
+
+  onTranscriptionStopped: (callback) => 
+    ipcRenderer.on('transcription-stopped', (_, data) => callback(data)),
+ setVirtualTyping: (enabled) => ipcRenderer.send('set-virtual-typing', enabled),
+  onVirtualKeydown: (callback) => ipcRenderer.on('virtual-keydown', (_, data) => callback(data)),
+  removeVirtualListeners: () => ipcRenderer.removeAllListeners('virtual-keydown'),
+  copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text)
 });

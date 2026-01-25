@@ -1,0 +1,14 @@
+{
+  "name": "sandbox",
+  "version": "1.0.0",
+  "main": "build/Release/sandbox.node",
+  "scripts": {
+    "build": "node-gyp rebuild",
+    "clean": "node-gyp clean",
+    "configure": "node-gyp configure"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.0.0"
+  },
+  "gypfile": true
+}

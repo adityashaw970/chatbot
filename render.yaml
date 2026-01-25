@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: kali-chatbot
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SARVAM_API_KEY
+        sync: false
+    # Add this:
+    buildpacks:
+      - heroku/nodejs
+      - https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git

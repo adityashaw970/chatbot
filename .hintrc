@@ -9,7 +9,8 @@
         "ignore": [
           "user-select",
           "-webkit-app-region",
-          "select"
+          "select",
+          "backdrop-filter"
         ]
       }
     ],
@@ -19,6 +20,13 @@
       "default",
       {
         "button-name": "off"
+      }
+    ],
+    "css-prefix-order": "off",
+    "axe/parsing": [
+      "default",
+      {
+        "duplicate-id-active": "off"
       }
     ]
   }

@@ -3,19 +3,44 @@
 
 
 ::-webkit-scrollbar {
-      width: 8px;
+      width: 2px;
     }
     
     ::-webkit-scrollbar-track {
-      border-radius: 4px;
+      border-radius: 2px;
     }
     
     ::-webkit-scrollbar-thumb {
-      background: white;
-      border-radius: 4px;
+      background: transparent;
+      border-radius: 2px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.5);
+      background: transparent
     }
-    
+
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-bounce {
+    animation: bounce 1s ease-in-out infinite;
+  }
+
+  body, html, #root {
+        background-color: #111827 !important;
+      }
+      
+      .prose pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      
+      .prose code {
+        word-break: break-word;
+  }

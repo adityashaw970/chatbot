@@ -2,1154 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="./assets/dragon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KaLi Chatbot</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        color: white;
-        overflow: hidden;
-        background: black;
-      }
-      * {
-    -webkit-app-region: no-drag; /* Allow clicks everywhere by default */
-  }
-
-  /* Only the header should be draggable */
-  .header {
-    -webkit-app-region: drag;
-  }
-
-  /* But buttons and interactive elements in header should NOT be draggable */
-  .header button,
-  .header .ai-btn,
-  .header .action-btn,
-  .header .control-btn,
-  .header input,
-  .header select,
-  .auto-timer-btn,
-  .auto-ss-btn {
-    -webkit-app-region: no-drag !important;
-  }
-
-  /* Ensure all clickable elements are NOT draggable */
-  button,
-  input,
-  textarea,
-  select,
-  a,
-  .message,
-  .image-preview,
-  .send-btn,
-  .ai-btn,
-  .action-btn,
-  .control-btn {
-    -webkit-app-region: no-drag !important;
-  }
-
-  /* Chat container should be scrollable, not draggable */
-  .chat-container,
-  .messages,
-  .message,
-  .input-area,
-  .footer {
-    -webkit-app-region: no-drag !important;
-  }
-
-  /* Browser view elements */
-  .browser-view,
-  .webview-container,
-  .browser-webview {
-    -webkit-app-region: no-drag !important;
-  }
-
-  /* Ensure cursor shows interactivity 
-  button:not(:disabled) {
-    cursor: pointer !important;
-  }
-
-  button:disabled {
-    cursor: not-allowed !important;
-    opacity: 0.5;
-  }
-*/
-  /* Add visual feedback for buttons */
-  button:not(:disabled):active {
-    transform: scale(0.95);
-    transition: transform 0.1s;
-  }
-
-  /* Fix for transparent areas that might block clicks */
-  body {
-    pointer-events: auto !important;
-  }
-
-  .container {
-    pointer-events: auto !important;
-  }
-
-  /* Ensure folder view is clickable when visible */
-  .folder-view {
-    -webkit-app-region: no-drag !important;
-    pointer-events: auto !important;
-  }
-/*
-  .folder-view.active {
-    cursor: pointer !important;
-  }
-*/
-      .container {
-        background-color: black;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        user-select: none;
-        border-radius: 20px;
-        overflow: hidden;
-      }
-
-      .connection-indicator {
-        position: fixed;
-        top: 80px;
-        right: 0px;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 10px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        z-index: 1000;
-        -webkit-app-region: drag;
-        user-select: none;
-      }
-
-      .connection-indicator.connected {
-        background: rgba(34, 197, 94, 0.15);
-        border: 1px solid rgba(34, 197, 94, 0.4);
-        color: #22c55e;
-      }
-
-      .connection-indicator.disconnected {
-        background: rgba(239, 68, 68, 0.15);
-        border: 1px solid rgba(239, 68, 68, 0.4);
-        color: #ef4444;
-      }
-
-      .connection-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        animation: pulse 2s infinite;
-      }
-
-      .connection-indicator.connected .connection-dot {
-        background: #22c55e;
-      }
-
-      .connection-indicator.disconnected .connection-dot {
-        background: #ef4444;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.5;
-        }
-      }
-
-      .folder-view {
-        display: none;
-        width: 100%;
-        height: 100%;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        -webkit-app-region: drag;
-      }
-
-      .folder-view.active {
-        display: flex;
-      }
-
-      .folder-label {
-        width: 100%;
-        height: 100%;
-        font-size: 10px;
-        color: white;
-        text-align: center;
-        padding: 2px 8px;
-        border-radius: 3px;
-        -webkit-app-region: no-drag;
-        user-select: none;
-      }
-
-      .main-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        -webkit-app-region: no-drag;
-        position: relative;
-      }
-
-      .main-content.hidden {
-        display: none;
-      }
-
-      .browser-view {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #1a1a1a;
-        display: none;
-        flex-direction: column;
-        z-index: 500;
-      }
-
-      .browser-view.active {
-        display: flex;
-      }
-
-      .webview-container {
-        flex: 1;
-        position: relative;
-        background: white;
-        overflow: hidden;
-      }
-
-      .browser-webview {
-        width: 100%;
-        height: 100%;
-        border: none;
-      }
-
-      .browser-loading {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        z-index: 10;
-      }
-
-      .browser-loading.hidden {
-        display: none;
-      }
-
-      .browser-spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(59, 130, 246, 0.3);
-        border-top-color: #3b82f6;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin: 0 auto 16px;
-      }
-
-      .browser-info {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(59, 130, 246, 0.95);
-        padding: 12px 16px;
-        border-radius: 8px;
-        max-width: 320px;
-        z-index: 100;
-        animation: slideInRight 0.3s ease;
-      }
-
-      .browser-info.hidden {
-        display: none;
-      }
-
-      @keyframes slideInRight {
-        from {
-          opacity: 0;
-          transform: translateX(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      .browser-info h3 {
-        font-size: 13px;
-        margin-bottom: 6px;
-        font-weight: 600;
-      }
-
-      .browser-info p {
-        font-size: 11px;
-        line-height: 1.5;
-        opacity: 0.95;
-      }
-
-      .browser-image-preview {
-        position: absolute;
-        top: 60px;
-        right: 10px;
-        background: rgba(30, 30, 30, 0.95);
-        border: 2px solid rgba(59, 130, 246, 0.5);
-        border-radius: 8px;
-        padding: 8px;
-        max-width: 200px;
-        z-index: 150;
-        display: none;
-      }
-
-      .browser-image-preview.show {
-        display: block;
-        animation: fadeIn 0.3s ease;
-      }
-
-      .browser-image-preview img {
-        width: 100%;
-        border-radius: 4px;
-        margin-bottom: 8px;
-      }
-
-      .browser-image-preview button {
-        width: 100%;
-        padding: 6px;
-        background: rgba(59, 130, 246, 0.8);
-        border: none;
-        border-radius: 4px;
-        color: white;
-        font-size: 11px;
-        font-weight: 600;
-      }
-
-      .browser-image-preview button:hover {
-        background: rgba(59, 130, 246, 1);
-      }
-
-      .chat-view {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-
-      .chat-view.hidden {
-        display: none;
-      }
-
-      .header {
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 0px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        -webkit-app-region: drag;
-        user-select: none;
-        flex-shrink: 0;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      }
-
-      .header button {
-        -webkit-app-region: no-drag;
-      }
-
-      .window-controls {
-        display: flex;
-        flex-direction: row;
-        gap: 6px;
-      }
-
-      .control-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
-        border: none;
-        font-size: 16px;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        -webkit-backdrop-filter: blur(10px);
-        backdrop-filter: blur(10px);
-      }
-
-      .control-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: scale(1.05);
-      }
-
-      .control-btn:active {
-        transform: scale(0.95);
-      }
-
-      .control-btn.minimize {
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.3),
-          rgba(37, 99, 235, 0.3)
-        );
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-      }
-
-      .control-btn.close {
-        background: linear-gradient(
-          135deg,
-          rgba(239, 68, 68, 0.3),
-          rgba(220, 38, 38, 0.3)
-        );
-        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-      }
-
-      .ai-provider-selector {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        gap: 3px;
-        flex: 1;
-        -webkit-app-region: drag;
-      }
-
-      .provider-section {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.03);
-        padding: 1px 0px;
-      }
-
-      .provider-buttons {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        flex: 1;
-      }
-
-      .ai-btn {
-        padding: 6px 12px;
-        border: 1.5px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 11px;
-        font-weight: 600;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .ai-btn::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.1),
-          transparent
-        );
-        transition: left 0.5s;
-      }
-
-      .ai-btn:hover::before {
-        left: 100%;
-      }
-
-      .ai-btn:hover {
-        border-color: rgba(255, 255, 255, 0.4);
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-      }
-
-      .ai-btn.active {
-        border-color: #3b82f6;
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.3),
-          rgba(37, 99, 235, 0.25)
-        );
-        color: white;
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.4),
-          inset 0 0 10px rgba(59, 130, 246, 0.1);
-      }
-
-      .ai-btn.browser-mode {
-        border-color: rgba(168, 85, 247, 0.4);
-      }
-
-      .ai-btn.browser-mode.active {
-        border-color: #a855f7;
-        background: linear-gradient(
-          135deg,
-          rgba(168, 85, 247, 0.3),
-          rgba(147, 51, 234, 0.25)
-        );
-        box-shadow: 0 0 20px rgba(168, 85, 247, 0.4),
-          inset 0 0 10px rgba(168, 85, 247, 0.1);
-      }
-      .action-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .action-row {
-        display: flex;
-        gap: 6px;
-      }
-
-      .action-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        border: 1.5px solid rgba(255, 255, 255, 0.2);
-        background: rgba(255, 255, 255, 0.08);
-        font-size: 16px;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-      }
-
-      .action-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.4);
-        transform: scale(1.1);
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-      }
-
-      .action-btn:active {
-        transform: scale(0.95);
-      }
-
-      .action-btn.screenshot {
-        background: linear-gradient(
-          135deg,
-          rgba(34, 197, 94, 0.2),
-          rgba(22, 163, 74, 0.2)
-        );
-        border-color: rgba(34, 197, 94, 0.4);
-      }
-
-      .action-btn.ocr {
-        background: linear-gradient(
-          135deg,
-          rgba(168, 85, 247, 0.2),
-          rgba(147, 51, 234, 0.2)
-        );
-        border-color: rgba(168, 85, 247, 0.4);
-      }
-
-      .action-btn.attach {
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.2),
-          rgba(37, 99, 235, 0.2)
-        );
-        border-color: rgba(59, 130, 246, 0.4);
-      }
-      .action-btn.screenshot-direct {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.4), rgba(22, 163, 74, 0.4));
-        border-color: rgba(34, 197, 94, 0.6);
-        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
-      }
-
-      .action-btn.screenshot-direct:hover {
-        box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
-      }
-
-      .action-btn.ocr-direct {
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(147, 51, 234, 0.4));
-        border-color: rgba(168, 85, 247, 0.6);
-        box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
-      }
-
-      .action-btn.ocr-direct:hover {
-        box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
-      }
-
-      .auto-timer-btn {
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 6px 10px;
-        border-radius: 10px;
-        border: 1.5px solid rgba(168, 85, 247, 0.4);
-        background: linear-gradient(
-          135deg,
-          rgba(168, 85, 247, 0.15),
-          rgba(147, 51, 234, 0.15)
-        );
-        transition: all 0.2s;
-        font-size: 13px;
-      }
-
-      .auto-timer-btn:hover {
-        background: linear-gradient(
-          135deg,
-          rgba(168, 85, 247, 0.25),
-          rgba(147, 51, 234, 0.25)
-        );
-        transform: scale(1.05);
-      }
-
-      .auto-timer-btn.active {
-        border-color: rgba(34, 197, 94, 0.6);
-        background: linear-gradient(
-          135deg,
-          rgba(34, 197, 94, 0.25),
-          rgba(22, 163, 74, 0.25)
-        );
-        animation: pulse-glow 2s infinite;
-      }
-
-      @keyframes pulse-glow {
-        0%,
-        100% {
-          box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
-        }
-        50% {
-          box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
-        }
-      }
-
-      .timer-display {
-        font-family: "Courier New", monospace;
-        font-size: 8px;
-        font-weight: 700;
-        min-width: 10px;
-        text-align: center;
-        color: white;
-      }
-
-      .auto-settings-popup {
-        position: absolute;
-        bottom: -5px;
-        left: 60px;
-        background: linear-gradient(
-          135deg,
-          rgba(15, 23, 42, 0.98),
-          rgba(30, 41, 59, 0.98)
-        );
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-        border: 1.5px solid rgba(255, 255, 255, 0.15);
-        border-radius: 5px;
-        min-width: 100px;
-        display: none;
-        z-index: 1000;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      }
-
-      .auto-settings-popup.show {
-        display: block;
-        animation: slideUp 0.2s ease;
-      }
-
-      @keyframes slideUp {
-        from {
-          opacity: 0;
-          transform: translateY(5px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .settings-input {
-        width: 100%;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        padding: 5px;
-        border-radius: 8px;
-        font-size: 12px;
-        margin-bottom: 5px;
-        text-align: center;
-        transition: all 0.2s;
-      }
-
-      .settings-input:focus {
-        outline: none;
-        border-color: rgba(59, 130, 246, 0.6);
-        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-      }
-
-      .settings-btn {
-        width: 100%;
-        padding: 8px;
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.8),
-          rgba(37, 99, 235, 0.8)
-        );
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-size: 11px;
-        font-weight: 600;
-        transition: all 0.2s;
-      }
-
-      .settings-btn:hover {
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 1),
-          rgba(37, 99, 235, 1)
-        );
-        transform: scale(1.05);
-      }
-      .chat-container {
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding: 15px 10px;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .messages {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        min-height: min-content;
-      }
-      /* Code block styling */
-.message pre {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  padding: 12px;
-  overflow-x: auto;
-  margin: 8px 0;
-  position: relative;
-}
-
-.message code {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.message pre code {
-  display: block;
-  padding: 0;
-  background: none;
-  color: #e6edf3;
-}
-
-.message :not(pre) > code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-/* Copy button for code blocks */
-.code-block-wrapper {
-  position: relative;
-  margin: 8px 0;
-}
-
-.copy-code-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(59, 130, 246, 0.8);
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  color: white;
-  font-size: 11px;
-  opacity: 0;
-  transition: all 0.2s;
-  z-index: 10;
-}
-
-.code-block-wrapper:hover .copy-code-btn {
-  opacity: 1;
-}
-
-.copy-code-btn:hover {
-  background: rgba(59, 130, 246, 1);
-  transform: scale(1.05);
-}
-
-.copy-code-btn.copied {
-  background: rgba(34, 197, 94, 0.9);
-}
-
-/* Language label */
-.code-language {
-  position: absolute;
-  top: 8px;
-  left: 12px;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 600;
-  text-transform: uppercase;
-  pointer-events: none;
-}
-      ::-webkit-scrollbar {
-        width: 4px;
-      }
-
-      ::-webkit-scrollbar-track {
-        border-radius: 4px;
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: white;
-        border-radius: 4px;
-      }
-
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.5);
-      }
-
-      .footer {
-        flex-shrink: 0;
-        padding: 5px 5px;
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .input-area {
-        display: flex;
-        gap: 10px;
-        align-items: flex-end;
-      }
-
-      .input-wrapper {
-        flex: 1;
-        border-radius: 12px;
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        max-height: 150px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1.5px solid rgba(255, 255, 255, 0.15);
-        transition: all 0.2s;
-      }
-
-      .input-wrapper:focus-within {
-        border-color: rgba(59, 130, 246, 0.6);
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
-      }
-
-      textarea {
-        background: transparent;
-        border: none;
-        color: white;
-        resize: none;
-        outline: none;
-        font-size: 14px;
-        font-family: inherit;
-        min-height: 40px;
-        max-height: 80px;
-        overflow-y: auto;
-      }
-
-      textarea::placeholder {
-        color: rgba(255, 255, 255, 0.4);
-      }
-
-      .send-controls {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .send-btn {
-        width: 80px;
-        height: 35px;
-        border-radius: 12px;
-        border: none;
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.8),
-          rgba(37, 99, 235, 0.8)
-        );
-        color: white;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-      }
-
-      .send-btn:hover:not(:disabled) {
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 1),
-          rgba(37, 99, 235, 1)
-        );
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-      }
-
-      .send-btn:active:not(:disabled) {
-        transform: scale(0.95);
-      }
-
-      .send-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .auto-ss-container {
-        position: relative;
-      }
-
-      .auto-ss-btn {
-        width: 80px;
-        height: 30px;
-        border-radius: 12px;
-        border: 1.5px solid rgba(34, 197, 94, 0.4);
-        background: linear-gradient(
-          135deg,
-          rgba(34, 197, 94, 0.15),
-          rgba(22, 163, 74, 0.15)
-        );
-        transition: all 0.2s;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-      }
-
-      .auto-ss-btn:hover {
-        background: linear-gradient(
-          135deg,
-          rgba(34, 197, 94, 0.25),
-          rgba(22, 163, 74, 0.25)
-        );
-        transform: scale(1.05);
-      }
-
-      .auto-ss-btn.active {
-        border-color: rgba(34, 197, 94, 0.6);
-        background: linear-gradient(
-          135deg,
-          rgba(34, 197, 94, 0.3),
-          rgba(22, 163, 74, 0.3)
-        );
-        animation: pulse-glow 2s infinite;
-      }
-
-      .auto-ss-icon {
-        font-size: 16px;
-      }
-
-      .auto-ss-timer-text {
-        font-family: "Courier New", monospace;
-        font-size: 9px;
-        font-weight: 700;
-        color: white;
-      }
-
-      .auto-ss-settings {
-        position: absolute;
-        bottom: calc(100% + 8px);
-        right: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(15, 23, 42, 0.98),
-          rgba(30, 41, 59, 0.98)
-        );
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-        border: 1.5px solid rgba(255, 255, 255, 0.15);
-        border-radius: 12px;
-        padding: 12px;
-        min-width: 160px;
-        display: none;
-        z-index: 1000;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      }
-
-      .auto-ss-settings.show {
-        display: block;
-        animation: slideUp 0.2s ease;
-      }
-
-      .image-preview-container {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        max-height: 80px;
-        overflow-y: auto;
-      }
-
-      .image-preview {
-        position: relative;
-        width: 60px;
-        height: 60px;
-        flex-shrink: 0;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.2s;
-      }
-
-      .image-preview:hover {
-        border-color: rgba(59, 130, 246, 0.6);
-        transform: scale(1.05);
-      }
-
-      .image-preview img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .image-preview button {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: linear-gradient(
-          135deg,
-          rgba(239, 68, 68, 0.9),
-          rgba(220, 38, 38, 0.9)
-        );
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-      }
-
-      .image-preview button:hover {
-        background: linear-gradient(
-          135deg,
-          rgba(239, 68, 68, 1),
-          rgba(220, 38, 38, 1)
-        );
-        transform: scale(1.1);
-      }
-
-      .message {
-        padding: 12px 16px;
-        border-radius: 12px;
-        max-width: 80%;
-        word-wrap: break-word;
-        animation: slideIn 0.3s ease;
-      }
-
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .message.user {
-        background: rgba(23, 100, 225, 0.9);
-        align-self: flex-end;
-        margin-left: auto;
-      }
-
-      .message.bot {
-        background: rgba(15, 88, 204, 0.98);
-        align-self: flex-start;
-      }
-
-      .message.portal {
-        background: rgba(168, 85, 247, 0.9);
-        align-self: flex-start;
-        border: 2px solid rgba(168, 85, 247, 0.5);
-      }
-
-      .message.portal::before {
-        content: "📱 Portal Message";
-        display: block;
-        font-size: 10px;
-        opacity: 0.8;
-        margin-bottom: 4px;
-        font-weight: 600;
-      }
-
-      .message img {
-        max-width: 200px;
-        max-height: 200px;
-        border-radius: 8px;
-        margin-top: 8px;
-        display: block;
-      }
-
-      .model-badge {
-        font-size: 9px;
-        padding: 2px 6px;
-        background: rgba(59, 130, 246, 0.3);
-        border-radius: 4px;
-        margin-bottom: 4px;
-        display: inline-block;
-      }
-
-      .loading {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: white;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(5px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
     
@@ -1160,168 +19,14 @@
     </div>
 
     <div class="container">
+
       <div class="folder-view" id="folderView" onclick="restoreFromFolder()">
         <div class="folder-label bg-white/25"></div>
       </div>
 
       <div class="main-content opacity-[0.7]" id="mainContent">
-        <!-- Browser View -->
-        <div class="browser-view" id="browserView">
-          <div class="header">
-            <!-- Window Controls -->
-            <div class="window-controls">
-              <button onclick="minimizeToFolder()" class="control-btn minimize">
-                🥷
-              </button>
-              <button id="browserClosebtn" class="control-btn close">✕</button>
-            </div>
 
-            <!-- AI Provider Selector -->
-            <div class="ai-provider-selector">
-              <!-- Chatbot Section -->
-              <div class="provider-section">
-                <div class="provider-buttons">
-                  <button
-                    class="ai-btn"
-                    data-provider="gemini-3-flash-preview"
-                    data-mode="chatbot"
-                  >
-                    3.0
-                  </button>
-                  <button
-                    class="ai-btn active"
-                    data-provider="gemini-25-flash"
-                    data-mode="chatbot"
-                  >
-                    2.5
-                  </button>
-                  <button
-                    class="ai-btn"
-                    data-provider="gemini-25-flash-lite"
-                    data-mode="chatbot"
-                  >
-                    Lite
-                  </button>
-                  <button
-                    class="ai-btn"
-                    data-provider="Claude"
-                    data-mode="chatbot"
-                  >
-                    Claude
-                  </button>
-                  <button
-                    class="ai-btn"
-                    data-provider="ChatGPT"
-                    data-mode="chatbot"
-                  >
-                    GPT
-                  </button>
-                </div>
-              </div>
-
-              <!-- Browser Section -->
-              <div class="provider-section">
-                <div class="provider-buttons">
-                  <button
-                    class="ai-btn browser-mode"
-                    data-provider="chatgpt"
-                    data-mode="browser"
-                  >
-                    ChatGPT
-                  </button>
-                  <button
-                    class="ai-btn browser-mode active"
-                    data-provider="claude"
-                    data-mode="browser"
-                  >
-                    Claude
-                  </button>
-                  <button id="dragBrowser" class="ai-btn bg-white/20">🎯</button>
-
-                  <!-- Auto-OCR Timer -->
-                  <div style="position: relative">
-                    <button
-                      class="auto-timer-btn"
-                      id="browserAutoOcrBtn"
-                    >
-                      <span>📝</span>
-                      <span class="timer-display" id="browserAutoOcrTimer"
-                        >--</span
-                      >
-                    </button>
-
-                    <div
-                      class="auto-settings-popup"
-                      id="browserAutoOcrSettings"
-                    >
-                      <input
-                        type="number"
-                        id="browserAutoOcrInterval"
-                        class="settings-input"
-                        value="30"
-                        min="5"
-                        max="300"
-                        placeholder="Seconds"
-                      />
-                      <button
-                        class="settings-btn"
-                        onclick="startBrowserAutoOCR()"
-                      >
-                        Start
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-              <div class="action-row">
-                <input type="file" id="browserImageInput" accept="image/*" multiple style="display: none"/>
-                <button class="hidden" id="browserScreenshotDirectBtn">📹</button>
-                <button class="action-btn screenshot" id="browserScreenshotBtn">📸</button>
-        
-              </div>
-              <div class="action-row">
-                <button class="action-btn ocr" id="browserOcrBtn">📝</button>
-                <button class="action-btn attach" id="browserAttachBtn">📂</button>
-              </div>
-            </div>
-          </div>
-          <div class="browser-image-preview" id="browserImagePreview">
-            <img id="browserPreviewImg" src="" alt="Preview" />
-            <button id="browserPasteBtn">Paste to Chat</button>
-          </div>
-          <!-- ADD THIS after browserImagePreview div -->
-            <div class="browser-text-preview" id="browserTextPreview" style="display: none;">
-              <div style="max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 4px; margin-bottom: 8px;">
-                <pre id="browserPreviewText" style="white-space: pre-wrap; word-wrap: break-word; font-size: 12px;"></pre>
-              </div>
-              <button id="browserTextPasteBtn" style="width: 100%; padding: 6px; background: rgba(59, 130, 246, 0.8); border: none; border-radius: 4px; color: white; font-size: 11px; font-weight: 600;">Paste to Chat</button>
-            </div>
-          <div class="webview-container">
-            <div class="browser-loading" id="browserLoading">
-              <div class="browser-spinner"></div>
-              <p style="color: white">Loading AI interface...</p>
-            </div>
-
-            <div class="browser-info" id="browserInfo">
-              <h3 id="browserInfoTitle">Instructions</h3>
-              <p id="browserInfoText"></p>
-            </div>
-
-            <webview 
-              id="browserWebview" 
-              class="browser-webview"
-              partition="persist:webview"
-              allowpopups
-              webpreferences="allowRunningInsecureContent, experimentalFeatures"
-            ></webview>
-          </div>
-        </div>
-
-        <!-- Chat View -->
+         <!-- Chat View -->
         <div class="chat-view" id="chatView">
           <!-- Chat View Header -->
           <div class="header">
@@ -1377,53 +82,50 @@
                     data-mode="chatbot"
                   >
                     GPT
-                  </button>
+                  </button> 
+                 
                 </div>
               </div>
 
               <!-- Browser Section -->
               <div class="provider-section">
                 <div class="provider-buttons">
-                  <button
-                    class="ai-btn browser-mode"
-                    data-provider="chatgpt"
-                    data-mode="browser"
-                  >
-                    ChatGPT
-                  </button>
-                  <button
-                    class="ai-btn browser-mode"
-                    data-provider="claude"
-                    data-mode="browser"
-                  >
-                    Claude
-                  </button>
-                  <button id="drag" class="ai-btn bg-white/20">🎯</button>
                   <!-- Auto-OCR Timer -->
                   <div style="position: relative">
-                    <button
-                      class="auto-timer-btn"
-                      id="autoOcrBtn"
-                    >
+                    <button class="auto-timer-btn" id="autoOcrBtn">
                       <span>📝</span>
                       <span class="timer-display" id="autoOcrTimer">--</span>
                     </button>
 
                     <div class="auto-settings-popup" id="autoOcrSettings">
-                      <input
-                        type="number"
-                        id="autoOcrInterval"
-                        class="settings-input"
-                        value="30"
-                        min="5"
-                        max="300"
-                        placeholder="Seconds"
-                      />
-                      <button class="settings-btn" onclick="startAutoOCR()">
-                        Start
-                      </button>
+                      <div class="time-adjust-buttons">
+                        <button class="time-btn decrease" onclick="adjustAutoTime('autoOcrInterval', -10)">-10s</button>
+                        <button class="time-btn decrease" onclick="adjustAutoTime('autoOcrInterval', -5)">-5s</button>
+                        <input
+                          type="number"
+                          id="autoOcrInterval"
+                          class="settings-input"
+                          value="30"
+                          min="5"
+                          max="300"
+                          placeholder="Seconds"
+                        />
+                        <button class="time-btn increase" onclick="adjustAutoTime('autoOcrInterval', 5)">+5s</button>
+                        <button class="time-btn increase" onclick="adjustAutoTime('autoOcrInterval', 10)">+10s</button>
+                      </div>
+                      <button class="settings-btn start-btn" onclick="startAutoOCR()">Start</button>
                     </div>
                   </div>
+                  <button
+                    class="ai-btn browser-mode"
+                    data-provider="chatgpt"
+                    data-mode="browser"
+                  >
+                    Browser
+                  </button>
+                  <button class="toggle-btn ai-btn " id="toggleBtn">🚫</button>
+                  <button id="drag" class="ai-btn bg-white/20">🎯</button>
+                 
                 </div>
               </div>
             </div>
@@ -1434,12 +136,13 @@
                 <input type="file" id="imageInput" accept="image/*" multiple style="display: none"/>
                 <button class="action-btn screenshot-direct" id="screenshotDirectBtn">📹</button>
                 <button class="action-btn screenshot" id="screenshotBtn">📸</button>
-                
+                <button class="action-btn help" id="helpBtn">🆘</button>
               </div>
               <div class="action-row">
                 <button class="action-btn ocr" id="ocrBtn">📝</button>
                 <button class="action-btn attach" id="attachBtn">📂</button>
               </div>
+            
             </div>
           </div>
 
@@ -1453,38 +156,45 @@
                 <div class="image-preview-container" id="imagePreviews"></div>
                 <textarea
                   id="messageInput"
-                  placeholder="Type your message..."
+                  placeholder="Hover here and start typing..."
                   rows="1"
                 ></textarea>
+                <div class="absolute flex gap-3 top-2 right-0">
+                  <button id="clearAllBtn" class="action-btn clear-btn">🗑️</button>
+                  <button id="deleteLastBtn" class="action-btn delete-btn ">⌫</button>
+                  <button id="copyTextBtn" class="action-btn copy-btn">📋</button>
+                </div>
               </div>
 
               <div class="send-controls">
                 <!-- Auto Screenshot Button -->
                 <div class="auto-ss-container">
-                  <button
-                    class="auto-ss-btn"
-                    id="autoSSBtn"
-                  >
+                  <button class="auto-ss-btn" id="autoSSBtn">
                     <span class="auto-ss-icon">🤖</span>
                     <span class="auto-ss-timer-text" id="autoSSTimer">--</span>
                   </button>
 
                   <div class="auto-ss-settings" id="autoSSSettings">
-                    <input
-                      type="number"
-                      id="autoSSInterval"
-                      class="settings-input"
-                      value="30"
-                      min="5"
-                      max="300"
-                      placeholder="Seconds"
-                    />
-                    <button class="settings-btn" onclick="startAutoSS()">
+                    <div class="time-adjust-buttons">
+                      <button class="time-btn decrease" onclick="adjustTime(-10)">-10s</button>
+                      <button class="time-btn decrease" onclick="adjustTime(-5)">-5s</button>
+                      <input
+                        type="number"
+                        id="autoSSInterval"
+                        class="settings-input"
+                        value="30"
+                        min="5"
+                        max="300"
+                        placeholder="Seconds"
+                      />
+                      <button class="time-btn increase" onclick="adjustTime(5)">+5s</button>
+                      <button class="time-btn increase" onclick="adjustTime(10)">+10s</button>
+                    </div>
+                    <button class="settings-btn start-btn" onclick="startAutoSS()">
                       Start
                     </button>
                   </div>
                 </div>
-
                 <!-- Send Button -->
                 <button class="send-btn" id="sendBtn">
                   <svg
@@ -1503,20 +213,221 @@
             </div>
           </div>
         </div>
+
+
+        <!-- Browser View -->
+          <div class="browser-view" id="browserView">
+          <div class="header">
+            <!-- Window Controls -->
+            <div class="window-controls">
+              <button onclick="minimizeToFolder()" class="control-btn minimize">
+                🥷
+              </button>
+              <button id="browserClosebtn" class="control-btn close">✕</button>
+            </div>
+
+            <!-- AI Provider Selector -->
+            <div class="ai-provider-selector">
+              <!-- Chatbot Section -->
+              <div class="provider-section">
+                <div class="provider-buttons">
+                  
+                  <button
+                    class="ai-btn active"
+                    data-provider="gemini-25-flash"
+                    data-mode="chatbot"
+                  >
+                    Chatbot
+                  </button>
+                  <button
+                    class="ai-btn browser-mode active"
+                    data-provider="gemini"
+                    data-mode="browser"
+                  >
+                  Gemini
+                  </button>
+                  <button
+                    class="ai-btn browser-mode"
+                    data-provider="deepseek"
+                    data-mode="browser"
+                  >
+                    DeepSeek
+                  </button>
+                  <button
+                    class="ai-btn browser-mode"
+                    data-provider="perplexity"
+                    data-mode="browser"
+                  >
+                    Perplexity
+                  </button>
+                </div>
+              </div>
+
+              <!-- Browser Section -->
+              <div class="provider-section">
+                <div class="provider-buttons">
+                   <!-- Auto-OCR Timer -->
+                  <div style="position: relative">
+                    <button class="auto-timer-btn" id="browserAutoOcrBtn">
+                      <span>📝</span>
+                      <span class="timer-display" id="browserAutoOcrTimer">--</span>
+                    </button>
+
+                    <div class="auto-settings-popup" id="browserAutoOcrSettings">
+                      <div class="time-adjust-buttons">
+                        <button class="time-btn decrease" onclick="adjustAutoTime('browserAutoOcrInterval', -10)">-10s</button>
+                        <button class="time-btn decrease" onclick="adjustAutoTime('browserAutoOcrInterval', -5)">-5s</button>
+                        <input
+                          type="number"
+                          id="browserAutoOcrInterval"
+                          class="settings-input"
+                          value="30"
+                          min="5"
+                          max="300"
+                          placeholder="Seconds"
+                        />
+                        <button class="time-btn increase" onclick="adjustAutoTime('browserAutoOcrInterval', 5)">+5s</button>
+                        <button class="time-btn increase" onclick="adjustAutoTime('browserAutoOcrInterval', 10)">+10s</button>
+                      </div>
+                      <button class="settings-btn start-btn" onclick="startBrowserAutoOCR()">Start</button>
+                    </div>
+                  </div>
+                  <button
+                    class="ai-btn browser-mode"
+                    data-provider="chatgpt"
+                    data-mode="browser"
+                  >
+                    ChatGPT
+                  </button>
+                  <button
+                    class="ai-btn browser-mode active"
+                    data-provider="claude"
+                    data-mode="browser"
+                  >
+                    Claude
+                  </button>
+                  <button id="dragBrowser" class="ai-btn bg-white/20">🎯</button>
+
+                 
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+              <div class="action-row">
+                <input type="file" id="browserImageInput" accept="image/*" multiple style="display: none"/>
+                <button class="action-btn screenshot" id="browserScreenshotBtn">📸</button>
+                <button class="action-btn audio-capture" id="audioCaptureBtn" >🎙️</button>
+
+              </div>
+              <div class="action-row">
+                <button class="action-btn ocr" id="browserOcrBtn">📝</button>
+                <button class="action-btn attach" id="browserAttachBtn">📂</button>
+              </div>
+            </div>
+          </div>
+          <div class="browser-image-preview" id="browserImagePreview">
+            <img id="browserPreviewImg" src="" alt="Preview" />
+            <button id="browserPasteBtn">Paste to Chat</button>
+          </div>
+          <div class="webview-container">
+            <div class="browser-loading" id="browserLoading">
+              <div class="browser-spinner"></div>
+              <p style="color: white">Loading AI interface...</p>
+            </div>
+
+            <div class="browser-info" id="browserInfo">
+              <h3 id="browserInfoTitle">Instructions</h3>
+              <p id="browserInfoText"></p>
+            </div>
+
+            <webview 
+              id="browserWebview" 
+              class="browser-webview"
+              partition="persist:webview"
+              allowpopups
+              webpreferences="allowRunningInsecureContent, experimentalFeatures"
+            ></webview>
+          </div>
+          <div class="footer">
+            <div class="input-area">
+              <div class="input-wrapper">
+                <div class="image-preview-container" id="imagePreviews"></div>
+                <textarea
+                  id="messageInput"
+                  placeholder="Hover here and start typing..."
+                  rows="1" 
+                ></textarea>
+                <div class="absolute flex gap-3 top-2 right-0">
+                  <button id="clearAllBtn" class="action-btn clear-btn">🗑️</button>
+                  <button id="deleteLastBtn" class="action-btn delete-btn ">⌫</button>
+                  <button id="copyTextBtn" class="action-btn copy-btn">📋</button>
+                </div>
+              </div>
+
+              <div class="send-controls">
+                <!-- Auto Screenshot Button -->
+                <div class="auto-ss-container">
+                  <button class="auto-ss-btn" id="autoSSBtn">
+                    <span class="auto-ss-icon">🤖</span>
+                    <span class="auto-ss-timer-text" id="autoSSTimer">--</span>
+                  </button>
+
+                  <div class="auto-ss-settings" id="autoSSSettings">
+                    <div class="time-adjust-buttons">
+                      <button class="time-btn decrease" onclick="adjustTime(-10)">-10s</button>
+                      <button class="time-btn decrease" onclick="adjustTime(-5)">-5s</button>
+                      <input
+                        type="number"
+                        id="autoSSInterval"
+                        class="settings-input"
+                        value="30"
+                        min="5"
+                        max="300"
+                        placeholder="Seconds"
+                      />
+                      <button class="time-btn increase" onclick="adjustTime(5)">+5s</button>
+                      <button class="time-btn increase" onclick="adjustTime(10)">+10s</button>
+                    </div>
+                    <button class="settings-btn start-btn" onclick="startAutoSS()">
+                      Start
+                    </button>
+                  </div>
+                </div>
+                <!-- Send Button -->
+                <button class="send-btn" id="browserPasteBtn">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                  >
+                    <path
+                      d="M208.49,120.49a12,12,0,0,1-17,0L140,69V216a12,12,0,0,1-24,0V69L64.49,120.49a12,12,0,0,1-17-17l72-72a12,12,0,0,1,17,0l72,72A12,12,0,0,1,208.49,120.49Z"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+       
       </div>
     </div>
 
    </main>
    
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-
+    <!-- <script src="./src/renderer/voice-handler.js"></script>
+    <script src="./src/renderer/audio-capture.js"></script> -->
     <script>
       // ==================== SOCKET AND ELEMENT INITIALIZATION ====================
-      const SOCKET_URL = window.location.hostname === 'localhost' 
-      ? 'http://localhost:3000'
-      : 'https://chatbot-al0x.onrender.com';
+      const SOCKET_URL = 'http://localhost:3000';
 
-    const socket = io(SOCKET_URL, {
+      const socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
@@ -1524,20 +435,24 @@
       timeout: 10000
     });
 
+      // Add after SOCKET_URL declaration
+      const CLOUDINARY_CONFIG = {
+        cloudName: "divcvwuhh",
+        uploadPreset: "chatbot_uploads" // You'll create this in Cloudinary dashboard
+      };
+
       // All element references (declare ONCE at the top)
       const messagesDiv = document.getElementById("messages");
       const messageInput = document.getElementById("messageInput");
       const sendBtn = document.getElementById("sendBtn");
       const attachBtn = document.getElementById("attachBtn");
       const screenshotBtn = document.getElementById("screenshotBtn");
-      const imageInput = document.getElementById("imageInput");
+      const imageInput = document.getElementById("imageInput")
       const imagePreviewsDiv = document.getElementById("imagePreviews");
       const closeBtn = document.getElementById("closebtn");
       const folderView = document.getElementById("folderView");
       const mainContent = document.getElementById("mainContent");
-      const connectionIndicator = document.getElementById(
-        "connectionIndicator"
-      );
+      const connectionIndicator = document.getElementById("connectionIndicator");
       const connectionText = document.getElementById("connectionText");
       const autoSSBtn = document.getElementById("autoSSBtn");
       const autoSSSettings = document.getElementById("autoSSSettings");
@@ -1548,7 +463,6 @@
       const browserOcrBtn = document.getElementById("browserOcrBtn");
       const screenshotDirectBtn = document.getElementById("screenshotDirectBtn");
      
-      const browserScreenshotDirectBtn = document.getElementById("browserScreenshotDirectBtn");
     
       const autoOcrBtn = document.getElementById("autoOcrBtn");
       const autoOcrSettings = document.getElementById("autoOcrSettings");
@@ -1558,9 +472,7 @@
       const browserView = document.getElementById("browserView");
       const chatView = document.getElementById("chatView");
       const browserWebview = document.getElementById("browserWebview");
-      const browserScreenshotBtn = document.getElementById(
-        "browserScreenshotBtn"
-      );
+      const browserScreenshotBtn = document.getElementById("browserScreenshotBtn");
       const browserAttachBtn = document.getElementById("browserAttachBtn");
       const browserImageInput = document.getElementById("browserImageInput");
       const browserClosebtn = document.getElementById("browserClosebtn");
@@ -1568,18 +480,12 @@
       const browserInfo = document.getElementById("browserInfo");
       const browserInfoTitle = document.getElementById("browserInfoTitle");
       const browserInfoText = document.getElementById("browserInfoText");
-      const browserImagePreview = document.getElementById(
-        "browserImagePreview"
-      );
+      const browserImagePreview = document.getElementById("browserImagePreview");
       const browserPreviewImg = document.getElementById("browserPreviewImg");
       const browserPasteBtn = document.getElementById("browserPasteBtn");
       const browserAutoOcrBtn = document.getElementById("browserAutoOcrBtn");
-      const browserAutoOcrSettings = document.getElementById(
-        "browserAutoOcrSettings"
-      );
-      const browserAutoOcrTimer = document.getElementById(
-        "browserAutoOcrTimer"
-      );
+      const browserAutoOcrSettings = document.getElementById("browserAutoOcrSettings");
+      const browserAutoOcrTimer = document.getElementById("browserAutoOcrTimer");
 
       // ==================== STATE VARIABLES ====================
       let selectedImages = [];
@@ -1596,11 +502,15 @@
       let browserAutoOcrTimeLeft = 0;
       let currentBrowserProvider = null;
       let pendingBrowserImage = null;
-      let autoSendEnabled = true; // NEW: Auto-send screenshots in browser mode
+      let autoSendEnabled = true; 
+      let selectedSession = null; 
 
       const BROWSER_URLS = {
         claude: "https://claude.ai/new",
         chatgpt: "https://chat.openai.com/",
+        gemini: "https://gemini.google.com/app",
+        deepseek: "https://chat.deepseek.com/",
+        perplexity: "https://www.perplexity.ai/"
       };
 
       // ==================== PROVIDER BUTTON SETUP ====================
@@ -1614,6 +524,7 @@
             const mode = btn.dataset.mode;
 
             console.log(`Button clicked: ${provider} (${mode})`);
+            activemode( mode);
             switchProvider(provider, mode);
           });
         });
@@ -1637,7 +548,7 @@
         // Handle browser-based providers
         if (
           mode === "browser" &&
-          (provider === "claude" || provider === "chatgpt")
+          (provider === "claude" || provider === "chatgpt") || (provider === "gemini" || provider === "deepseek" || provider === "perplexity")
         ) {
           openBrowser(provider);
         } else if (mode === "chatbot") {
@@ -1664,10 +575,14 @@
           chatgpt:
             'Click 📸 to capture screenshot. Image will appear - click "Paste to Chat" to send it to ChatGPT.',
         };
-
-        browserInfoTitle.textContent = `Using ${
-          provider === "claude" ? "Claude.ai" : "ChatGPT"
-        }`;
+        const providerNames = {
+            chatgpt:"ChatGPT",
+            claude:"Claude.ai",
+            gemini: "Gemini 2.5",
+            deepseek: "DeepSeek",
+            perplexity: "Perplexity"
+          };
+        browserInfoTitle.textContent = `Using ${providerNames[provider]}`;
         browserInfoText.textContent = instructions[provider];
         browserInfo.classList.remove("hidden");
 
@@ -1692,7 +607,7 @@
         browserPreviewImg.src = imageData;
         browserImagePreview.classList.add("show");
       }
-      let pendingBrowserText = null; // Store extracted text
+      let pendingBrowserText = null; 
 
       function showBrowserTextPreview(text) {
         pendingBrowserText = text;
@@ -1733,15 +648,15 @@
       }
             
       async function pasteToBrowserChat() {
-  // 🔥 NEW: Check if we have text instead of image
-  if (pendingBrowserText) {
-    await pasteBrowserText();
-    return;
-  }
-  
-  if (!pendingBrowserImage) return;
-  
-  const prompt = browserPreviewImg;
+      // 🔥 NEW: Check if we have text instead of image
+      if (pendingBrowserText) {
+        await pasteBrowserText();
+        return;
+      }
+      
+      if (!pendingBrowserImage) return;
+      
+      const prompt = browserPreviewImg;
 
         try {
           if (currentBrowserProvider === "claude") {
@@ -1890,122 +805,6 @@
         }
       }
 
-     
-      async function pasteBrowserText() {
-  if (!pendingBrowserText) return;
-
-  const textToSend = pendingBrowserText;
-
-  try {
-    if (currentBrowserProvider === "claude") {
-      const sendScript = `
-        (async function() {
-          try {
-            const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]');
-            if (inputArea) {
-              inputArea.focus();
-              inputArea.innerHTML = '';
-              
-              const paragraph = document.createElement('p');
-              paragraph.textContent = "${textToSend.replace(/"/g, '\\"').replace(/\n/g, '\\n')}";
-              inputArea.appendChild(paragraph);
-              
-              inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-              
-              // Wait for text to register
-              await new Promise(resolve => setTimeout(resolve, 500));
-              
-              // Click send button
-              const sendButton = document.querySelector('button[aria-label="Send message"]:not([disabled])');
-              if (sendButton) {
-                sendButton.click();
-                return 'sent';
-              }
-            }
-            return 'failed';
-          } catch (e) {
-            return 'error: ' + e.message;
-          }
-        })();
-      `;
-
-      const result = await browserWebview.executeJavaScript(sendScript);
-
-      if (result === "sent") {
-        showBrowserNotification("✅ Text sent to Claude successfully!");
-      } else {
-        showBrowserNotification("⚠️ Text inserted but not sent. Click send manually.");
-      }
-    } else if (currentBrowserProvider === "chatgpt") {
-      const sendScript = `
-        (async function() {
-          try {
-            let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
-            
-            if (!inputArea) {
-              inputArea = document.querySelector('textarea[name="prompt-textarea"]');
-            }
-            
-            if (inputArea) {
-              inputArea.focus();
-              
-              if (inputArea.tagName === 'TEXTAREA') {
-                inputArea.value = "${textToSend.replace(/"/g, '\\"').replace(/\n/g, '\\n')}";
-                inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-              } else {
-                inputArea.innerHTML = '';
-                const paragraph = document.createElement('p');
-                paragraph.textContent = "${textToSend.replace(/"/g, '\\"').replace(/\n/g, '\\n')}";
-                inputArea.appendChild(paragraph);
-                inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-              }
-              
-              // Wait for text to register
-              await new Promise(resolve => setTimeout(resolve, 500));
-              
-              // Click send button
-              const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]:not([disabled])');
-              if (sendButton) {
-                sendButton.click();
-                return 'sent';
-              }
-            }
-            return 'failed';
-          } catch (e) {
-            return 'error: ' + e.message;
-          }
-        })();
-      `;
-
-      const result = await browserWebview.executeJavaScript(sendScript);
-
-      if (result === "sent") {
-        showBrowserNotification("✅ Text sent to ChatGPT successfully!");
-      } else {
-        showBrowserNotification("⚠️ Text inserted but not sent. Click send manually.");
-      }
-    }
-
-    // Hide preview after sending
-    setTimeout(() => {
-      const previewDiv = document.getElementById("browserImagePreview");
-      previewDiv.classList.remove("show");
-      
-      const textDisplay = document.getElementById("browserTextDisplay");
-      if (textDisplay) textDisplay.style.display = "none";
-      
-      const previewImg = document.getElementById("browserPreviewImg");
-      previewImg.style.display = "block";
-      
-      pendingBrowserText = null;
-    }, 2000);
-  } catch (error) {
-    console.error("Text paste error:", error);
-    showBrowserNotification("❌ Failed to send text");
-  }
-}
-    
-    
       async function copyImageToClipboard(imageDataUrl) {
         try {
           const response = await fetch(imageDataUrl);
@@ -2198,186 +997,617 @@
       }
 
       async function injectTextToBrowser(text, autoSend = false) {
-  if (!currentBrowserProvider) {
-    showBrowserNotification("❌ No browser provider active");
-    return;
-  }
+        if (!currentBrowserProvider) {
+          showBrowserNotification("❌ No browser provider active");
+          return;
+        }
 
-  try {
-    const escapedText = text
-      .replace(/\\/g, "\\\\")
-      .replace(/`/g, "\\`")
-      .replace(/"/g, '\\"')
-      .replace(/'/g, "\\'")
-      .replace(/\n/g, "\\n")
-      .replace(/\r/g, "");
+        try {
+          const escapedText = text
+            .replace(/\\/g, "\\\\")
+            .replace(/`/g, "\\`")
+            .replace(/"/g, '\\"')
+            .replace(/'/g, "\\'")
+            .replace(/\n/g, "\\n")
+            .replace(/\r/g, "");
 
-    if (currentBrowserProvider === "claude") {
-      const claudeScript = `
-        (async function() {
-          try {
-            const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]');
-            if (!inputArea) return 'input_not_found';
-            
-            inputArea.focus();
-            inputArea.innerHTML = '';
-            
-            const paragraph = document.createElement('p');
-            paragraph.textContent = "${escapedText}";
-            inputArea.appendChild(paragraph);
-            
-            inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-            
-            ${autoSend ? `
-            // Wait for input to register
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Click send button
-            const sendButton = document.querySelector('button[aria-label="Send message"]:not([disabled])');
-            if (sendButton) {
-              sendButton.click();
-              return 'sent';
-            }
-            ` : ''}
-            
-            return 'success';
-          } catch (e) {
-            return 'error: ' + e.message;
-          }
-        })();
-      `;
+          let injectionScript = '';
+          let providerName = '';
 
-      const result = await browserWebview.executeJavaScript(claudeScript);
-
-      if (result === "sent") {
-        showBrowserNotification("✅ Text sent to Claude!");
-      } else if (result === "success") {
-        showBrowserNotification("✅ Text inserted into Claude!");
-      } else {
-        showBrowserNotification("⚠️ Text copied to clipboard - paste with Ctrl+V");
-        await copyTextToClipboard(text);
-      }
-    } else if (currentBrowserProvider === "chatgpt") {
-      const chatgptScript = `
-        (async function() {
-          try {
-            let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
-            
-            if (!inputArea) {
-              const textarea = document.querySelector('textarea[name="prompt-textarea"]');
-              if (textarea) {
-                textarea.style.display = 'block';
-                textarea.focus();
-                textarea.value = "${escapedText}";
-                textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-                
-                ${autoSend ? `
-                await new Promise(resolve => setTimeout(resolve, 500));
-                const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]:not([disabled])');
-                if (sendButton) {
-                  sendButton.click();
-                  return 'sent_textarea';
+          // ==================== CLAUDE ====================
+          if (currentBrowserProvider === "claude") {
+            providerName = "Claude";
+            injectionScript = `
+              (async function() {
+                try {
+                  const inputArea = document.querySelector('div[contenteditable="true"][role="textbox"]');
+                  if (!inputArea) return 'input_not_found';
+                  
+                  inputArea.focus();
+                  inputArea.innerHTML = '';
+                  
+                  const paragraph = document.createElement('p');
+                  paragraph.textContent = "${escapedText}";
+                  inputArea.appendChild(paragraph);
+                  
+                  inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                  
+                  ${autoSend ? `
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  
+                  const sendButton = document.querySelector('button[aria-label="Send message"]:not([disabled])');
+                  if (sendButton) {
+                    sendButton.click();
+                    return 'sent';
+                  }
+                  ` : ''}
+                  
+                  return 'success';
+                } catch (e) {
+                  return 'error: ' + e.message;
                 }
-                ` : ''}
-                
-                return 'success_textarea';
-              }
-            }
-            
-            if (!inputArea) return 'input_not_found';
-            
-            inputArea.innerHTML = '';
-            const paragraph = document.createElement('p');
-            paragraph.textContent = "${escapedText}";
-            inputArea.appendChild(paragraph);
-            inputArea.focus();
-            inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-            inputArea.dispatchEvent(new Event('change', { bubbles: true }));
-            
-            const placeholder = inputArea.querySelector('p.placeholder');
-            if (placeholder && placeholder !== paragraph) {
-              placeholder.remove();
-            }
-            
-            ${autoSend ? `
-            // Wait for input to register
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Click send button
-            const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]:not([disabled])');
-            if (sendButton) {
-              sendButton.click();
-              return 'sent';
-            }
-            ` : ''}
-            
-            return 'success';
-          } catch (e) {
-            return 'error: ' + e.message;
+              })();
+            `;
           }
-        })();
-      `;
+          
+          // ==================== CHATGPT ====================
+          else if (currentBrowserProvider === "chatgpt") {
+            providerName = "ChatGPT";
+            injectionScript = `
+              (async function() {
+                try {
+                  let inputArea = document.querySelector('div.ProseMirror[contenteditable="true"]#prompt-textarea');
+                  
+                  if (!inputArea) {
+                    const textarea = document.querySelector('textarea[name="prompt-textarea"]');
+                    if (textarea) {
+                      textarea.style.display = 'block';
+                      textarea.focus();
+                      textarea.value = "${escapedText}";
+                      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                      textarea.style.height = 'auto';
+                      textarea.style.height = textarea.scrollHeight + 'px';
+                      
+                      ${autoSend ? `
+                      await new Promise(resolve => setTimeout(resolve, 500));
+                      const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]:not([disabled])');
+                      if (sendButton) {
+                        sendButton.click();
+                        return 'sent_textarea';
+                      }
+                      ` : ''}
+                      
+                      return 'success_textarea';
+                    }
+                  }
+                  
+                  if (!inputArea) return 'input_not_found';
+                  
+                  inputArea.innerHTML = '';
+                  const paragraph = document.createElement('p');
+                  paragraph.textContent = "${escapedText}";
+                  inputArea.appendChild(paragraph);
+                  inputArea.focus();
+                  inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                  inputArea.dispatchEvent(new Event('change', { bubbles: true }));
+                  
+                  const placeholder = inputArea.querySelector('p.placeholder');
+                  if (placeholder && placeholder !== paragraph) {
+                    placeholder.remove();
+                  }
+                  
+                  ${autoSend ? `
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  
+                  const sendButton = document.querySelector('button#composer-submit-button[data-testid="send-button"]:not([disabled])');
+                  if (sendButton) {
+                    sendButton.click();
+                    return 'sent';
+                  }
+                  ` : ''}
+                  
+                  return 'success';
+                } catch (e) {
+                  return 'error: ' + e.message;
+                }
+              })();
+            `;
+          }
+          
+          // ==================== GEMINI ====================
+          else if (currentBrowserProvider === "gemini") {
+            providerName = "Gemini";
+            injectionScript = `
+              (async function() {
+                try {
+                  // Multiple selectors to find Gemini's Quill editor
+                  let editor = document.querySelector('rich-textarea .ql-editor[contenteditable="true"]');
+                  
+                  if (!editor) {
+                    editor = document.querySelector('.ql-editor.textarea[contenteditable="true"]');
+                  }
+                  
+                  if (!editor) {
+                    editor = document.querySelector('div.ql-editor[role="textbox"][contenteditable="true"]');
+                  }
+                  
+                  if (!editor) {
+                    editor = document.querySelector('[data-placeholder*="Ask Gemini"] .ql-editor');
+                  }
+                  
+                  if (!editor) return 'input_not_found';
+                  
+                  // Focus the editor
+                  editor.focus();
+                  
+                  // CRITICAL FIX: Don't use innerHTML, use textContent for TrustedHTML
+                  // Remove all child nodes first
+                  while (editor.firstChild) {
+                    editor.removeChild(editor.firstChild);
+                  }
+                  
+                  // Create paragraph with textContent (not innerHTML)
+                  const paragraph = document.createElement('p');
+                  paragraph.textContent = "${escapedText}";
+                  editor.appendChild(paragraph);
+                  
+                  // Place cursor at end
+                  const range = document.createRange();
+                  const sel = window.getSelection();
+                  range.selectNodeContents(editor);
+                  range.collapse(false);
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                  
+                  // Trigger multiple events to ensure Gemini detects the change
+                  editor.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+                  editor.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+                  editor.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+                  editor.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+                  
+                  ${autoSend ? `
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  
+                  // Find send button - multiple fallback selectors
+                  let sendButton = null;
+                  
+                  // Try specific aria-label
+                  sendButton = document.querySelector('button[aria-label="Send message"]:not([aria-disabled="true"]):not([disabled])');
+                  
+                  if (!sendButton) {
+                    // Try the send button container
+                    const container = document.querySelector('.send-button-container');
+                    if (container) {
+                      sendButton = container.querySelector('button.mat-mdc-icon-button:not([aria-disabled="true"]):not([disabled])');
+                    }
+                  }
+                  
+                  if (!sendButton) {
+                    // Try by jslog attribute
+                    sendButton = document.querySelector('button[jslog*="173899"][aria-disabled="false"]');
+                  }
+                  
+                  if (!sendButton) {
+                    // Try by icon name
+                    const buttons = document.querySelectorAll('button.mat-mdc-icon-button');
+                    for (const btn of buttons) {
+                      const icon = btn.querySelector('mat-icon[fonticon="send"]');
+                      if (icon && btn.getAttribute('aria-disabled') !== 'true' && !btn.disabled) {
+                        sendButton = btn;
+                        break;
+                      }
+                    }
+                  }
+                  
+                  if (sendButton && sendButton.getAttribute('aria-disabled') !== 'true' && !sendButton.disabled) {
+                    sendButton.click();
+                    return 'sent';
+                  } else {
+                    return 'button_disabled';
+                  }
+                  ` : ''}
+                  
+                  return 'success';
+                } catch (e) {
+                  return 'error: ' + e.message;
+                }
+              })();
+            `;
+          }
+          
+          // ==================== PERPLEXITY ====================
+          else if (currentBrowserProvider === "perplexity") {
+            providerName = "Perplexity";
+            injectionScript = `
+              (async function() {
+                try {
+                  // Find the Lexical editor container
+                  const editorContainer = document.querySelector('div[contenteditable="true"]#ask-input[role="textbox"]');
+                  
+                  if (!editorContainer) return 'input_not_found';
+                  
+                  editorContainer.focus();
+                  
+                  // Clear the editor by removing all child nodes
+                  while (editorContainer.firstChild) {
+                    editorContainer.removeChild(editorContainer.firstChild);
+                  }
+                  
+                  // Create new paragraph with proper Lexical structure
+                  const paragraph = document.createElement('p');
+                  paragraph.setAttribute('dir', 'auto');
+                  const textNode = document.createTextNode("${escapedText}");
+                  paragraph.appendChild(textNode);
+                  editorContainer.appendChild(paragraph);
+                  
+                  // Trigger comprehensive event set for Lexical
+                  const inputEvent = new InputEvent('input', { 
+                    bubbles: true, 
+                    cancelable: true,
+                    inputType: 'insertText',
+                    data: "${escapedText}"
+                  });
+                  editorContainer.dispatchEvent(inputEvent);
+                  
+                  editorContainer.dispatchEvent(new Event('change', { bubbles: true }));
+                  editorContainer.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+                  
+                  ${autoSend ? `
+                  await new Promise(resolve => setTimeout(resolve, 800));
+                  
+                  // Multiple fallback selectors for submit button
+                  let sendButton = document.querySelector('button[aria-label="Submit"]:not([disabled])');
+                  
+                  if (!sendButton) {
+                    // Look for button with specific styling and arrow icon
+                    const buttons = document.querySelectorAll('button.bg-super.text-inverse:not([disabled])');
+                    for (const btn of buttons) {
+                      const svg = btn.querySelector('svg[xlink\\\\:href*="arrow-right"]');
+                      if (svg) {
+                        sendButton = btn;
+                        break;
+                      }
+                    }
+                  }
+                  
+                  if (!sendButton) {
+                    // Last resort - find button in send area
+                    const sendContainer = document.querySelector('.flex.items-center.justify-self-end');
+                    if (sendContainer) {
+                      sendButton = sendContainer.querySelector('button:not([disabled])');
+                    }
+                  }
+                  
+                  if (sendButton && !sendButton.disabled) {
+                    sendButton.click();
+                    return 'sent';
+                  } else {
+                    return 'button_not_found';
+                  }
+                  ` : ''}
+                  
+                  return 'success';
+                } catch (e) {
+                  return 'error: ' + e.message;
+                }
+              })();
+            `;
+          }
+          
+          // ==================== DEEPSEEK ====================
+          else if (currentBrowserProvider === "deepseek") {
+            providerName = "DeepSeek";
+            injectionScript = `
+              (async function() {
+                try {
+                  // Find the textarea - it's the one inside _24fad49
+                  let textarea = document.querySelector('textarea._27c9245.ds-scroll-area.d96f2d2a');
+                  
+                  if (!textarea) {
+                    textarea = document.querySelector('textarea._27c9245.ds-scroll-area');
+                  }
+                  
+                  if (!textarea) {
+                    const container = document.querySelector('._24fad49');
+                    if (container) {
+                      textarea = container.querySelector('textarea.ds-scroll-area');
+                    }
+                  }
+                  
+                  if (!textarea) {
+                    textarea = document.querySelector('textarea[placeholder][rows="2"]');
+                  }
+                  
+                  if (!textarea) return 'input_not_found';
+                  
+                  // CRITICAL FIX: DeepSeek doesn't accept direct value changes
+                  // We need to simulate actual typing
+                  
+                  // Clear first
+                  textarea.focus();
+                  textarea.select();
+                  document.execCommand('delete');
+                  
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                  
+                  // METHOD 1: Try execCommand insertText (works in most browsers)
+                  const insertSuccess = document.execCommand('insertText', false, "${escapedText}");
+                  
+                  if (!insertSuccess) {
+                    // METHOD 2: Fallback - use clipboard API simulation
+                    textarea.value = "${escapedText}";
+                    
+                    // Trigger comprehensive events
+                    const inputEvent = new InputEvent('input', { 
+                      bubbles: true, 
+                      cancelable: true,
+                      inputType: 'insertText',
+                      data: "${escapedText}"
+                    });
+                    textarea.dispatchEvent(inputEvent);
+                  }
+                  
+                  // Additional events to ensure detection
+                  textarea.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+                  textarea.dispatchEvent(new KeyboardEvent('keydown', { 
+                    bubbles: true, 
+                    cancelable: true,
+                    key: 'a',
+                    code: 'KeyA'
+                  }));
+                  textarea.dispatchEvent(new KeyboardEvent('keyup', { 
+                    bubbles: true, 
+                    cancelable: true,
+                    key: 'a',
+                    code: 'KeyA'
+                  }));
+                  
+                  // Auto-resize
+                  textarea.style.height = 'auto';
+                  textarea.style.height = textarea.scrollHeight + 'px';
+                  
+                  // Force focus
+                  textarea.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+                  textarea.focus();
+                  
+                  ${autoSend ? `
+                  // Wait for DeepSeek to process and enable send button
+                  await new Promise(resolve => setTimeout(resolve, 1500));
+                  
+                  // Find the send button
+                  let sendButton = null;
+                  
+                  // Method 1: Look in bf38813a container for enabled button
+                  const buttonContainer = document.querySelector('.bf38813a');
+                  if (buttonContainer) {
+                    const buttons = buttonContainer.querySelectorAll('.ds-icon-button');
+                    for (const btn of buttons) {
+                      const isDisabled = btn.classList.contains('ds-icon-button--disabled') || 
+                                        btn.getAttribute('aria-disabled') === 'true';
+                      
+                      if (!isDisabled) {
+                        const svg = btn.querySelector('svg path[d*="M8.3125"]');
+                        if (svg) {
+                          sendButton = btn;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                  
+                  // Method 2: Direct _7436101 or f02f0e25 class
+                  if (!sendButton) {
+                    sendButton = document.querySelector('._7436101.ds-icon-button[role="button"][aria-disabled="false"]');
+                  }
+                  
+                  if (!sendButton) {
+                    sendButton = document.querySelector('.f02f0e25.ds-icon-button[role="button"][aria-disabled="false"]');
+                  }
+                  
+                  // Method 3: Look in parent container
+                  if (!sendButton) {
+                    const container = document.querySelector('div[style*="width: fit-content"]');
+                    if (container) {
+                      const btn = container.querySelector('.ds-icon-button[role="button"]');
+                      if (btn && btn.getAttribute('aria-disabled') !== 'true') {
+                        sendButton = btn;
+                      }
+                    }
+                  }
+                  
+                  // Method 4: Any enabled button with upload icon
+                  if (!sendButton) {
+                    const allButtons = document.querySelectorAll('.ds-icon-button[role="button"]');
+                    for (const btn of allButtons) {
+                      const svg = btn.querySelector('svg path[d*="M8.3125"]');
+                      if (svg && btn.getAttribute('aria-disabled') !== 'true' && 
+                          !btn.classList.contains('ds-icon-button--disabled')) {
+                        sendButton = btn;
+                        break;
+                      }
+                    }
+                  }
+                  
+                  if (sendButton) {
+                    const isDisabled = sendButton.classList.contains('ds-icon-button--disabled') || 
+                                      sendButton.getAttribute('aria-disabled') === 'true';
+                    
+                    if (!isDisabled) {
+                      // Triple click approach for reliability
+                      sendButton.click();
+                      
+                      await new Promise(resolve => setTimeout(resolve, 50));
+                      
+                      sendButton.dispatchEvent(new MouseEvent('mousedown', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                      }));
+                      
+                      sendButton.dispatchEvent(new MouseEvent('mouseup', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                      }));
+                      
+                      sendButton.dispatchEvent(new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                      }));
+                      
+                      return 'sent';
+                    } else {
+                      return 'button_still_disabled';
+                    }
+                  } else {
+                    return 'button_not_found';
+                  }
+                  ` : ''}
+                  
+                  return 'success';
+                } catch (e) {
+                  return 'error: ' + e.message;
+                }
+              })();
+            `;
+          }
+          
+          // ==================== UNKNOWN PROVIDER ====================
+          else {
+            showBrowserNotification("❌ Unknown provider: " + currentBrowserProvider);
+            return;
+          }
 
-      const result = await browserWebview.executeJavaScript(chatgptScript);
+          // Execute the injection script
+          const result = await browserWebview.executeJavaScript(injectionScript);
 
-      if (result === "sent" || result === "sent_textarea") {
-        showBrowserNotification("✅ Text sent to ChatGPT!");
-      } else if (result === "success" || result === "success_textarea") {
-        showBrowserNotification("✅ Text inserted into ChatGPT!");
-      } else {
-        showBrowserNotification("⚠️ Text copied to clipboard - paste with Ctrl+V");
-        await copyTextToClipboard(text);
+          // Handle results
+          if (result === "sent" || result === "sent_textarea") {
+            showBrowserNotification(`✅ Text sent to ${providerName}!`);
+          } else if (result === "success" || result === "success_textarea") {
+            showBrowserNotification(`✅ Text inserted into ${providerName}!`);
+          } else if (result === "input_not_found") {
+            showBrowserNotification(`⚠️ ${providerName} input not found - text copied to clipboard`);
+            await copyTextToClipboard(text);
+          } else if (result === "button_disabled" || result === "button_still_disabled") {
+            showBrowserNotification(`⚠️ Text inserted but send button disabled. Please click send manually.`);
+          } else if (result === "button_not_found") {
+            showBrowserNotification(`⚠️ Text inserted but send button not found. Click send manually.`);
+          } else if (result.startsWith("error:")) {
+            showBrowserNotification(`❌ Error: ${result.substring(7)}`);
+            await copyTextToClipboard(text);
+          } else {
+            showBrowserNotification("⚠️ Text copied to clipboard - paste with Ctrl+V");
+            await copyTextToClipboard(text);
+          }
+
+        } catch (error) {
+          console.error("Text injection error:", error);
+          showBrowserNotification("⚠️ Injection failed. Text copied to clipboard.");
+          await copyTextToClipboard(text);
+        }
       }
-    }
-  } catch (error) {
-    console.error("Text injection error:", error);
-    showBrowserNotification("⚠️ Injection failed. Text copied to clipboard.");
-    await copyTextToClipboard(text);
-  }
-}
-      
-      function showBrowserNotification(message) {
-        const notification = document.createElement("div");
-        notification.style.cssText = `
-            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-            background: rgba(59, 130, 246, 0.95);
-            padding: 12px 20px; border-radius: 8px; font-size: 12px; z-index: 1000;
-            animation: slideInRight 0.3s ease; color: white; font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 90%;
-            text-align: center;
-          `;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 5000);
+
+      // ==================== PASTE BROWSER TEXT  ====================
+
+      async function pasteBrowserText() {
+        if (!pendingBrowserText) return;
+
+        const textToSend = pendingBrowserText;
+
+        try {
+          // Use the same injection function with autoSend enabled
+          await injectTextToBrowser(textToSend, true);
+
+          // Hide preview after sending
+          setTimeout(() => {
+            const previewDiv = document.getElementById("browserImagePreview");
+            if (previewDiv) previewDiv.classList.remove("show");
+            
+            const textDisplay = document.getElementById("browserTextDisplay");
+            if (textDisplay) textDisplay.style.display = "none";
+            
+            const previewImg = document.getElementById("browserPreviewImg");
+            if (previewImg) previewImg.style.display = "block";
+            
+            pendingBrowserText = null;
+          }, 2000);
+
+        } catch (error) {
+          console.error("Text paste error:", error);
+          showBrowserNotification("❌ Failed to send text");
+        }
       }
 
+        function showBrowserNotification(message){
+                      const notification = document.createElement("div");
+                      notification.style.cssText = `
+                          position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+                          background: rgba(59, 130, 246, 0.95);
+                          padding: 12px 20px; border-radius: 8px; font-size: 12px; z-index: 1000;
+                          animation: slideInRight 0.3s ease; color: white; font-weight: 600;
+                          box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 90%;
+                          text-align: center;
+                        `;
+                      notification.textContent = message;
+                      document.body.appendChild(notification);
+                      setTimeout(() => notification.remove(), 5000);
+                    }
+       
       // ==================== BROWSER EVENT LISTENERS ====================
       
-      // Browser Screenshot Manual
+      // Browser Screenshot Manual - Upload to Cloudinary
       browserScreenshotBtn.addEventListener("click", async () => {
-            try {
-              browserScreenshotBtn.disabled = true;
-              browserScreenshotBtn.textContent = "⏳";
+        try {
+        browserScreenshotBtn.disabled = true;
+        browserScreenshotBtn.textContent = "⏳";
 
-              const screenshotData = await window.electronAPI.captureScreen();
+        const screenshotData = await window.electronAPI.captureScreen();
 
-              if (screenshotData) {
-                showBrowserImagePreview(screenshotData);
-                await copyImageToClipboard(screenshotData);
-                showBrowserNotification('📸 Screenshot captured! Click "Paste to Chat" to send.');
-              } else {
-                showBrowserNotification("❌ Screenshot capture failed");
-              }
-            } catch (error) {
-              console.error("Browser screenshot error:", error);
-              showBrowserNotification("❌ Screenshot failed");
-            } finally {
-              browserScreenshotBtn.disabled = false;
-              browserScreenshotBtn.textContent = "📸";
+        if (screenshotData) {
+          // Show uploading notification
+          showBrowserNotification("📤 Uploading to cloud...");
+
+      // Upload to Cloudinary
+      const formData = new FormData();
+      formData.append('file', screenshotData);
+      formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+
+      const uploadResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      const uploadResult = await uploadResponse.json();
+
+      if (uploadResult.secure_url) {
+        const imageUrl = uploadResult.secure_url;
+        
+        // Store the formatted prompt with image URL
+        pendingBrowserText = `Analyse the image and tell proper answer: ${imageUrl}`;
+        
+        // Show text preview with the prompt
+        showBrowserTextPreview(pendingBrowserText);
+        
+        showBrowserNotification('✅ Image uploaded! Click "Paste to Chat" to send.');
+            } else {
+              showBrowserNotification("❌ Upload failed");
             }
-          });
+          } else {
+            showBrowserNotification("❌ Screenshot capture failed");
+          }
+        } catch (error) {
+            console.error("Browser screenshot upload error:", error);
+            showBrowserNotification("❌ Upload failed: " + error.message);
+          } finally {
+            browserScreenshotBtn.disabled = false;
+            browserScreenshotBtn.textContent = "📸";
+          }
+        });
 
       // Browser OCR Manual
       browserOcrBtn.addEventListener("click", async () => {
@@ -2403,44 +1633,17 @@
               }
 
               // 🔥 NEW: Show text preview with "Paste to Chat" button
-              showBrowserTextPreview(result.text);
+              let textaddon=`Analyse the ocr and answer the question if code provide in that particular language  ${result.text}`;
+              showBrowserTextPreview(textaddon);
               showBrowserNotification(`✅ Extracted ${result.length} characters. Click "Paste to Chat" to send!`);
             } catch (error) {
               console.error("Browser OCR error:", error);
               showBrowserNotification("❌ OCR failed: " + error.message);
             }
           });
-
-        // Browser Screenshot Direct - Auto-inject
-        browserScreenshotDirectBtn.addEventListener("click", async () => {
-          try {
-            browserScreenshotDirectBtn.disabled = true;
-            browserScreenshotDirectBtn.textContent = "⏳";
-
-            const screenshotData = await window.electronAPI.captureScreen();
-
-            if (screenshotData) {
-              await copyImageToClipboard(screenshotData);
-              showBrowserNotification("📸 Screenshot captured! Auto-injecting...");
-
-              setTimeout(async () => {
-                await injectImageToBrowser(screenshotData);
-                showBrowserNotification("✅ Screenshot auto-pasted to browser!");
-              }, 500);
-            } else {
-              showBrowserNotification("❌ Screenshot capture failed");
-            }
-          } catch (error) {
-            console.error("Browser screenshot direct error:", error);
-            showBrowserNotification("❌ Screenshot failed");
-          } finally {
-            browserScreenshotDirectBtn.disabled = false;
-            browserScreenshotDirectBtn.textContent = "📹";
-          }
-        });
-             
+       
        // Screenshot Manual - Chat Mode
-        screenshotBtn.addEventListener("click", async () => {
+      screenshotBtn.addEventListener("click", async () => {
           try {
             screenshotBtn.disabled = true;
             screenshotBtn.textContent = "⏳";
@@ -2499,7 +1702,7 @@
           }
 
           // Insert text into message input
-          messageInput.value = result.text;
+          messageInput.value =`Analyse the ocr and answer the question if code provide in that particular language ${result.text}`;
           messageInput.style.height = "auto";
           messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + "px";
           
@@ -2584,6 +1787,7 @@
       });
 
       // ==================== OCR FUNCTIONALITY ====================
+      
       function showOCRLoading(buttonElement, message = "Extracting text...") {
         const originalText = buttonElement.textContent;
         buttonElement.disabled = true;
@@ -2658,70 +1862,73 @@
         autoOcrTimer.textContent = `${String(secs).padStart(2, "0")}s`;
       }
 
-     async function captureAndOcrAuto() {
-  try {
-    const screenshotData = await window.electronAPI.captureScreen();
+      async function captureAndOcrAuto() {
+          try {
+            const screenshotData = await window.electronAPI.captureScreen();
 
-    if (!screenshotData) {
-      console.error("Auto-OCR: Screenshot capture failed");
-      return;
-    }
+            if (!screenshotData) {
+              console.error("Auto-OCR: Screenshot capture failed");
+              return;
+            }
 
-    const result = await window.electronAPI.extractTextFromImage(screenshotData);
+            const result = await window.electronAPI.extractTextFromImage(screenshotData);
 
-    if (!result.success || !result.text) {
-      showBrowserNotification("🤖 Auto-OCR: No text found");
-      return;
-    }
+            let ocrtextaddon=`Analyse the ocr and answer the question if code provide in that particular language ${result.text}`;
 
-    console.log(`🤖 Auto-OCR extracted ${result.length} characters`);
+            if (!result.success || !result.text) {
+              showBrowserNotification("🤖 Auto-OCR: No text found");
+              return;
+            }
 
-    // If in browser mode, inject text
-    if (browserView.classList.contains("active")) {
-      await injectTextToBrowser(result.text, true);
-      showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted & inserted!`);
-      return;
-    }
+            console.log(`🤖 Auto-OCR extracted ${result.length} characters`);
 
-    // If current provider is browser-based, open browser and inject
-    if (currentProvider === "claude" || currentProvider === "chatgpt") {
-      openBrowser(currentProvider);
-      setTimeout(async () => {
-        await injectTextToBrowser(result.text,true);
-        showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted!`);
-      }, 1500);
-      return;
-    }
+            // If in browser mode, inject text
+            if (browserView.classList.contains("active")) {
+              await injectTextToBrowser(ocrtextaddon, true);
+              showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted & inserted!`);
+              return;
+            }
 
-    // For Gemini models, auto-send the OCR text
-    if (currentProvider.startsWith("gemini-")) {
-      addMessage(result.text, true, [], null, currentProvider);
+            // If current provider is browser-based, open browser and inject
+            if (currentProvider === "claude" || currentProvider === "chatgpt") {
+              openBrowser(currentProvider);
+              setTimeout(async () => {
+                await injectTextToBrowser(ocrtextaddon,true);
+                showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted!`);
+              }, 1500);
+              return;
+            }
 
-      const messageData = {
-        prompt: result.text,
-        images: [],
-        provider: currentProvider,
-      };
+            // For Gemini models, auto-send the OCR text
+            if (currentProvider.startsWith("gemini-")) {
+              addMessage(ocrtextaddon, true, [], null, currentProvider);
 
-      showLoading();
-      socket.emit("send_message", messageData);
-      
-      showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars sent to Gemini!`);
-      return;
-    }
+              const messageData = {
+                prompt: ocrtextaddon,
+                images: [],
+                provider: currentProvider,
+              };
 
-    // Fallback: Put text in input for manual send
-    messageInput.value = result.text;
-    messageInput.style.height = "auto";
-    messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + "px";
+              showLoading();
+              socket.emit("send_message", messageData);
+              
+              showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars sent to Gemini!`);
+              return;
+            }
 
-    showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted. Review & send!`);
-  } catch (error) {
-    console.error("Auto-OCR error:", error);
-  }
-}
+            // Fallback: Put text in input for manual send
+            messageInput.value =ocrtextaddon;
+            messageInput.style.height = "auto";
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + "px";
+
+            showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted. Review & send!`);
+          } catch (error) {
+            console.error("Auto-OCR error:", error);
+          }
+        }
      
-    // ==================== BROWSER AUTO-OCR ====================
+      // ==================== BROWSER AUTO-OCR ====================
+      
       browserAutoOcrBtn.addEventListener("click", () => {
         if (!browserAutoOcrActive) {
           browserAutoOcrSettings.classList.toggle("show");
@@ -2772,32 +1979,62 @@
       }
 
       async function captureAndOcrAutoBrowser() {
-  try {
-    const screenshotData = await window.electronAPI.captureScreen();
-    if (!screenshotData) return;
+          try {
+            const screenshotData = await window.electronAPI.captureScreen();
+            if (!screenshotData) return;
 
-    const result = await window.electronAPI.extractTextFromImage(screenshotData);
-    if (!result.success || !result.text) {
-      showBrowserNotification("🤖 Auto-OCR: No text found");
-      return;
-    }
+            const result = await window.electronAPI.extractTextFromImage(screenshotData);
+            if (!result.success || !result.text) {
+              showBrowserNotification("🤖 Auto-OCR: No text found");
+              return;
+            }
+            let ocrtextaddon=`Analyse the ocr and answer the question if code provide in that particular language ${result.text}`;
 
-    // 🔥 NEW: Use the same preview + paste flow
-    showBrowserTextPreview(result.text);
-    
-    // Auto-click "Paste to Chat" after 1 second
-    setTimeout(() => {
-      document.getElementById("browserPasteBtn").click();
-    }, 1000);
-    
-    showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted!`);
-  } catch (error) {
-    console.error("Browser Auto-OCR error:", error);
-  }
-}
+            // 🔥 NEW: Use the same preview + paste flow
+            showBrowserTextPreview(ocrtextaddon);
+            
+            // Auto-click "Paste to Chat" after 1 second
+            setTimeout(() => {
+              document.getElementById("browserPasteBtn").click();
+            }, 1000);
+            
+            showBrowserNotification(`🤖 Auto-OCR: ${result.length} chars extracted!`);
+          } catch (error) {
+            console.error("Browser Auto-OCR error:", error);
+          }
+        }
       
       
       // ==================== AUTO SCREENSHOT ====================
+      function adjustAutoTime(inputId, change) {
+      const input = document.getElementById(inputId);
+      let currentValue = parseInt(input.value) || 30;
+      let newValue = currentValue + change;
+      
+      // Enforce min/max limits
+      if (newValue < 5) newValue = 5;
+      if (newValue > 300) newValue = 300;
+      
+      input.value = newValue;
+      
+      // Auto-restart based on which feature is active
+      if (inputId === 'autoSSInterval' && autoSSActive) {
+        stopAutoSS();
+        startAutoSS();
+      } else if (inputId === 'autoOcrInterval' && autoOcrActive) {
+        stopAutoOCR();
+        startAutoOCR();
+      } else if (inputId === 'browserAutoOcrInterval' && browserAutoOcrActive) {
+        stopBrowserAutoOCR();
+        startBrowserAutoOCR();
+      }
+    }
+
+      // Keep your existing adjustTime function for backwards compatibility
+      function adjustTime(change) {
+        adjustAutoTime('autoSSInterval', change);
+      }
+            
       autoSSBtn.addEventListener("click", () => {
         if (!autoSSActive) {
           autoSSSettings.classList.toggle("show");
@@ -2922,11 +2159,17 @@
         messageInput.style.height =
           Math.min(messageInput.scrollHeight, 80) + "px";
       });
-
-      closeBtn.addEventListener("click", () => {
-        if (window.electronAPI && window.electronAPI.closeWindow) {
-          window.electronAPI.closeWindow();
-        }
+      
+      const timer=null;
+      messageInput.addEventListener("mouseenter", () => {
+        if(document.activeElement===messageInput)return;
+        timer=setTimeout(()=>{
+          messageInput.focus();
+        },1000);
+      });
+      messageInput.addEventListener("mouseleave",()=>{
+        clearTimeout(timer);
+        timer=null;
       });
     
       // Screenshot Direct - Auto-send
@@ -3029,127 +2272,206 @@
         updateImagePreviews();
       };
 
-     // ==================== MESSAGING ====================
-     function addMessage(text, isUser, images = [], sender = null, provider = null) {
-  const messageDiv = document.createElement("div");
-  const messageClass = sender === "portal" ? "portal" : isUser ? "user" : "bot";
-  messageDiv.className = `message ${messageClass}`;
+      // Global copy state
+      let isCopyEnabled = false;
 
-  let content = "";
-
-        if (!isUser && provider) {
-          const modelNames = {
-            "gemini-3-flash-preview": "🤖 Gemini 3.0 Flash-Preview",
-            "gemini-25-flash": "🤖 Gemini 2.5 Flash",
-            "gemini-25-flash-lite": "🤖 Gemini 2.5 Lite",
-            Claude: "🧠 Claude Sonnet 4 (API)",
-            ChatGPT: "💬 ChatGPT (API)",
-            claude: "🧠 Claude Browser",
-            chatgpt: "💬 ChatGPT Browser",
-          };
-          content += `<div class="model-badge">${
-            modelNames[provider] || provider
-          }</div>`;
+      // Toggle button handler
+      const toggleBtn = document.getElementById('toggleBtn');
+      toggleBtn.addEventListener('click', function() {
+      isCopyEnabled = !isCopyEnabled;
+        
+        if (isCopyEnabled) {
+          toggleBtn.innerHTML = '📋';
+          // Enable all copy buttons
+          document.querySelectorAll('.copy-msg-btn').forEach(btn => {
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+          });
+        } else {
+          toggleBtn.innerHTML = '🚫';
+          // Disable all copy buttons
+          document.querySelectorAll('.copy-msg-btn').forEach(btn => {
+            btn.style.opacity = '0.3';
+            btn.style.pointerEvents = 'none';
+          });
         }
+      });
 
-  if (images.length > 0) {
-    images.forEach((img) => {
-      content += `<img src="${img.data}" alt="${img.name}">`;
-    });
-  }
-
-  // NEW: Render markdown for bot messages
-  if (!isUser && text) {
-    content += `<div class="message-content">${renderMarkdown(text)}</div>`;
-  } else {
-    content += `<div>${text}</div>`;
-  }
-
-  messageDiv.innerHTML = content;
-  
-  // Add copy buttons to code blocks
-  if (!isUser) {
-    addCopyButtonsToCodeBlocks(messageDiv);
-  }
-  
-  messagesDiv.appendChild(messageDiv);
-
-  const chatContainer = document.querySelector(".chat-container");
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-     // NEW: Markdown rendering function
-      function renderMarkdown(text) {
-  // Configure marked options
-  marked.setOptions({
-    highlight: function(code, lang) {
-      if (lang && hljs.getLanguage(lang)) {
+      async function copyText(text) {
         try {
-          return hljs.highlight(code, { language: lang }).value;
+          if (window.electronAPI && window.electronAPI.copyToClipboard) {
+            await window.electronAPI.copyToClipboard(text);
+          } else {
+            await navigator.clipboard.writeText(text);
+          }
+          return true;
         } catch (err) {
-          console.error('Highlight error:', err);
+          console.error('❌ Copy failed:', err);
+          return false;
         }
       }
-      return hljs.highlightAuto(code).value;
-    },
-    breaks: true,
-    gfm: true
-  });
 
-  return marked.parse(text);
-}
+      // Modified addMessage function
+      function addMessage(text, isUser, images = [], sender = null, provider = null) {
+          const messageDiv = document.createElement("div");
+          const messageClass = sender === "portal" ? "portal" : isUser ? "user" : "bot";
+          messageDiv.className = `message ${messageClass}`;
+
+          let content = "";
+
+          if (!isUser && provider) {
+            const modelNames = {
+              "gemini-3-flash-preview": "🤖 Gemini 3.0 Flash-Preview",
+              "gemini-25-flash": "🤖 Gemini 2.5 Flash",
+              "gemini-25-flash-lite": "🤖 Gemini 2.5 Lite",
+              Claude: "🧠 Claude Sonnet 4 (API)",
+              ChatGPT: "💬 ChatGPT (API)",
+              claude: "🧠 Claude Browser",
+              chatgpt: "💬 ChatGPT Browser",
+            };
+            content += `<div class="model-badge">${
+              modelNames[provider] || provider
+            }</div>`;
+          }
+
+          if (images.length > 0) {
+            images.forEach((img) => {
+              content += `<img src="${img.data}" alt="${img.name}">`;
+            });
+          }
+
+          // Render markdown for bot messages
+          if (!isUser && text) {
+            content += `<div class="message-content">${renderMarkdown(text)}</div>`;
+          } else {
+            content += `<div class="message-content">${text}</div>`;
+          }
+
+          messageDiv.innerHTML = content;
+          
+          // Add copy button AFTER setting innerHTML
+          const copyBtn = document.createElement('button');
+          copyBtn.className = `copy-msg-btn ${isCopyEnabled ? 'enabled' : 'disabled'}`;
+          copyBtn.innerHTML = '📋';
+          
+          // Add event listener to the copy button
+          copyBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (!isCopyEnabled) {
+              copyBtn.innerHTML = '🚫';
+              setTimeout(() => {
+                copyBtn.innerHTML = '📋';
+              }, 1000);
+              return;
+            }
+
+            const messageContent = messageDiv.querySelector('.message-content');
+            const textToCopy = messageContent.innerText || messageContent.textContent;
+
+            const success = await copyText(textToCopy);
+
+            if (success) {
+              copyBtn.innerHTML = '✅';
+              setTimeout(() => {
+                copyBtn.innerHTML = '📋';
+              }, 2000);
+            } else {
+              copyBtn.innerHTML = '❌';
+              setTimeout(() => {
+                copyBtn.innerHTML = '📋';
+              }, 2000);
+            }
+          });
+          
+          // Append copy button to message div
+          messageDiv.appendChild(copyBtn);
+          
+          // Add copy buttons to code blocks
+          if (!isUser) {
+            addCopyButtonsToCodeBlocks(messageDiv);
+          }
+
+          messagesDiv.appendChild(messageDiv);
+
+          const chatContainer = document.querySelector(".chat-container");
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+              
+
+      // NEW: Markdown rendering function
+      function renderMarkdown(text) {
+            // Configure marked options
+                  marked.setOptions({
+                    highlight: function(code, lang) {
+                      if (lang && hljs.getLanguage(lang)) {
+                        try {
+                          return hljs.highlight(code, { language: lang }).value;
+                        } catch (err) {
+                          console.error('Highlight error:', err);
+                        }
+                      }
+                      return hljs.highlightAuto(code).value;
+                    },
+                    breaks: true,
+                    gfm: true
+                  });
+
+              return marked.parse(text);
+            }
 
       // NEW: Add copy buttons to code blocks
       function addCopyButtonsToCodeBlocks(messageDiv) {
-      const codeBlocks = messageDiv.querySelectorAll('pre code');
-  
-  codeBlocks.forEach((codeBlock) => {
-    const pre = codeBlock.parentElement;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'code-block-wrapper';
-    
-    // Detect language
-    const classes = codeBlock.className.split(' ');
-    const langClass = classes.find(c => c.startsWith('language-'));
-    const language = langClass ? langClass.replace('language-', '') : 'code';
-    
-    // Add language label
-    const langLabel = document.createElement('span');
-    langLabel.className = 'code-language';
-    langLabel.textContent = language;
-    
-    // Create copy button
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'copy-code-btn';
-    copyBtn.textContent = '📋 Copy';
-    
-    copyBtn.addEventListener('click', async () => {
-      const code = codeBlock.textContent;
-      try {
-        await navigator.clipboard.writeText(code);
-        copyBtn.textContent = '✅ Copied!';
-        copyBtn.classList.add('copied');
-        
-        setTimeout(() => {
+          const codeBlocks = messageDiv.querySelectorAll('pre code');
+      
+          codeBlocks.forEach((codeBlock) => {
+          const pre = codeBlock.parentElement;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'code-block-wrapper';
+          
+          // Detect language
+          const classes = codeBlock.className.split(' ');
+          const langClass = classes.find(c => c.startsWith('language-'));
+          const language = langClass ? langClass.replace('language-', '') : 'code';
+          
+          // Add language label
+          const langLabel = document.createElement('span');
+          langLabel.className = 'code-language';
+          langLabel.textContent = language;
+          
+          // Create copy button
+          const copyBtn = document.createElement('button');
+          copyBtn.className = 'copy-code-btn';
           copyBtn.textContent = '📋 Copy';
-          copyBtn.classList.remove('copied');
-        }, 1000);
-      } catch (err) {
-        console.error('Copy failed:', err);
-        copyBtn.textContent = '❌ Failed';
-        setTimeout(() => {
-          copyBtn.textContent = '📋 Copy';
-        }, 1000);
-      }
-    });
-    
-    // Wrap the pre element
-    pre.parentNode.insertBefore(wrapper, pre);
-    wrapper.appendChild(pre);
-    wrapper.appendChild(langLabel);
-    wrapper.appendChild(copyBtn);
-  });
-}
+          
+          copyBtn.addEventListener('click', async () => {
+            const code = codeBlock.textContent;
+            try {
+              await navigator.clipboard.writeText(code);
+              copyBtn.textContent = '✅ Copied!';
+              copyBtn.classList.add('copied');
+              
+              setTimeout(() => {
+                copyBtn.textContent = '📋 Copy';
+                copyBtn.classList.remove('copied');
+              }, 1000);
+            } catch (err) {
+              console.error('Copy failed:', err);
+              copyBtn.textContent = '❌ Failed';
+              setTimeout(() => {
+                copyBtn.textContent = '📋 Copy';
+              }, 1000);
+            }
+          });
+          
+          // Wrap the pre element
+          pre.parentNode.insertBefore(wrapper, pre);
+          wrapper.appendChild(pre);
+          wrapper.appendChild(langLabel);
+          wrapper.appendChild(copyBtn);
+        });
+            }
 
       function showLoading() {
         const loadingDiv = document.createElement("div");
@@ -3163,9 +2485,9 @@
       }
 
       function removeLoading() {
-        const loading = document.getElementById("loading");
-        if (loading) loading.remove();
-      }
+            const loading = document.getElementById("loading");
+            if (loading) loading.remove();
+          }
 
       function sendMessage() {
         const text = messageInput.value.trim();
@@ -3225,13 +2547,22 @@
       });
 
       // ==================== SOCKET LISTENERS ====================
+      socket.on("session_initialized", (data) => {
+        console.log("✅ Session initialized:", data);
+        selectedSession = data.sessionId; // Store the MongoDB _id
+        
+        showBrowserNotification(
+          `Connected! Session: ${data.socketId.slice(0, 8)}... (${data.historyLength} messages)`
+        );
+      })
+      
       socket.on("portal_notification", (data) => {
         console.log("Received portal message:", data);
         addMessage(data.message, false, [], "portal");
 
         const notification = document.createElement("div");
         notification.style.cssText = `
-            position: fixed; top: 60px; right: 20px; background: rgba(168, 85, 247, 0.95);
+            position: fixed; top: 60px; right: 20px; background: #25292E;
             padding: 12px 20px; border-radius: 8px; animation: slideInRight 0.3s ease;
             z-index: 1000; max-width: 300px;
           `;
@@ -3337,7 +2668,7 @@
       window.restoreFromFolder = restoreFromFolder;
 
       
-      // ==================== INITIALIZATION ====================
+      // ==================== RIPPLE EFFECT ====================
       document.addEventListener("DOMContentLoaded", () => {
         setupProviderButtons();
         //console.log("✅ Application initialized with multi-model support");
@@ -3349,69 +2680,69 @@
         setupProviderButtons();
       }
 
-    document.addEventListener('DOMContentLoaded', function() {
-    //console.log('🖱️  Click handler initialized');
-    
-    // Track all clicks for debugging
-    let clickCount = 0;
-    document.addEventListener('click', function(e) {
-      clickCount++;
-      console.log(`Click #${clickCount} detected on:`, e.target.tagName, e.target.className);
+        document.addEventListener('DOMContentLoaded', function() {
+      //console.log('🖱️  Click handler initialized');
       
-      // Visual feedback
-      const ripple = document.createElement('div');
-      ripple.style.cssText = `
-        position: fixed;
-        left: ${e.clientX - 5}px;
-        top: ${e.clientY - 5}px;
-        width: 10px;
-        height: 10px;
-        background: rgba(59, 130, 246, 0.5);
-        border-radius: 50%;
-        pointer-events: none;
-        animation: ripple 0.6s ease-out;
-        z-index: 10000;
-      `;
-      document.body.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 600);
-    });
-    
-    // Add ripple animation
-    if (!document.querySelector('#ripple-style')) {
-      const style = document.createElement('style');
-      style.id = 'ripple-style';
-      style.textContent = `
-        @keyframes ripple {
-          0% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(4);
-            opacity: 0;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-    
-    // Log button click status
-    document.querySelectorAll('button').forEach((btn, index) => {
-      btn.addEventListener('click', function() {
-        console.log(`✅ Button ${index} clicked successfully:`, btn.textContent || btn.title);
+      // Track all clicks for debugging
+      let clickCount = 0;
+      document.addEventListener('click', function(e) {
+        clickCount++;
+        console.log(`Click #${clickCount} detected on:`, e.target.tagName, e.target.className);
+        
+        // Visual feedback
+        const ripple = document.createElement('div');
+        ripple.style.cssText = `
+          position: fixed;
+          left: ${e.clientX - 5}px;
+          top: ${e.clientY - 5}px;
+          width: 10px;
+          height: 10px;
+          background: rgba(59, 130, 246, 0.5);
+          border-radius: 50%;
+          pointer-events: none;
+          animation: ripple 0.6s ease-out;
+          z-index: 10000;
+        `;
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
       });
-    });
-    
-    // Debug mode: Show clickable regions
-    if (window.location.search.includes('debug=true')) {
-      document.querySelectorAll('button, input, textarea, .ai-btn, .action-btn').forEach(el => {
-        el.style.outline = '2px solid rgba(0, 255, 0, 0.5)';
+      
+      // Add ripple animation
+      if (!document.querySelector('#ripple-style')) {
+        const style = document.createElement('style');
+        style.id = 'ripple-style';
+        style.textContent = `
+          @keyframes ripple {
+            0% {
+              transform: scale(1);
+              opacity: 1;
+            }
+            100% {
+              transform: scale(4);
+              opacity: 0;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      // Log button click status
+      document.querySelectorAll('button').forEach((btn, index) => {
+        btn.addEventListener('click', function() {
+          console.log(`✅ Button ${index} clicked successfully:`, btn.textContent);
+        });
       });
-      //console.log('Debug mode: Clickable regions highlighted');
-    }
-    });
+      
+      // Debug mode: Show clickable regions
+      if (window.location.search.includes('debug=true')) {
+        document.querySelectorAll('button, input, textarea, .ai-btn, .action-btn').forEach(el => {
+          el.style.outline = '2px solid rgba(0, 255, 0, 0.5)';
+        });
+        //console.log('Debug mode: Clickable regions highlighted');
+      }
+      });
 
-    // ==================== SIMPLE DRAG SYSTEM ====================
+        // ==================== SIMPLE DRAG SYSTEM ====================
         class SimpleDragSystem {
           constructor() {
             this.isDragging = false;
@@ -3594,7 +2925,7 @@
           }
         }
 
-// ==================== HOVER AUTO-CLICK SYSTEM ====================
+        // ==================== HOVER AUTO-CLICK SYSTEM ====================
         class HoverAutoClick {
           constructor(options = {}) {
             this.hoverDelay = options.hoverDelay || 1000;
@@ -3647,45 +2978,56 @@
             }
           }
 
-          setupEventListeners() {
-            const selectorsToWatch = [
-              'button:not([disabled])',
-              '.ai-btn',
-              '.action-btn',
-              '.control-btn',
-              '.send-btn',
-              '.auto-timer-btn',
-              '.auto-ss-btn',
-              'select:not([disabled])',
-              '.folder-view.active',
-              '.folder-label'
-            ];
+         setupEventListeners() {
+  const selectorsToWatch = [
+    'button:not([disabled])',
+    '.ai-btn',
+    '.action-btn',
+    '.control-btn',
+    '.send-btn',
+    '.auto-timer-btn',
+    '.auto-ss-btn',
+    'select:not([disabled])',
+    '.folder-view.active',
+    '.folder-label',
+    '#messageInput',
+    '#browsermessageInput'
+  ];
 
-            // Hover detection
-            document.addEventListener('mouseover', (e) => {
-              if (!this.enabled) return;
+  document.addEventListener('mouseover', (e) => {
+    if (!this.enabled) return;
 
-              const target = e.target.closest(selectorsToWatch.join(','));
-              
-              if (target) {
-                this.startHoverTimer(target);
-              }
-            });
+    const target = e.target.closest(selectorsToWatch.join(','));
+    
+    if (target) {
+      this.startHoverTimer(target);
+      
+      // ✅ FIX: Use window.globalTyping instead of window.globalTypingSystem
+      if (target.id === 'messageInput' && window.globalTyping) {
+        window.globalTyping.enableVirtualKeyboard();
+        console.log('🎯 Textarea hovered - Virtual keyboard ENABLED');
+      }
+    }
+  });
 
-            document.addEventListener('mouseout', (e) => {
-              const target = e.target.closest(selectorsToWatch.join(','));
-              
-              if (target) {
-                this.cancelHoverTimer();
-              }
-            });
+  document.addEventListener('mouseout', (e) => {
+    const target = e.target.closest(selectorsToWatch.join(','));
+    
+    if (target) {
+      this.cancelHoverTimer();
+      
+      // ✅ FIX: Use window.globalTyping
+      if (target.id === 'messageInput' && window.globalTyping) {
+        window.globalTyping.disableVirtualKeyboard();
+        console.log('👋 Textarea left - Virtual keyboard DISABLED');
+      }
+    }
+  });
 
-            // Cancel on manual click
-            document.addEventListener('click', () => {
-              this.cancelHoverTimer();
-            }, true);
-          }
-
+  document.addEventListener('click', () => {
+    this.cancelHoverTimer();
+  }, true);
+}
           startHoverTimer(target) {
             this.cancelHoverTimer();
             this.currentHoverTarget = target;
@@ -3749,7 +3091,7 @@
           }
         }
 
-// ==================== GLOBAL TYPING SYSTEM ====================
+        // ==================== GLOBAL TYPING SYSTEM (OS-Level) ====================
         class GlobalTypingSystem {
           constructor() {
             this.typingBuffer = '';
@@ -3757,14 +3099,15 @@
             this.typingIndicator = null;
             this.typingTimeout = null;
             this.TYPING_DELAY = 1500;
+            this.virtualKeyboardActive = false;
             
             this.init();
           }
 
           init() {
             this.createTypingIndicator();
-            this.setupGlobalKeyListener();
-            console.log('⌨️ Global Typing System initialized');
+            this.setupVirtualKeyboardListener(); // NEW: Listen to OS-level keys
+            console.log('⌨️ Global Typing System initialized (OS-level)');
           }
 
           createTypingIndicator() {
@@ -3798,30 +3141,79 @@
             document.body.appendChild(this.typingIndicator);
           }
 
-          setupGlobalKeyListener() {
-            document.addEventListener('keydown', (e) => {
-              const activeElement = document.activeElement;
-              if (activeElement.tagName === 'INPUT' || 
-                  activeElement.tagName === 'TEXTAREA' ||
-                  activeElement.getAttribute('contenteditable') === 'true') {
+          // NEW: uIOhook keycode → character mapping
+          getCharFromKeycode(keycode, shiftKey) {
+            const keyMap = {
+              // Numbers
+              2: '1', 3: '2', 4: '3', 5: '4', 6: '5',
+              7: '6', 8: '7', 9: '8', 10: '9', 11: '0',
+              
+              // Letters
+              16: 'q', 17: 'w', 18: 'e', 19: 'r', 20: 't',
+              21: 'y', 22: 'u', 23: 'i', 24: 'o', 25: 'p',
+              30: 'a', 31: 's', 32: 'd', 33: 'f', 34: 'g',
+              35: 'h', 36: 'j', 37: 'k', 38: 'l',
+              44: 'z', 45: 'x', 46: 'c', 47: 'v', 48: 'b',
+              49: 'n', 50: 'm',
+              
+              // Symbols (unshifted)
+              12: '-', 13: '=', 26: '[', 27: ']',
+              39: ';', 40: "'", 41: '`', 43: '\\',
+              51: ',', 52: '.', 53: '/',
+              
+              57: ' ' // Space
+            };
+            
+            const shiftMap = {
+              2: '!', 3: '@', 4: '#', 5: '$', 6: '%',
+              7: '^', 8: '&', 9: '*', 10: '(', 11: ')',
+              12: '_', 13: '+', 26: '{', 27: '}',
+              39: ':', 40: '"', 41: '~', 43: '|',
+              51: '<', 52: '>', 53: '?'
+            };
+            
+            let char = keyMap[keycode];
+            if (!char) return null;
+            
+            // Apply shift for letters
+            if (char.match(/[a-z]/)) {
+              return shiftKey ? char.toUpperCase() : char;
+            }
+            
+            // Apply shift for symbols
+            if (shiftKey && shiftMap[keycode]) {
+              return shiftMap[keycode];
+            }
+            
+            return char;
+          }
+
+          setupVirtualKeyboardListener() {
+            // Listen for OS-level keyboard events from main process
+            window.electronAPI.onVirtualKeydown((data) => {
+              const { keycode, shiftKey } = data;
+              
+              console.log('🔑 Key received:', keycode, 'Shift:', shiftKey);
+              
+              // Enter key (keycode 28)
+              if (keycode === 28) {
+                if (this.typingActive) {
+                  this.insertToChat();
+                }
                 return;
               }
-
-              if (this.typingActive) {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  this.insertToChat();
-                  return;
-                }
-                
-                if (e.key === 'Escape') {
-                  e.preventDefault();
+              
+              // Escape key (keycode 1)
+              if (keycode === 1) {
+                if (this.typingActive) {
                   this.cancelTyping();
-                  return;
                 }
-
-                if (e.key === 'Backspace') {
-                  e.preventDefault();
+                return;
+              }
+              
+              // Backspace key (keycode 14)
+              if (keycode === 14) {
+                if (this.typingActive) {
                   this.typingBuffer = this.typingBuffer.slice(0, -1);
                   this.updateDisplay();
                   this.resetTimeout();
@@ -3829,18 +3221,19 @@
                   if (this.typingBuffer.length === 0) {
                     this.cancelTyping();
                   }
-                  return;
                 }
+                return;
               }
-
-              if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                e.preventDefault();
-                
+              
+              // Regular character keys
+              const char = this.getCharFromKeycode(keycode, shiftKey);
+              
+              if (char) {
                 if (!this.typingActive) {
                   this.startTyping();
                 }
-
-                this.typingBuffer += e.key;
+                
+                this.typingBuffer += char;
                 this.updateDisplay();
                 this.resetTimeout();
               }
@@ -3850,6 +3243,7 @@
           startTyping() {
             this.typingActive = true;
             this.typingIndicator.style.display = 'block';
+            console.log('▶️ Global typing started');
           }
 
           updateDisplay() {
@@ -3878,8 +3272,6 @@
               
               messageInput.style.height = 'auto';
               messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + 'px';
-              messageInput.focus();
-              messageInput.setSelectionRange(messageInput.value.length, messageInput.value.length);
               
               console.log('✅ Text inserted:', this.typingBuffer);
             }
@@ -3896,29 +3288,749 @@
               clearTimeout(this.typingTimeout);
               this.typingTimeout = null;
             }
+            
+            console.log('⏹️ Global typing cancelled');
+          }
+          
+          // Call this when mouse enters textarea area
+          enableVirtualKeyboard() {
+            window.electronAPI.setVirtualTyping(true);
+            this.virtualKeyboardActive = true;
+            console.log('⌨️ Virtual keyboard ENABLED');
+          }
+          
+          // Call this when mouse leaves textarea area
+          disableVirtualKeyboard() {
+            window.electronAPI.setVirtualTyping(false);
+            this.virtualKeyboardActive = false;
+            console.log('⌨️ Virtual keyboard DISABLED');
           }
         }
 
-// ==================== INITIALIZATION ====================
-        let dragSystem = null;
-        let hoverAutoClick = null;
-        let globalTyping = null;
+        // Declare variables FIRST
+        let dragSystem;
+        let hoverAutoClick;
+        let globalTyping;
 
-      document.addEventListener('DOMContentLoaded', () => {
-        dragSystem = new SimpleDragSystem();
+        document.addEventListener('DOMContentLoaded', () => {
+          // Then initialize
+          dragSystem = new SimpleDragSystem();
+          
+          hoverAutoClick = new HoverAutoClick({
+            hoverDelay: 1000,
+            enabled: true
+          });
+
+          globalTyping = new GlobalTypingSystem();
+          
+          // Make globally accessible
+          window.dragSystem = dragSystem;
+          window.hoverAutoClick = hoverAutoClick;
+          window.globalTyping = globalTyping;
+          
+          console.log('✅ All systems initialized:', {
+            drag: !!dragSystem,
+            hover: !!hoverAutoClick, 
+            typing: !!globalTyping
+          });
+        });
+            
+      //=================== HELP BUTTON FUNCTIONALITY ====================
+      const helpBtn = document.getElementById("helpBtn");
+
+      async function sendHelpRequest() {
+        // Check if we have an active session
+        if (!selectedSession) {
+          showBrowserNotification("❌ No active chat session. Start chatting first!");
+          return;
+        }
+
+        try {
+          helpBtn.disabled = true;
+          helpBtn.textContent = "⏳";
+          
+          console.log('🆘 Sending help request for session:', selectedSession);
+
+          const response = await fetch(`${SOCKET_URL}/api/sessions/${selectedSession}/help`, {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ 
+              message: "🆘 Help for code",
+              timestamp: new Date().toISOString()
+            }),
+          });
+
+          const result = await response.json();
+          console.log('Help response:', result);
+
+          if (response.ok) {
+            showBrowserNotification(`✅ Help request sent! (${result.portalNotified || 0} portal(s) notified)`);
+            
+            // Also add the message to local chat
+            addMessage("🆘 Help for code", true, [], null, currentProvider);
+            
+            // Emit via socket for real-time update
+            socket.emit("help_request", {
+              sessionId: selectedSession,
+              message: "🆘 Help for code",
+              timestamp: new Date()
+            });
+          } else {
+            console.error('Help request failed:', result);
+            showBrowserNotification("❌ Failed: " + (result.error || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error("Help request error:", error);
+          showBrowserNotification("❌ Error: " + error.message);
+        } finally {
+          helpBtn.disabled = false;
+          helpBtn.textContent = "🆘";
+        }
+      }
+
+      // Attach event listener
+      if (helpBtn) {
+        helpBtn.addEventListener("click", sendHelpRequest);
+        console.log('✅ Help button initialized');
+      } else {
+        console.error('❌ Help button not found in DOM');
+      }
+
+
+// ==================== ACTIVE MODE MANAGEMENT ====================
+let currentMode = "chatbot";
+
+function activemode(mode) {
+  currentMode = mode;
+  
+  const mainContent = document.getElementById('mainContent');
+  const browserView = document.getElementById('browserView');
+  const chatView = document.getElementById('chatView');
+  
+  // Remove both from DOM
+  if (browserView && browserView.parentElement) {
+    browserView.remove();
+  }
+  if (chatView && chatView.parentElement) {
+    chatView.remove();
+  }
+  
+  // Re-insert in correct order - active mode goes FIRST
+  if (mode === "browser") {
+    mainContent.appendChild(browserView);
+    mainContent.appendChild(chatView);
+    console.log('🌐 Browser mode - browserView on top');
+  } else {
+    mainContent.appendChild(chatView);
+    mainContent.appendChild(browserView);
+    console.log('💬 Chatbot mode - chatView on top');
+  }
+  
+}
+
+// ==================== TEXTAREA ACTION BUTTONS ====================
+document.addEventListener('DOMContentLoaded', () => {
+  
+  const clearAllBtns = document.querySelectorAll('[id="clearAllBtn"]');
+  const deleteLastBtns = document.querySelectorAll('[id="deleteLastBtn"]');
+  const copyTextBtns = document.querySelectorAll('[id="copyTextBtn"]');
+
+  // ✅ CLEAR ALL - Erase entire textarea
+  clearAllBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const messageInput = document.getElementById('messageInput');
+      
+      if (messageInput && messageInput.value.trim()) {
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
         
-        hoverAutoClick = new HoverAutoClick({
-          hoverDelay: 1000,
-          enabled: true
+        btn.textContent = '✓';
+        setTimeout(() => {
+          btn.textContent = '🗑️';
+        }, 1500);
+      }
+    });
+  });
+
+  // ✅ DELETE LAST - Remove last character
+  deleteLastBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const messageInput = document.getElementById('messageInput');
+      const text = messageInput?.value;
+      
+      if (!text || !text.trim()) {
+        return;
+      }
+      
+      messageInput.value = text.slice(0, -1);
+      messageInput.style.height = 'auto';
+      messageInput.style.height = Math.min(messageInput.scrollHeight, 200) + 'px';
+      
+      btn.textContent = '✓';
+      setTimeout(() => {
+        btn.textContent = '⌫';
+      }, 1500);
+    });
+  });
+
+  // ✅ COPY - Copy textarea content to clipboard
+  copyTextBtns.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const messageInput = document.getElementById('messageInput');
+      const text = messageInput?.value.trim();
+      
+      if (!text) {
+        return;
+      }
+
+      try {
+        if (window.electronAPI && window.electronAPI.copyToClipboard) {
+          await window.electronAPI.copyToClipboard(text);
+        } else {
+          await navigator.clipboard.writeText(text);
+        }
+        
+        btn.classList.add('copied');
+        btn.textContent = '✓';
+        
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.textContent = '📋';
+        }, 2000);
+        
+      } catch (err) {
+        console.error('❌ Copy failed:', err);
+        btn.textContent = '❌';
+        setTimeout(() => {
+          btn.textContent = '📋';
+        }, 2000);
+      }
+    });
+  });
+
+  console.log('✅ Textarea buttons initialized');
+});
+
+// ==================== BROWSER SEND BUTTON (Auto-inject & Send) ====================
+document.addEventListener('DOMContentLoaded', () => {
+  
+  // Get the browser send button (the one with the SVG arrow in browser view)
+  const browserSendBtn = document.querySelector('#browserView .send-btn');
+  
+  if (browserSendBtn) {
+    // Remove any existing event listeners by cloning
+    const newBtn = browserSendBtn.cloneNode(true);
+    browserSendBtn.parentNode.replaceChild(newBtn, browserSendBtn);
+    
+    // Add new click handler
+    newBtn.addEventListener('click', async () => {
+      const messageInput = document.getElementById('messageInput');
+      const text = messageInput?.value.trim();
+      
+      if (!text) {
+        showBrowserNotification('⚠️ Please type a message first!');
+        return;
+      }
+      
+      // Check if we have an active browser provider
+      if (!currentBrowserProvider) {
+        showBrowserNotification('❌ No browser provider active!');
+        return;
+      }
+      
+      // Disable button during sending
+      newBtn.disabled = true;
+      const originalHTML = newBtn.innerHTML;
+      newBtn.innerHTML = '⏳';
+      
+      try {
+        // Inject text with auto-send enabled
+        await injectTextToBrowser(text, true);
+        
+        // Clear the textarea after successful send
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+        
+        showBrowserNotification(`✅ Sent to ${currentBrowserProvider}!`);
+        
+      } catch (error) {
+        console.error('Send error:', error);
+        showBrowserNotification('❌ Failed to send message');
+      } finally {
+        // Re-enable button
+        newBtn.disabled = false;
+        newBtn.innerHTML = originalHTML;
+      }
+    });
+    
+    console.log('✅ Browser send button initialized');
+  }
+});
+
+// ==================== IMPROVED BROWSER VOICE CAPTURE WITH AUDIO PREPROCESSING ====================
+
+class BrowserVoiceCapture {
+  constructor() {
+    this.isRecording = false;
+    this.mediaRecorder = null;
+    this.audioChunks = [];
+    this.systemAudioStream = null;
+    this.micStream = null;
+    this.audioContext = null;
+    this.mode = 'manual';
+    this.silenceDetector = null;
+  }
+
+  async startCapture(options = {}) {
+    const {
+      captureSystemAudio = true,
+      captureMicrophone = true,
+      useVAD = false
+    } = options;
+
+    this.mode = useVAD ? 'vad' : 'manual';
+
+    try {
+      const streams = [];
+
+      // === MICROPHONE CAPTURE with BETTER SETTINGS ===
+      if (captureMicrophone) {
+        try {
+          this.micStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+              sampleRate: 48000, // Higher quality
+              channelCount: 1
+            }
+          });
+          streams.push(this.micStream);
+          console.log('✅ Microphone captured (48kHz)');
+        } catch (err) {
+          console.error('❌ Microphone error:', err);
+          throw new Error('Microphone access denied');
+        }
+      }
+
+      // === SYSTEM AUDIO CAPTURE ===
+      if (captureSystemAudio) {
+        try {
+          this.systemAudioStream = await navigator.mediaDevices.getDisplayMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+              sampleRate: 48000
+            },
+            video: true
+          });
+
+          const videoTracks = this.systemAudioStream.getVideoTracks();
+          videoTracks.forEach(track => track.stop());
+
+          const audioTracks = this.systemAudioStream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            streams.push(this.systemAudioStream);
+            console.log('✅ System audio captured (48kHz)');
+          } else {
+            this.systemAudioStream.getTracks().forEach(track => track.stop());
+            this.systemAudioStream = null;
+          }
+        } catch (err) {
+          console.warn('⚠️ System audio failed:', err.message);
+          showBrowserNotification('⚠️ System audio unavailable - mic only');
+        }
+      }
+
+      if (streams.length === 0) {
+        throw new Error('No audio streams available');
+      }
+
+      // === ADVANCED AUDIO PROCESSING ===
+      let finalStream;
+
+      if (streams.length === 1) {
+        // Single stream - apply processing
+        finalStream = await this.processAudioStream(streams[0]);
+      } else {
+        // Multiple streams - mix and process
+        this.audioContext = new AudioContext({ sampleRate: 48000 });
+        const destination = this.audioContext.createMediaStreamDestination();
+
+        streams.forEach(stream => {
+          const audioTracks = stream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            const source = this.audioContext.createMediaStreamSource(stream);
+            
+            // Apply gain normalization
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = 1.5; // Boost volume slightly
+            
+            source.connect(gainNode);
+            gainNode.connect(destination);
+          }
         });
 
-        globalTyping = new GlobalTypingSystem();
+        finalStream = destination.stream;
+      }
 
+      // === START RECORDING with BEST QUALITY ===
+      let mimeType;
+      
+      // Prefer higher quality formats
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+      } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+        mimeType = 'audio/ogg;codecs=opus';
+      } else {
+        mimeType = 'audio/ogg';
+      }
+
+      console.log('🎙️ Recording format:', mimeType);
+
+      this.mediaRecorder = new MediaRecorder(finalStream, {
+        mimeType: mimeType,
+        audioBitsPerSecond: 128000 // High bitrate for better quality
       });
 
-      window.dragSystem = dragSystem;
-      window.hoverAutoClick = hoverAutoClick;
-      window.globalTyping = globalTyping;
+      this.audioChunks = [];
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.audioChunks.push(event.data);
+        }
+      };
+
+      this.mediaRecorder.onstop = async () => {
+        await this.processAndInject();
+      };
+
+      this.mediaRecorder.onerror = (event) => {
+        console.error('❌ MediaRecorder error:', event.error);
+        showBrowserNotification('❌ Recording error: ' + event.error.message);
+        this.cleanup();
+      };
+
+      this.mediaRecorder.start();
+      this.isRecording = true;
+
+      // Monitor audio levels
+      this.monitorAudioLevel(finalStream);
+
+      if (useVAD) {
+        this.setupVAD(finalStream);
+      }
+
+      const audioType = captureSystemAudio && this.systemAudioStream 
+        ? 'mic + system'
+        : 'microphone';
+
+      console.log(`🎙️ Recording started (${this.mode} mode, ${audioType})`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ Capture error:', error);
+      this.cleanup();
+      return { success: false, error: error.message };
+    }
+  }
+
+  async processAudioStream(stream) {
+    // Apply audio processing for single stream
+    const context = new AudioContext({ sampleRate: 48000 });
+    const source = context.createMediaStreamSource(stream);
+    const destination = context.createMediaStreamDestination();
+    
+    // Create processing chain
+    const gainNode = context.createGain();
+    gainNode.gain.value = 1.5;
+    
+    // High-pass filter to remove low-frequency noise
+    const highPass = context.createBiquadFilter();
+    highPass.type = 'highpass';
+    highPass.frequency.value = 80; // Remove frequencies below 80Hz
+    
+    // Low-pass filter to remove high-frequency noise
+    const lowPass = context.createBiquadFilter();
+    lowPass.type = 'lowpass';
+    lowPass.frequency.value = 8000; // Remove frequencies above 8kHz
+    
+    // Connect the chain
+    source.connect(highPass);
+    highPass.connect(lowPass);
+    lowPass.connect(gainNode);
+    gainNode.connect(destination);
+    
+    this.audioContext = context;
+    return destination.stream;
+  }
+
+  monitorAudioLevel(stream) {
+    try {
+      const monitorContext = new AudioContext();
+      const source = monitorContext.createMediaStreamSource(stream);
+      const analyser = monitorContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      let lastLogTime = Date.now();
+
+      const checkLevel = () => {
+        if (!this.isRecording) {
+          monitorContext.close();
+          return;
+        }
+
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+        
+        // Log level every 2 seconds
+        if (Date.now() - lastLogTime > 2000) {
+          console.log(`🎚️ Audio level: ${Math.round(average)}/255`);
+          if (average < 10) {
+            console.warn('⚠️ Audio level very low! Speak louder.');
+          } else if (average > 200) {
+            console.warn('⚠️ Audio might be clipping! Lower volume.');
+          } else {
+            console.log('✅ Audio level good');
+          }
+          lastLogTime = Date.now();
+        }
+
+        requestAnimationFrame(checkLevel);
+      };
+
+      checkLevel();
+    } catch (err) {
+      console.warn('⚠️ Audio monitor setup failed:', err);
+    }
+  }
+
+  setupVAD(stream) {
+    try {
+      const vadContext = new AudioContext();
+      const source = vadContext.createMediaStreamSource(stream);
+      const analyser = vadContext.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.8;
+      source.connect(analyser);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      let silenceStart = Date.now();
+      const SILENCE_THRESHOLD = 15;
+      const SILENCE_DURATION = 2000;
+
+      const checkSilence = () => {
+        if (!this.isRecording) {
+          vadContext.close();
+          return;
+        }
+
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+        if (average < SILENCE_THRESHOLD) {
+          if (Date.now() - silenceStart > SILENCE_DURATION) {
+            console.log('🔇 Silence detected, stopping...');
+            this.stopCapture();
+            vadContext.close();
+            return;
+          }
+        } else {
+          silenceStart = Date.now();
+        }
+
+        requestAnimationFrame(checkSilence);
+      };
+
+      this.silenceDetector = checkSilence;
+      checkSilence();
+
+    } catch (err) {
+      console.warn('⚠️ VAD setup failed:', err);
+    }
+  }
+
+  async processAndInject() {
+    if (this.audioChunks.length === 0) {
+      showBrowserNotification('⚠️ No audio recorded');
+      this.cleanup();
+      return;
+    }
+
+    try {
+      const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+
+      if (audioBlob.size < 2000) { // Increased minimum size
+        showBrowserNotification('⚠️ Recording too short (speak for at least 2 seconds)');
+        this.cleanup();
+        return;
+      }
+
+      showBrowserNotification('🔄 Transcribing...');
+      console.log(`📤 Audio: ${audioBlob.size} bytes`);
+
+      // Convert to array buffer
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+
+      if (typeof socket === 'undefined') {
+        throw new Error('Socket.IO not connected');
+      }
+
+      // Set up promise for response
+      const transcriptPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          socket.off('browser_transcription_result');
+          socket.off('browser_transcription_error');
+          reject(new Error('Transcription timeout (30s)'));
+        }, 30000);
+
+        socket.once('browser_transcription_result', (data) => {
+          clearTimeout(timeout);
+          socket.off('browser_transcription_error');
+          resolve(data.transcript);
+        });
+
+        socket.once('browser_transcription_error', (error) => {
+          clearTimeout(timeout);
+          socket.off('browser_transcription_result');
+          reject(new Error(error));
+        });
+      });
+
+      // Send to server
+      socket.emit('browser_transcribe_audio', {
+        buffer: Array.from(uint8Array),
+        mimeType: 'audio/webm',
+        mode: 'browser'
+      });
+
+      // Wait for transcript
+      const transcript = await transcriptPromise;
+
+      console.log(`✅ Transcript: "${transcript}"`);
+
+      // Filter invalid
+      if (!transcript || 
+          transcript === '<nospeech>' || 
+          transcript.trim().length < 3) {
+        showBrowserNotification('⚠️ No clear speech detected. Try speaking louder and clearer.');
+        this.cleanup();
+        return;
+      }
+      let textaddon=`Analyse the speech and tell the answer accordingly:${transcript}`;
+      // Inject to browser
+      await this.injectToBrowser(textaddon);
+
+    } catch (error) {
+      console.error('❌ Processing error:', error);
+      showBrowserNotification(`❌ Error: ${error.message}`);
+    } finally {
+      this.cleanup();
+    }
+  }
+
+  async injectToBrowser(transcript) {
+    if (!currentBrowserProvider) {
+      showBrowserNotification('❌ No browser active');
+      return;
+    }
+
+    try {
+      await injectTextToBrowser(transcript, true);
+      showBrowserNotification(`✅ Sent: "${transcript.substring(0, 40)}..."`);
+    } catch (error) {
+      console.error('❌ Injection error:', error);
+      showBrowserNotification('⚠️ Injection failed');
+    }
+  }
+
+  stopCapture() {
+    this.isRecording = false;
+
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
+    }
+
+    this.cleanup();
+    console.log('🛑 Recording stopped');
+  }
+
+  cleanup() {
+    if (this.micStream) {
+      this.micStream.getTracks().forEach(track => track.stop());
+      this.micStream = null;
+    }
+
+    if (this.systemAudioStream) {
+      this.systemAudioStream.getTracks().forEach(track => track.stop());
+      this.systemAudioStream = null;
+    }
+
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+
+    this.silenceDetector = null;
+    this.audioChunks = [];
+  }
+}
+
+// ==================== UI INTEGRATION ====================
+
+window.browserVoiceCapture = new BrowserVoiceCapture();
+
+function initBrowserVoiceButton() {
+  const audioCaptureBtn = document.querySelector('[id^="audioCaptureBtn"]');
+  if (!audioCaptureBtn) {
+    console.warn('⚠️ Audio capture button not found');
+    return;
+  }
+
+  let isCapturing = false;
+
+  audioCaptureBtn.addEventListener('click', async () => {
+    if (!isCapturing) {
+      const result = await window.browserVoiceCapture.startCapture({
+        captureSystemAudio: true,
+        captureMicrophone: true,
+        useVAD: false
+      });
+
+      if (result.success) {
+        isCapturing = true;
+        audioCaptureBtn.style.background = 'rgba(239, 68, 68, 0.8)';
+        audioCaptureBtn.textContent = '⏹️';
+        audioCaptureBtn.title = 'Stop recording';
+        showBrowserNotification('🎙️ Recording... Speak clearly!');
+      } else {
+        showBrowserNotification(`❌ ${result.error}`);
+      }
+    } else {
+      window.browserVoiceCapture.stopCapture();
+      isCapturing = false;
+      audioCaptureBtn.style.background = '';
+      audioCaptureBtn.textContent = '🎙️';
+      audioCaptureBtn.title = 'Voice capture';
+    }
+  });
+
+  console.log('🎤 Browser voice button initialized');
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initBrowserVoiceButton);
+} else {
+  initBrowserVoiceButton();
+}
 
     </script>
   </body>

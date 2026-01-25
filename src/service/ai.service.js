@@ -38,14 +38,18 @@ const GEMINI_MODELS = {
 
 function limitConversationHistory(history, maxMessages = 10) {
   if (!Array.isArray(history)) return [];
-  return history.slice(-maxMessages);
-}
 
+  return history.slice(-(maxMessages * 2));
+}
 function smartMaxTokens(prompt = "") {
-  if (/code|program|function|class|implement|example/i.test(prompt)) return 4096;
-  if (/explain|how|why|guide|step/i.test(prompt)) return 2048;
-  if (prompt.length < 80) return 512;
-  return 1024;
+  // Check for topics that need longer responses
+  if (/astrology|horoscope|chart|placement|transit|zodiac/i.test(prompt)) return 4096;
+  if (/code|program|function|class|implement|example|algorithm/i.test(prompt)) return 4096;
+  if (/explain|describe|elaborate|detail|comprehensive|analyze/i.test(prompt)) return 3072;
+  if (/how|why|what|guide|step|tutorial/i.test(prompt)) return 2048;
+  if (/list|summarize|brief|short/i.test(prompt)) return 1024;
+  
+  return 2048; // Increased default from 1024
 }
 
 // ================= GEMINI =================
@@ -66,7 +70,7 @@ async function generateResponseGemini(
   }
 
   // Create a COPY to avoid mutating the original
-  const history = limitConversationHistory([...conversationHistory], 10);
+  const history = limitConversationHistory(conversationHistory, 10);
   const dynamicTokens = smartMaxTokens(prompt);
 
   // Try each key in sequence until one works
@@ -150,7 +154,7 @@ async function generateResponseClaude(
     throw new Error("No Claude API keys configured");
   }
 
-  const history = limitConversationHistory([...conversationHistory], 10);
+  const history = limitConversationHistory(conversationHistory, 10);
   const dynamicTokens = smartMaxTokens(prompt);
 
   for (let keyIndex = 0; keyIndex < claudeClients.length; keyIndex++) {
@@ -225,7 +229,7 @@ async function generateResponseChatGPT(
     throw new Error("No OpenAI API keys configured");
   }
 
-  const history = limitConversationHistory([...conversationHistory], 10);
+ const history = limitConversationHistory(conversationHistory, 10);
   const dynamicTokens = smartMaxTokens(prompt);
 
   for (let keyIndex = 0; keyIndex < openaiClients.length; keyIndex++) {
