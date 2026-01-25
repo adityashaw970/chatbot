@@ -63,8 +63,8 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, confirmText
   };
 
   return (
-    <div className="fixed inset-0 bg-white/20 bg-opacity-75 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full border border-gray-100">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      <div className="bg-black rounded-2xl shadow-2xl max-w-md w-full border border-gray-100">
         <div className="p-6">
           <div className="flex items-start gap-4">
             <div className={`p-3 rounded-full ${type === 'danger' ? 'bg-red-900 bg-opacity-30' : 'bg-amber-900 bg-opacity-30'}`}>
@@ -77,10 +77,10 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, confirmText
           </div>
         </div>
         
-        <div className="px-6 py-4 bg-gray-900 bg-opacity-50 rounded-b-2xl flex gap-3">
+        <div className="px-6 py-4 bg-black bg-opacity-50 rounded-b-2xl flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition"
+            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-800 text-white rounded-lg font-medium transition"
           >
             {cancelText}
           </button>
@@ -731,7 +731,7 @@ const fetchMessages = async (sessionId, silent = false) => {
   ${showChatView ? 'hidden md:flex' : 'flex'} 
   bg-black border-r border-gray-700 flex-col h-full`}>
 
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-r border-white">
           <h1 className="text-xl font-bold mb-3 flex items-center gap-2">
             <MessageSquare size={24} />
             Chat History Portal
@@ -746,7 +746,7 @@ const fetchMessages = async (sessionId, silent = false) => {
               placeholder="Search sessions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+              className="w-full pl-10 pr-4 py-2 bg-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white border"
             />
           </div>
           <div className="mt-3 flex items-center justify-between">
@@ -767,7 +767,7 @@ const fetchMessages = async (sessionId, silent = false) => {
                 className={`px-3 py-1 text-xs rounded-lg transition flex items-center gap-1 ${
                   autoRefresh
                     ? "bg-green-600 text-white"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    : "border border-2 border-blue-700 bg-blue-700/20 text-gray-300"
                 }`}
                 title={
                   autoRefresh
@@ -786,7 +786,7 @@ const fetchMessages = async (sessionId, silent = false) => {
                 className={`px-3 py-1 text-xs rounded-lg transition ${
                   selectMode
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    : "bg-yellow-700  text-gray-300 hover:bg-yellow-600"
                 }`}
               >
                 {selectMode ? "Cancel" : "Select"}
@@ -804,7 +804,7 @@ const fetchMessages = async (sessionId, silent = false) => {
             <div className="mt-3 flex flex-col gap-2">
               <button
                 onClick={selectAllSessions}
-                className="w-full px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition"
+                className="w-full px-3 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-sm transition"
               >
                 {selectedSessions.size === filteredSessions.length
                   ? "Deselect All"
@@ -830,7 +830,7 @@ const fetchMessages = async (sessionId, silent = false) => {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto border-r">
           {loading && sessions.length === 0 ? (
             <div className="p-4 text-center text-gray-400">Loading...</div>
           ) : filteredSessions.length === 0 ? (
@@ -849,8 +849,8 @@ const fetchMessages = async (sessionId, silent = false) => {
               return (
                 <div
                   key={session._id}
-                  className={`p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-700 transition ${
-                    selectedSession === session._id ? "bg-gray-700" : ""
+                  className={`p-4 border-b border-white cursor-pointer hover:bg-blue-800/50 transition text-white ${
+                    selectedSession === session._id ? "bg-blue-800/50": ""
                   } ${
                     selectedSessions.has(session._id)
                       ? "border-l-4 border-l-blue-500"
@@ -935,7 +935,7 @@ const fetchMessages = async (sessionId, silent = false) => {
         setShowChatView(false);
         setSelectedSession(null);
       }}
-      className="md:hidden p-2 bg-gray-700 hover:bg-gray-700 rounded-lg transition"
+      className="md:hidden p-2 bg-green-600 hover:bg-green-700 rounded-lg transition"
     >
       ← Back
     </button>
@@ -952,7 +952,7 @@ const fetchMessages = async (sessionId, silent = false) => {
       </div>
       <button
         onClick={() => scrollToBottom()}
-        className="hidden md:block px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded-lg transition"
+        className="hidden md:block px-3 py-1 text-xs bg-black rounded-lg transition"
       >
         ↓ Scroll to Bottom
       </button>
@@ -979,10 +979,10 @@ const fetchMessages = async (sessionId, silent = false) => {
                       <div
                         className={`max-w-[85%] md:max-w-3xl px-4 py-3 rounded-2xl relative group shadow-md break-words overflow-hidden ${
                         msg.sender === "portal"
-                          ? "bg-[#25292E] text-white ml-auto"
+                          ? "bg-yellow-400/20 border border-3 border-yellow-600 text-white ml-auto"
                           : msg.sender === "bot"
-                          ? "bg-gray-800 text-white border border-gray-700"
-                          : "bg-blue-600 text-white"
+                          ? "bg-black text-white border border-3 border-green-700"
+                          : "bg-blue-700/20 border border-3 border-blue-600 text-white"
                       }`}
                       >
                         {msg.images && msg.images.length > 0 && (
@@ -1069,7 +1069,7 @@ const fetchMessages = async (sessionId, silent = false) => {
                     e.key === "Enter" && sendMessageToChatbot()
                   }
                   placeholder="Type a message"
-                  className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base bg-black text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={!connected}
                 />
                 <button
