@@ -1042,7 +1042,7 @@ const fetchMessages = async (sessionId, silent = false) => {
                         <button
                           onClick={() => copyToClipboard(msg.message, messageId)}
                           className={`absolute bottom-[1vw] ${
-                            msg.sender === "portal" ? "left-1" : "right-1"} bg-white/20 bg-opacity-30 hover:bg-opacity-50 rounded-lg transition opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                            msg.sender === "portal" ? "left-1" : "right-1"} bg-white/20 bg-opacity-30 rounded-lg transition opacity-100 md:group-hover:!opacity-100"
                           title="Copy message`}
                         >
                           {copiedMessageId === messageId ? (
