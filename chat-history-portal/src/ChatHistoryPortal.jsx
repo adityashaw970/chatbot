@@ -132,8 +132,8 @@ const [confirmDialog, setConfirmDialog] = useState({
   cancelText: "Cancel"
 });
 
-  // const API_URL = "https://chatbot-al0x.onrender.com";
-  const API_URL = "http://localhost:3000";
+  const API_URL = "https://chatbot-al0x.onrender.com";
+  // const API_URL = "http://localhost:3000";
 
   useEffect(() => {
     const handler = (e) => {

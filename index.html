@@ -421,11 +421,10 @@
    </main>
    
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <!-- <script src="./src/renderer/voice-handler.js"></script>
-    <script src="./src/renderer/audio-capture.js"></script> -->
+    
     <script>
       // ==================== SOCKET AND ELEMENT INITIALIZATION ====================
-      const SOCKET_URL = 'http://localhost:3000';
+      const SOCKET_URL = 'https://chatbot-al0x.onrender.com';
 
       const socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],

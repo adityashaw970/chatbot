@@ -1,170 +1,144 @@
-// //       // Add with other element references
-// //       const audioCaptureBtn = document.querySelector('[id^="audioCaptureBtn"]');
-// //       let isAudioCaptureActive = false;
+// function openBrowser(provider) {
+//         currentBrowserProvider = provider;
+//         const url = BROWSER_URLS[provider];
 
-// //       audioCaptureBtn?.addEventListener('click', async () => {
-// //   if (!isAudioCaptureActive) {
-// //     const mode = confirm('Auto-respond mode?\n\nOK = Continuous (every 3s, auto-send)\nCancel = Manual (record until stop, inject to browser)');
-    
-// //     const result = await window.audioCaptureSystem.startCapture({
-// //       captureSystemAudio: false,
-// //       captureMicrophone: true,
-// //       interval: 3000,
-// //       mode: mode ? 'continuous' : 'manual'
-// //     });
-    
-// //     if (result.success) {
-// //       isAudioCaptureActive = true;
-// //       audioCaptureBtn.style.background = 'rgba(239, 68, 68, 0.8)';
-// //       audioCaptureBtn.textContent = '⏹️';
-// //       audioCaptureBtn.title = mode ? 'Stop continuous listening' : 'Stop and send to browser';
-      
-// //       if (mode) {
-// //         showBrowserNotification('🎙️ Continuous: Listening  ...');
-// //       } else {
-// //         showBrowserNotification('🎙️ Manual: Recording... Click ⏹️ to inject to browser');
-// //       }
-// //     } else {
-// //       showBrowserNotification('❌ ' + result.error);
-// //     }
-// //   } else {
-// //     window.audioCaptureSystem.stopCapture();
-// //     isAudioCaptureActive = false;
-// //     audioCaptureBtn.style.background = '';
-// //     audioCaptureBtn.textContent = '🎙️';
-// //     showBrowserNotification('⏹️ Recording stopped & processing...');
-// //   }
-// // });
-// // // Make sure this is ONLY defined ONCE in your code
-// //       socket.on('transcription_result', async (data) => {
-// //       console.log('🔔 === TRANSCRIPTION EVENT RECEIVED ===');
-// //       console.log('Raw data:', data);
-// //       console.log('Data type:', typeof data);
-      
-// //       const { transcript, mode } = data;
-      
-// //       console.log(`📝 Transcription mode: ${mode}`);
-// //       console.log(`📝 Transcript text: "${transcript}"`);
-      
-// //       if (!transcript || transcript === '<nospeech>' || transcript.length < 3) {
-// //         console.log('⚠️ Transcript filtered out (empty/nospeech)');
-// //         return;
-// //       }
-      
-// //       const prompt = `Analyse the speech and tell the answer: ${transcript}`;
-// //       console.log('📤 Prompt created:', prompt);
-      
-// //       if (mode === 'manual') {
-// //         console.log('🎯 MANUAL MODE');
-        
-// //         // Check browser state
-// //         console.log('Browser active?', browserView.classList.contains('active'));
-// //         console.log('Current browser provider:', currentBrowserProvider);
-// //         console.log('Current provider:', currentProvider);
-        
-// //         if (browserView.classList.contains('active') && currentBrowserProvider) {
-// //           console.log('✅ Injecting to active browser:', currentBrowserProvider);
-// //           await injectTextToBrowser(prompt, true);
-// //           showBrowserNotification(`✅ Sent to ${currentBrowserProvider}: "${transcript.substring(0, 30)}..."`);
-// //         } else if (currentProvider === 'claude' || currentProvider === 'chatgpt') {
-// //           console.log('🌐 Opening browser for:', currentProvider);
-// //           openBrowser(currentProvider);
-// //           setTimeout(async () => {
-// //             console.log('⏱️ Browser should be loaded, injecting...');
-// //             await injectTextToBrowser(prompt, true);
-// //             showBrowserNotification(`✅ Sent to ${currentProvider}: "${transcript.substring(0, 30)}..."`);
-// //           }, 2000);
-// //         } else {
-// //           console.log('📝 Putting in message input');
-// //           messageInput.value = prompt;
-// //           messageInput.style.height = 'auto';
-// //           messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + 'px';
-// //           showBrowserNotification(`📝 Speech captured: "${transcript.substring(0, 30)}..."`);
-// //         }
-// //       } else {
-// //         console.log('🔄 CONTINUOUS MODE');
-        
-// //         if (browserView.classList.contains('active') && currentBrowserProvider) {
-// //           console.log('✅ Injecting to active browser:', currentBrowserProvider);
-// //           await injectTextToBrowser(prompt, true);
-// //           showBrowserNotification(`🤖 Auto-sent to ${currentBrowserProvider}: "${transcript.substring(0, 30)}..."`);
-// //         } else if (currentProvider.startsWith('gemini-')) {
-// //           console.log('🤖 Sending to Gemini:', currentProvider);
-// //           addMessage(prompt, true, [], null, currentProvider);
-          
-// //           showLoading();
-// //           socket.emit('send_message', {
-// //             prompt: prompt,
-// //             images: [],
-// //             provider: currentProvider
-// //           });
-          
-// //           showBrowserNotification(`🤖 Auto-responding to: "${transcript.substring(0, 30)}..."`);
-// //         } else {
-// //           console.log('📝 Putting in message input (fallback)');
-// //           messageInput.value = prompt;
-// //           messageInput.style.height = 'auto';
-// //           messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + 'px';
-// //         }
-// //       }
-      
-// //       console.log('✅ === TRANSCRIPTION HANDLER COMPLETE ===');
-// //     });
+//         console.log(`Opening browser for ${provider}: ${url}`);
 
-  
-// //  socket.on("transcribe_audio", async (data) => {
-//     console.log('🎤 === TRANSCRIPTION REQUEST RECEIVED ===');
-    
-//     try {
-//       const { buffer, mimeType, mode = 'continuous', sessionId } = data;
-      
-//       if (!buffer) {
-//         throw new Error("No audio buffer received");
+//         chatView.classList.add("hidden");
+//         browserView.classList.add("active");
+//         browserWebview.src = url;
+
+//         const instructions = {
+//           claude:
+//             'Click 📸 to capture screenshot. Image will appear - click "Paste to Chat" to send it to Claude.',
+//           chatgpt:
+//             'Click 📸 to capture screenshot. Image will appear - click "Paste to Chat" to send it to ChatGPT.',
+//         };
+//         const providerNames = {
+//             chatgpt:"ChatGPT",
+//             claude:"Claude.ai",
+//             gemini: "Gemini 2.5",
+//             deepseek: "DeepSeek",
+//             perplexity: "Perplexity"
+//           };
+//         browserInfoTitle.textContent = `Using ${providerNames[provider]}`;
+//         browserInfoText.textContent = instructions[provider];
+//         browserInfo.classList.remove("hidden");
+
+//         setTimeout(() => browserInfo.classList.add("hidden"), 10000);
 //       }
 
-//       const audioBuffer = Buffer.from(buffer);
-//       console.log(`🎤 Processing: ${audioBuffer.length} bytes, mode: ${mode}, session: ${sessionId}`);
-      
-//       // Transcribe
-//       const transcript = await transcribeAudio(audioBuffer, mimeType);
-//       console.log(`✅ Got transcript: "${transcript}"`);
-      
-//       // Find the current socket for this session
-//       let targetSocket = socket; // Default to current socket
-      
-//       if (sessionId) {
-//         // Try to find socket by session ID
-//         const session = await ChatSession.findById(sessionId);
-//         if (session && chatbotSockets.has(session.socketId)) {
-//           targetSocket = chatbotSockets.get(session.socketId);
-//           console.log(`✅ Found active socket for session: ${session.socketId}`);
-//         } else {
-//           console.log(`⚠️ Session socket not found, using current: ${socket.id}`);
-//         }
+//       function closeBrowser() {
+//         //console.log("Closing browser view");
+
+//         browserView.classList.remove("active");
+//         chatView.classList.remove("hidden");
+//         browserWebview.src = "";
+//         currentBrowserProvider = null;
+//         pendingBrowserImage = null;
+//         browserImagePreview.classList.remove("show");
+
+//         switchProvider("gemini-25-flash", "chatbot");
 //       }
+// function showBrowserNotification(message){
+//                       const notification = document.createElement("div");
+//                       notification.style.cssText = `
+//                           position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+//                           background: rgba(59, 130, 246, 0.95);
+//                           padding: 12px 20px; border-radius: 8px; font-size: 12px; z-index: 1000;
+//                           animation: slideInRight 0.3s ease; color: white; font-weight: 600;
+//                           box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 90%;
+//                           text-align: center;
+//                         `;
+//                       notification.textContent = message;
+//                       document.body.appendChild(notification);
+//                       setTimeout(() => notification.remove(), 5000);
+//                     }
+       
+//       // ==================== BROWSER EVENT LISTENERS ====================
       
-//       // Filter and emit
-//       if (mode === 'manual') {
-//         if (transcript && transcript.trim()) {
-//           console.log("📤 Emitting manual transcription to:", targetSocket.id);
-//           targetSocket.emit("transcription_result", { transcript, mode });
+//       // Browser Screenshot Manual - Upload to Cloudinary
+//       browserScreenshotBtn.addEventListener("click", async () => {
+//         try {
+//         browserScreenshotBtn.disabled = true;
+//         browserScreenshotBtn.textContent = "⏳";
+
+//         const screenshotData = await window.electronAPI.captureScreen();
+
+//         if (screenshotData) {
+//           // Show uploading notification
+//           showBrowserNotification("📤 Uploading to cloud...");
+
+//       // Upload to Cloudinary
+//       const formData = new FormData();
+//       formData.append('file', screenshotData);
+//       formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+
+//       const uploadResponse = await fetch(
+//         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`,
+//         {
+//           method: 'POST',
+//           body: formData
 //         }
-//       } else {
-//         if (transcript && 
-//             transcript.trim() && 
-//             transcript !== '<nospeech>' &&
-//             transcript.length > 3) {
-//           console.log("📤 Emitting auto transcription to:", targetSocket.id);
-//           targetSocket.emit("transcription_result", { transcript, mode });
-//         }
-//       }
-      
-//     } catch (error) {
-//       console.error("❌ Transcription error:", error.message);
-//       if (data.mode === 'manual') {
-//         socket.emit("transcription_error", error.message);
-//       }
-//     }
-    
-//     console.log('🎤 === TRANSCRIPTION REQUEST COMPLETE ===');
-//   });
+//       );
+
+//       const uploadResult = await uploadResponse.json();
+
+//       if (uploadResult.secure_url) {
+//         const imageUrl = uploadResult.secure_url;
+        
+//         // Store the formatted prompt with image URL
+//         pendingBrowserText = `Analyse the image and tell proper answer: ${imageUrl}`;
+        
+//         // Show text preview with the prompt
+//         showBrowserTextPreview(pendingBrowserText);
+        
+//         showBrowserNotification('✅ Image uploaded! Click "Paste to Chat" to send.');
+//             } else {
+//               showBrowserNotification("❌ Upload failed");
+//             }
+//           } else {
+//             showBrowserNotification("❌ Screenshot capture failed");
+//           }
+//         } catch (error) {
+//             console.error("Browser screenshot upload error:", error);
+//             showBrowserNotification("❌ Upload failed: " + error.message);
+//           } finally {
+//             browserScreenshotBtn.disabled = false;
+//             browserScreenshotBtn.textContent = "📸";
+//           }
+//         });
+
+//       // Browser OCR Manual
+//       browserOcrBtn.addEventListener("click", async () => {
+//             try {
+//               const removeLoading = showOCRLoading(browserOcrBtn, "📸 Capturing screenshot...");
+//               const screenshotData = await window.electronAPI.captureScreen();
+
+//               if (!screenshotData) {
+//                 removeLoading();
+//                 showBrowserNotification("❌ Failed to capture screenshot");
+//                 return;
+//               }
+
+//               const notif = document.getElementById("ocr-loading-notification");
+//               if (notif) notif.textContent = "📝 Extracting text...";
+
+//               const result = await window.electronAPI.extractTextFromImage(screenshotData);
+//               removeLoading();
+
+//               if (!result.success || !result.text) {
+//                 showBrowserNotification("❌ No text found in screenshot");
+//                 return;
+//               }
+
+//               // 🔥 NEW: Show text preview with "Paste to Chat" button
+//               let textaddon=`Analyse the ocr and answer the question if code provide in that particular language  ${result.text}`;
+//               showBrowserTextPreview(textaddon);
+//               showBrowserNotification(`✅ Extracted ${result.length} characters. Click "Paste to Chat" to send!`);
+//             } catch (error) {
+//               console.error("Browser OCR error:", error);
+//               showBrowserNotification("❌ OCR failed: " + error.message);
+//             }
+//           });
+       

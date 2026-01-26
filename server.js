@@ -165,7 +165,7 @@ app.delete('/api/sessions/:sessionId', async (req, res) => {
 // ADD this route AFTER your existing /api/sessions routes
 app.post('/api/sessions/:sessionId/help', async (req, res) => {
   try {
-    console.log('🆘 Help request received for session:', req.params.sessionId);
+    // console.log('🆘 Help request received for session:', req.params.sessionId);
     
     const session = await ChatSession.findById(req.params.sessionId);
     if (!session) {
@@ -186,7 +186,7 @@ app.post('/api/sessions/:sessionId/help', async (req, res) => {
     session.updatedAt = new Date();
     
     await session.save();
-    console.log('✅ Help message saved to database');
+    // console.log('✅ Help message saved to database');
     
     // Find the chatbot socket using the session's socketId
     const chatbotSocket = chatbotSockets.get(session.socketId);
@@ -203,7 +203,7 @@ app.post('/api/sessions/:sessionId/help', async (req, res) => {
       portalNotified++;
     });
     
-    console.log(`📢 Notified ${portalNotified} portal(s)`);
+    // console.log(`📢 Notified ${portalNotified} portal(s)`);
     
     res.json({ 
       success: true, 
@@ -221,7 +221,7 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
   const startTime = Date.now();
   
   try {
-    console.log('🎤 === HTTP TRANSCRIPTION REQUEST (Sarvam.AI) ===');
+    // console.log('🎤 === HTTP TRANSCRIPTION REQUEST (Sarvam.AI) ===');
     
     if (!req.file) {
       console.error('❌ No audio file in request');
@@ -234,7 +234,7 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
     const audioBuffer = req.file.buffer;
     const mimeType = req.file.mimetype || 'audio/webm';
     
-    console.log(`📦 Received: ${audioBuffer.length} bytes (${mimeType})`);
+    // console.log(`📦 Received: ${audioBuffer.length} bytes (${mimeType})`);
     
     if (audioBuffer.length < 100) {
       console.error('❌ Audio too small');
@@ -245,12 +245,12 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
     }
 
     // Transcribe with Sarvam
-    console.log('🔄 Starting Sarvam transcription...');
+    // console.log('🔄 Starting Sarvam transcription...');
     const transcript = await transcribeWithSarvam(audioBuffer, mimeType);
     
     const duration = Date.now() - startTime;
-    console.log(`✅ Transcription complete in ${duration}ms`);
-    console.log(`📝 Result: "${transcript}"`);
+    // console.log(`✅ Transcription complete in ${duration}ms`);
+    // console.log(`📝 Result: "${transcript}"`);
     
     res.json({ 
       success: true, 
@@ -335,7 +335,7 @@ io.on("connection", (socket) => {
     if (!identifiedSockets.has(socket.id)) {
       identifiedSockets.add(socket.id);
       clientType = "chatbot";
-      console.log("🤖 Auto-identified as chatbot:", socket.id);
+      // console.log("🤖 Auto-identified as chatbot:", socket.id);
       await handleChatbotConnection(socket);
     }
   }, 2000);
@@ -451,7 +451,7 @@ io.on("connection", (socket) => {
 
 
   socket.on("help_request", async (data) => {
-    console.log("🆘 Help request via socket:", data.sessionId);
+    // console.log("🆘 Help request via socket:", data.sessionId);
     
     try {
       const session = await ChatSession.findById(data.sessionId);
@@ -470,7 +470,7 @@ io.on("connection", (socket) => {
         });
       });
       
-      console.log(`📢 Help request broadcast to ${portalSockets.size} portal(s)`);
+      // console.log(`📢 Help request broadcast to ${portalSockets.size} portal(s)`);
     } catch (error) {
       console.error('❌ Error broadcasting help:', error);
     }
@@ -478,7 +478,7 @@ io.on("connection", (socket) => {
 
 
   socket.on("session_initialized", (data) => {
-    console.log("✅ Session initialized:", data);
+    // console.log("✅ Session initialized:", data);
     selectedSession = data.sessionId; // Store the MongoDB _id
     
     // Show notification
@@ -488,7 +488,7 @@ io.on("connection", (socket) => {
   });
 
 socket.on("browser_transcribe_audio", async (data) => {
-  console.log('🎤 === BROWSER TRANSCRIPTION REQUEST (Sarvam.AI) ===');
+  // console.log('🎤 === BROWSER TRANSCRIPTION REQUEST (Sarvam.AI) ===');
   
   try {
     const { buffer, mimeType } = data;
@@ -498,18 +498,18 @@ socket.on("browser_transcribe_audio", async (data) => {
     }
 
     const audioBuffer = Buffer.from(buffer);
-    console.log(`🎤 Processing: ${audioBuffer.length} bytes`);
+    // console.log(`🎤 Processing: ${audioBuffer.length} bytes`);
     
     // Check if Sarvam API key exists
     if (!process.env.SARVAM_API_KEY) {
       throw new Error("SARVAM_API_KEY not configured in .env file");
     }
     
-    console.log('🔑 Sarvam API Key found');
+    // console.log('🔑 Sarvam API Key found');
     
     // Transcribe using Sarvam.AI
     const transcript = await transcribeWithSarvam(audioBuffer, mimeType);
-    console.log(`✅ Transcript: "${transcript}"`);
+    // console.log(`✅ Transcript: "${transcript}"`);
     
     // Send result back to THIS socket only
     socket.emit("browser_transcription_result", { 
@@ -534,7 +534,7 @@ socket.on("browser_transcribe_audio", async (data) => {
     socket.emit("browser_transcription_error", userMessage);
   }
   
-  console.log('🎤 === BROWSER TRANSCRIPTION COMPLETE ===');
+  // console.log('🎤 === BROWSER TRANSCRIPTION COMPLETE ===');
 });
 
   socket.on("disconnect", () => {
@@ -567,7 +567,7 @@ async function transcribeWithSarvam(audioBuffer, mimeType) {
   const axios = require('axios');
   
   try {
-    console.log('🔄 Preparing Sarvam.AI API request...');
+    // console.log('🔄 Preparing Sarvam.AI API request...');
     
     // Validate API key
     const apiKey = process.env.SARVAM_API_KEY;
@@ -580,7 +580,7 @@ async function transcribeWithSarvam(audioBuffer, mimeType) {
       throw new Error('Audio buffer too small or empty');
     }
     
-    console.log(`📊 Audio size: ${audioBuffer.length} bytes (${(audioBuffer.length / 1024).toFixed(2)} KB)`);
+    // console.log(`📊 Audio size: ${audioBuffer.length} bytes (${(audioBuffer.length / 1024).toFixed(2)} KB)`);
     
     // Create form data
     const form = new FormData();
@@ -600,7 +600,7 @@ async function transcribeWithSarvam(audioBuffer, mimeType) {
       contentType = 'audio/ogg';
     }
     
-    console.log(`📁 Format: ${filename} (${contentType})`);
+    // console.log(`📁 Format: ${filename} (${contentType})`);
     
     // Append file
     form.append('file', audioBuffer, {
@@ -618,7 +618,7 @@ async function transcribeWithSarvam(audioBuffer, mimeType) {
     form.append('with_timestamps', 'false');
     form.append('with_diarization', 'false');
     
-    console.log('📤 Sending to Sarvam.AI...');
+    // console.log('📤 Sending to Sarvam.AI...');
     console.log('Config:', {
       model: 'saarika:v2.5',
       language: 'auto-detect',
@@ -640,7 +640,7 @@ async function transcribeWithSarvam(audioBuffer, mimeType) {
       }
     );
     
-    console.log('✅ Sarvam response received');
+    // console.log('✅ Sarvam response received');
     console.log('Response:', JSON.stringify(response.data, null, 2));
     
     // Extract transcript
@@ -654,8 +654,8 @@ async function transcribeWithSarvam(audioBuffer, mimeType) {
     }
     
     const detectedLang = response.data.language_code || 'unknown';
-    console.log(`📝 Transcript: "${transcript}"`);
-    console.log(`🌐 Language: ${detectedLang}`);
+    // console.log(`📝 Transcript: "${transcript}"`);
+    // console.log(`🌐 Language: ${detectedLang}`);
     
     // If empty transcript and detected language, might be audio issue
     if (!transcript && detectedLang) {
@@ -669,7 +669,7 @@ async function transcribeWithSarvam(audioBuffer, mimeType) {
         transcript === '...' ||
         transcript === '.' ||
         /^[\s\.]+$/.test(transcript)) {
-      console.log('⚠️ No valid speech detected');
+      // console.log('⚠️ No valid speech detected');
       return '<nospeech>';
     }
     
@@ -707,7 +707,7 @@ async function transcribeWithSarvam(audioBuffer, mimeType) {
 
 async function handleChatbotConnection(socket) {
   if (chatSessions.has(socket.id)) {
-    console.log("⚠️  Chatbot session already exists for:", socket.id);
+    // console.log("⚠️  Chatbot session already exists for:", socket.id);
     return;
   }
   
